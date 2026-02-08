@@ -14,6 +14,14 @@ repositories {
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter")
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
+
+    implementation("org.postgresql:postgresql:42.7.9")
+    implementation("org.flywaydb:flyway-core:12.0.0")
+    runtimeOnly("org.flywaydb:flyway-database-postgresql:12.0.0")
+
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation(kotlin("test"))
 }
