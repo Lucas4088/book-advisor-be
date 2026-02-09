@@ -1,4 +1,4 @@
-package io.github.luksal.book.db.document;
+package io.github.luksal.book.db.document.model
 
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document

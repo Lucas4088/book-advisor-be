@@ -67,7 +67,7 @@ CREATE TABLE ratings (
                          source_id INT NOT NULL,
 
                          rating NUMERIC(3,2) NOT NULL,
-                         count INT NOT NULL,
+                         count INT,
 
                          CONSTRAINT fk_ratings_book
                              FOREIGN KEY (book_id)
