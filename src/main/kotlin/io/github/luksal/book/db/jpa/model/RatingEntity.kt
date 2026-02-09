@@ -18,16 +18,16 @@ class RatingEntity(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "book_id")
     val book: BookEntity,
 
-    @Column(precision = 3, scale = 2)
+    @Column(precision = 3, scale = 2, nullable = false)
     val rating: BigDecimal,
 
-    val count: Int,
+    val count: Int?,
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     @JoinColumn(name = "source_id")
     val source: RatingSourceEntity
 )

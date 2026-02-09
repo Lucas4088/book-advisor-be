@@ -1,4 +1,11 @@
+server:
+  port: 8090
+
 spring:
+  datasource:
+    hikari:
+      driver-class-name: org.postgresql.Driver
   data:
-    mongodb:
-      uri: mongodb://localhost:27017/book-advisor-db
+    jpa:
+      repositories:
+        enabled: true

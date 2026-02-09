@@ -1,0 +1,35 @@
+spring:
+  mongodb:
+    uri: mongodb://mongo_user:mongo_password@localhost:27017/admin
+    database: book-advisor-db
+  datasource:
+    url: jdbc:postgresql://localhost:5435/book-advisor-db
+    username: postgres
+    password: password
+    hikari:
+      pool-name: BookAdvisorHikariCP
+      maximum-pool-size: 5
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+    baseline-version: 0
+    out-of-order: true
+    baseline-on-migrate: true
+    mixed: true
+  cloud:
+    openfeign:
+      client:
+        config:
+          openLibraryClient:
+            logger-level: basic
+            url: https://openlibrary.org/
+
+logging:
+  level:
+    io.github.luksal.book.openlibrary: DEBUG
