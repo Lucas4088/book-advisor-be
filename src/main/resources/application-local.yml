@@ -30,6 +30,23 @@ spring:
             logger-level: basic
             url: https://openlibrary.org/
 
+resilience4j:
+  timelimiter:
+    instances:
+      search-openLibraryRateLimiter:
+        limitForPeriod: 20
+        limitRefreshPeriod: 6s
+        timeoutDuration: 1s
+  retry:
+    instances:
+      search-openLibraryRetry:
+        max-attempts: 4
+        wait-duration: 500ms
+        exponential-backoff-multiplier: 2
+        max-wait-duration: 5s
+        retry-exceptions:
+          - feign.RetryableException
+
 logging:
   level:
     io.github.luksal.book.openlibrary: DEBUG

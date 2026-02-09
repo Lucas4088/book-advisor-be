@@ -28,6 +28,7 @@ dependencies {
 
     implementation(platform("org.springframework.cloud:spring-cloud-dependencies:2025.1.1"))
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
+    implementation("io.github.resilience4j:resilience4j-spring-boot3")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation(kotlin("test"))

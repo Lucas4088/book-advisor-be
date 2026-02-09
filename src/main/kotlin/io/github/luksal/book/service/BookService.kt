@@ -5,6 +5,8 @@ import io.github.luksal.book.db.document.BookBasicInfoRepository
 import io.github.luksal.book.db.document.BookDocumentRepository
 import io.github.luksal.book.db.document.model.BookBasicInfoDocument
 import io.github.luksal.book.db.jpa.BookJpaRepository
+import io.github.luksal.book.ext.normalize
+import io.github.luksal.book.ext.sha256
 import io.github.luksal.book.openlibrary.api.OpenLibraryService
 import io.github.luksal.book.openlibrary.api.dto.OpenLibraryDoc
 import io.github.luksal.book.service.dto.BookSearchCriteriaDto
@@ -39,10 +41,9 @@ class BookService(
     }
 
     fun initBasicBookInfoCollection(fromYear: Int, toYear: Int, lang: String) {
-        //TODO("not async fix")
         CoroutineScope(ioInitializerDispatcher).launch {
             var page = 0
-            val limit = 100
+            val limit = 10000
             do {
                 page++
                 val response = openLibraryService.searchBooks(fromYear, toYear, lang, page, limit)
@@ -54,11 +55,12 @@ class BookService(
 
     private fun saveBookBasicInfo(bookBasicInfo: List<OpenLibraryDoc> = emptyList(), lang: String) {
         val documents = bookBasicInfo.map { BookBasicInfoDocument(
-            id = it.key ?: "",
+            id = (it.key + it.editionTitle()).normalize().sha256(),
             title = it.title,
-            key = it.key ?: "",
-            editionTitle = it.editions?.docs?.first()?.title,
-            editionKey = it.editions?.docs?.first()?.key,
+            key = it.key,
+            editionTitle = it.editionTitle(),
+            editionKey = it.editionKey(),
+            firstPublishYear = it.firstPublishYear,
             lang = lang
         ) }
         bookBasicInfoRepository.saveAll(documents)
