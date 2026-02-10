@@ -2,20 +2,20 @@ package io.github.luksal.book.api
 
 import io.github.luksal.book.api.dto.BookSearchCriteriaRequest
 import io.github.luksal.book.api.dto.BookSearchResponse
+import io.github.luksal.book.service.BookDataPopulationService
 import io.github.luksal.book.service.BookService
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Controller
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @Controller
 @RestController
 @RequestMapping("/books")
-class BookController(private val bookService: BookService) {
+class BookController(
+    private val bookService: BookService,
+    private val bookDataPopulationService: BookDataPopulationService
+) {
 
     @GetMapping(params = ["title", "genres", "publishedYearRange"])
     fun search(request: BookSearchCriteriaRequest, page: Pageable): Page<BookSearchResponse> {
@@ -27,8 +27,17 @@ class BookController(private val bookService: BookService) {
         return bookService.getBookById(id = id)
     }
 
-    @PostMapping(path = ["/init-basic-info"], params = ["fromYear", "toYear", "lang"])
-    fun initBasicBookInfoCollection(fromYear: Int, toYear: Int, lang: String) {
-        return bookService.initBasicBookInfoCollection(fromYear = fromYear, toYear = toYear, lang = lang)
+    @PostMapping(path = ["/basic-info/schedule-population"], params = ["fromYear", "toYear", "lang"])
+    fun scheduleBookBasicDataPopulation(fromYear: Int, toYear: Int, lang: String) {
+        return bookDataPopulationService.scheduleBasicBookInfoCollection(
+            fromYear = fromYear,
+            toYear = toYear,
+            lang = lang
+        )
+    }
+
+    @PostMapping(path = ["/basic-info/populate"])
+    suspend fun populateBasicBookInfoCollection() {
+        return bookDataPopulationService.populateBasicBookInfoCollection()
     }
 }

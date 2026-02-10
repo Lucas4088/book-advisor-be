@@ -5,25 +5,25 @@ import io.github.luksal.book.db.document.BookBasicInfoRepository
 import io.github.luksal.book.db.document.BookDocumentRepository
 import io.github.luksal.book.db.document.model.BookBasicInfoDocument
 import io.github.luksal.book.db.jpa.BookJpaRepository
+import io.github.luksal.book.ext.logger
 import io.github.luksal.book.ext.normalize
 import io.github.luksal.book.ext.sha256
-import io.github.luksal.book.openlibrary.api.OpenLibraryService
 import io.github.luksal.book.openlibrary.api.dto.OpenLibraryDoc
 import io.github.luksal.book.service.dto.BookSearchCriteriaDto
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 @Service
 class BookService(
     private val bookJpaRepository: BookJpaRepository,
     private val bookBasicInfoRepository: BookBasicInfoRepository,
-    private val bookDocumentRepository: BookDocumentRepository,
-    private val openLibraryService: OpenLibraryService,
-    private val ioInitializerDispatcher: kotlinx.coroutines.CoroutineDispatcher
+    private val bookDocumentRepository: BookDocumentRepository
 ) {
+
+    private val log = logger()
 
     fun searchBooks(criteria: BookSearchCriteriaDto, pageable: Pageable): Page<BookSearchResponse> {
         return bookJpaRepository.searchAll(
@@ -40,29 +40,21 @@ class BookService(
             .orElseThrow()
     }
 
-    fun initBasicBookInfoCollection(fromYear: Int, toYear: Int, lang: String) {
-        CoroutineScope(ioInitializerDispatcher).launch {
-            var page = 0
-            val limit = 10000
-            do {
-                page++
-                val response = openLibraryService.searchBooks(fromYear, toYear, lang, page, limit)
-                saveBookBasicInfo(response.docs, lang)
-            } while (response.docs.isNotEmpty())
+    @OptIn(ExperimentalUuidApi::class)
+    fun saveBookBasicInfo(bookBasicInfo: List<OpenLibraryDoc> = emptyList(), lang: String): Int {
+        return bookBasicInfo.map {
+            BookBasicInfoDocument(
+                id = (it.key + it.editionTitle()).normalize().sha256(),
+                title = it.title,
+                publicId = Uuid.generateV7().toString(),
+                key = it.key,
+                editionTitle = it.editionTitle(),
+                editionKey = it.editionKey(),
+                firstPublishYear = it.firstPublishYear,
+                lang = lang
+            )
+        }.let {
+            bookBasicInfoRepository.saveAll(it).size
         }
-        //TODO("Send email about results of the operation")
-    }
-
-    private fun saveBookBasicInfo(bookBasicInfo: List<OpenLibraryDoc> = emptyList(), lang: String) {
-        val documents = bookBasicInfo.map { BookBasicInfoDocument(
-            id = (it.key + it.editionTitle()).normalize().sha256(),
-            title = it.title,
-            key = it.key,
-            editionTitle = it.editionTitle(),
-            editionKey = it.editionKey(),
-            firstPublishYear = it.firstPublishYear,
-            lang = lang
-        ) }
-        bookBasicInfoRepository.saveAll(documents)
     }
 }

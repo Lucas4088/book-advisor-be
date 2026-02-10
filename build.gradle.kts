@@ -3,6 +3,7 @@ plugins {
     kotlin("plugin.spring") version "2.2.20"
     id("org.springframework.boot") version "4.0.2"
     id("io.spring.dependency-management") version "1.1.7"
+    id("org.jetbrains.kotlin.plugin.jpa") version "2.3.10"
 }
 
 group = "io.github.luksal"
@@ -18,6 +19,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
     implementation("org.springframework.boot:spring-boot-starter-flyway")
+    implementation("org.springframework.boot:spring-boot-starter-mail")
 
     implementation("org.postgresql:postgresql:42.7.9")
     implementation("org.flywaydb:flyway-core:12.0.0")
@@ -25,6 +27,7 @@ dependencies {
 
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
 
     implementation(platform("org.springframework.cloud:spring-cloud-dependencies:2025.1.1"))
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign")

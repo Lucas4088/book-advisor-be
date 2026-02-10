@@ -13,15 +13,19 @@ spring:
       connection-timeout: 30000
       idle-timeout: 600000
       max-lifetime: 1800000
-  jpa:
-    hibernate:
-      ddl-auto: validate
-  flyway:
-    enabled: true
-    baseline-version: 0
-    out-of-order: true
-    baseline-on-migrate: true
-    mixed: true
+  mail:
+    host: localhost
+    port: 1025
+    username: admin
+    password: admin
+    properties:
+        mail:
+            smtp:
+            auth: false
+            starttls:
+                enable: false
+            debug: true
+
   cloud:
     openfeign:
       client:
@@ -50,3 +54,8 @@ resilience4j:
 logging:
   level:
     io.github.luksal.book.openlibrary: DEBUG
+
+app:
+  mail:
+    from: noreply-book-advisor@gmail.com
+    to: lukasz4088@gmail.com

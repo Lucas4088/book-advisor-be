@@ -9,6 +9,6 @@ import java.util.concurrent.Executors
 class CoroutineDispatcherConfig {
 
     @Bean
-    fun ioInitializerDispatcher() =
+    fun customInitializerDispatcher() =
         Executors.newFixedThreadPool(4).asCoroutineDispatcher()
 }

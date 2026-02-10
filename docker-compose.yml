@@ -33,12 +33,20 @@ services:
       - "5435:5432"
     environment:
       POSTGRES_DB: book-advisor-db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
 
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: mailpit
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    environment:
+      MP_UI_AUTH: ${MAILPIT_LOGIN}:${MAILPIT_PASSWORD}
 
 volumes:
   mongo_data:

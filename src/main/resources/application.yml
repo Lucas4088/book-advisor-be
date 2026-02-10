@@ -9,3 +9,18 @@ spring:
     jpa:
       repositories:
         enabled: true
+    mongodb:
+      auto-index-creation: true
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+    baseline-version: 0
+    out-of-order: true
+    baseline-on-migrate: true
+    mixed: true
+  cloud:
+    openfeign:
+      http2client:
+        enabled: true
