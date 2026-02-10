@@ -33,6 +33,10 @@ spring:
           openLibraryClient:
             logger-level: basic
             url: https://openlibrary.org/
+          googleBooksClient:
+            logger-level: basic
+            url: https://www.googleapis.com/
+            path: books/v1/
 
 resilience4j:
   timelimiter:
@@ -59,3 +63,7 @@ app:
   mail:
     from: noreply-book-advisor@gmail.com
     to: lukasz4088@gmail.com
+  service:
+    google-books-api:
+      auth:
+        api-key: ${GOOGLE_BOOKS_API_KEY}

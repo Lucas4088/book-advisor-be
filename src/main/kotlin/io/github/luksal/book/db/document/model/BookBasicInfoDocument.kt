@@ -15,5 +15,6 @@ class BookBasicInfoDocument(
     val editionKey: String?,
     val editionTitle: String?,
     val firstPublishYear: Int?,
+    val authors: List<String>,
     val lang: String
 )

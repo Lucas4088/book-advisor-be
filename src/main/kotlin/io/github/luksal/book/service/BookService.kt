@@ -50,6 +50,7 @@ class BookService(
                 key = it.key,
                 editionTitle = it.editionTitle(),
                 editionKey = it.editionKey(),
+                authors = it.authorName ?: emptyList(),
                 firstPublishYear = it.firstPublishYear,
                 lang = lang
             )

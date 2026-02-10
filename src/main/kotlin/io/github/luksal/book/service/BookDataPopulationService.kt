@@ -9,6 +9,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -37,28 +38,30 @@ class BookDataPopulationService(
     }
 
     suspend fun populateBasicBookInfoCollection() {
-        CoroutineScope(customInitializerDispatcher).launch {
+        withContext(customInitializerDispatcher) {
             log.info("Starting book basic info collection initialization")
-            var page = 0
+
             val limit = 10000
             var totalSavedCount = 0
             var scheduled = bookBasicDataPopulationJpaRepository.findFirstByProcessedIsFalse() ?: run {
                 sendBasicBookInfoSuccessNotificationEmail(0, 0, "", totalSavedCount)
                 log.info("No scheduled tasks found for book basic info collection initialization, exiting")
-                return@launch
+                return@withContext
             }
             val fromYear = scheduled.year
             while (true) {
                 var savedCount = 0
                 try {
+                    var page = 0
                     do {
                         page++
-                        val response =
-                            openLibraryService.searchBooks(scheduled.year, scheduled.year, scheduled.lang, page, limit)
+                        val response = openLibraryService.searchBooks(scheduled.year, scheduled.year,
+                            scheduled.lang, page, limit)
                         bookService.saveBookBasicInfo(response.docs, scheduled.lang)
+
                         savedCount += response.docs.size
                         totalSavedCount += savedCount
-                        check(page != 3) { throw RuntimeException("Simulated error after 3 pages to test error handling")}
+
                     } while (response.docs.isNotEmpty())
                     bookBasicDataPopulationJpaRepository.save(scheduled.apply { processed = true })
                 } catch (e: Exception) {

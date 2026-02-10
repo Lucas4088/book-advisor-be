@@ -1,12 +1,14 @@
 package io.github.luksal.book.config
 
 import feign.FeignException
+import feign.RequestInterceptor
 import feign.Response
 import feign.RetryableException
 import feign.Retryer
 import feign.codec.ErrorDecoder
 import io.github.luksal.book.ext.logger
 import io.github.luksal.book.openlibrary.api.OpenLibraryClient
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.openfeign.EnableFeignClients
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -25,6 +27,15 @@ class FeignClientConfig {
     @Bean
     fun retryer(): Retryer =
         Retryer.NEVER_RETRY
+}
+
+@Configuration
+class FeignGoogleBooksConfig {
+    @Bean
+    fun feignAuthInterceptor(@Value("#{app.service.google-books-api-auth.api-key}") apiKey: String): RequestInterceptor =
+        RequestInterceptor { template ->
+            template.query("key", apiKey)
+        }
 }
 
 class FeignErrorDecoder : ErrorDecoder {
