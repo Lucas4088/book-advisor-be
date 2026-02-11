@@ -1,5 +1,6 @@
 package io.github.luksal.book.service
 
+import io.github.luksal.book.db.document.model.BookBasicInfoDocument
 import io.github.luksal.book.db.jpa.BookBasicDataPopulationJpaRepository
 import io.github.luksal.book.db.jpa.model.BookBasicDataPopulationScheduledYearEntity
 import io.github.luksal.book.ext.logger
@@ -40,7 +41,7 @@ class BookDataPopulationService(
         withContext(customInitializerDispatcher) {
             log.info("Starting book basic info collection initialization")
 
-            val limit = 10000
+            val limit = 5000
             var totalSavedCount = 0
             var scheduled = bookBasicDataPopulationJpaRepository.findFirstByProcessedIsFalse() ?: run {
                 sendBasicBookInfoSuccessNotificationEmail(0, 0, "", totalSavedCount)
@@ -84,11 +85,14 @@ class BookDataPopulationService(
     suspend fun populateBooksCollection() {
         withContext(customInitializerDispatcher) {
             log.info("Starting book details collection initialization")
-            bookService.getBookBasicInfo(PageRequest.of(0, 10)).content.mapNotNull {
+            val unprocessedTitles = bookService.getUnprocessedBookBasicInfo(PageRequest.of(0, 20))
+            unprocessedTitles.content.mapNotNull {
                 googleBooksService.findBookDetails(it.title, it.authors)?.items?.firstOrNull()?.toBook(it.publicId)
             }.let {
                 bookService.saveBooks(it)
             }
+            unprocessedTitles.forEach { info -> info.processed = true}
+            bookService.updateBookBasicInfo(unprocessedTitles.toList())
             log.info("Book details collection initialization completed")
         }
     }

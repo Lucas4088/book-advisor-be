@@ -55,7 +55,7 @@ resilience4j:
         max-attempts: 4
         wait-duration: 500ms
         exponential-backoff-multiplier: 2
-        exponential-max-wait-duration: 5s
+        exponential-max-wait-duration: 20s
         retry-exceptions:
           - feign.RetryableException
 

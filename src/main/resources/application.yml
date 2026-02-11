@@ -24,3 +24,8 @@ spring:
     openfeign:
       http2client:
         enabled: true
+      okhttp:
+        enabled: false
+      httpclient:
+          enabled: false
+
