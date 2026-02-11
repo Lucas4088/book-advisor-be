@@ -5,12 +5,12 @@ import io.github.luksal.book.db.document.BookBasicInfoDocumentRepository
 import io.github.luksal.book.db.document.BookDocumentRepository
 import io.github.luksal.book.db.document.model.BookBasicInfoDocument
 import io.github.luksal.book.db.jpa.BookJpaRepository
-import io.github.luksal.book.ext.logger
-import io.github.luksal.book.ext.normalize
-import io.github.luksal.book.ext.sha256
+import io.github.luksal.util.ext.logger
+import io.github.luksal.util.ext.normalize
+import io.github.luksal.util.ext.sha256
 import io.github.luksal.book.model.Book
 import io.github.luksal.book.model.toDocument
-import io.github.luksal.book.openlibrary.api.dto.OpenLibraryDoc
+import io.github.luksal.ingestion.source.openlibrary.api.dto.OpenLibraryDoc
 import io.github.luksal.book.service.dto.BookSearchCriteriaDto
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable

@@ -1,6 +1,7 @@
-package io.github.luksal.book.googlebooks.api
+package io.github.luksal.ingestion.source.googlebooks
 
-import io.github.luksal.book.googlebooks.api.dto.GoogleBooksSearchResponse
+import io.github.luksal.ingestion.source.googlebooks.api.GoogleBooksClient
+import io.github.luksal.ingestion.source.googlebooks.api.dto.GoogleBooksSearchResponse
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter
 import org.springframework.stereotype.Service
 

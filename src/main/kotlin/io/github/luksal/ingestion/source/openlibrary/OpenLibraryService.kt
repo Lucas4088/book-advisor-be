@@ -1,6 +1,7 @@
-package io.github.luksal.book.openlibrary.api
+package io.github.luksal.ingestion.source.openlibrary
 
-import io.github.luksal.book.openlibrary.api.dto.OpenLibrarySearchResponse
+import io.github.luksal.ingestion.source.openlibrary.api.OpenLibraryClient
+import io.github.luksal.ingestion.source.openlibrary.api.dto.OpenLibrarySearchResponse
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter
 import io.github.resilience4j.retry.annotation.Retry
 import org.springframework.stereotype.Service

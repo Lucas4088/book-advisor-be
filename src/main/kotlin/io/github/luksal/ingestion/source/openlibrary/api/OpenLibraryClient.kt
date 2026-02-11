@@ -1,7 +1,6 @@
-package io.github.luksal.book.openlibrary.api
+package io.github.luksal.ingestion.source.openlibrary.api
 
-import io.github.luksal.book.openlibrary.api.dto.OpenLibrarySearchResponse
-import io.github.resilience4j.ratelimiter.annotation.RateLimiter
+import io.github.luksal.ingestion.source.openlibrary.api.dto.OpenLibrarySearchResponse
 import org.springframework.cloud.openfeign.FeignClient
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestParam

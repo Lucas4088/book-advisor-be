@@ -1,4 +1,4 @@
-package io.github.luksal.book.ext
+package io.github.luksal.util.ext
 
 import java.security.MessageDigest
 

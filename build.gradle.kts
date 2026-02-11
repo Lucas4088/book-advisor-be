@@ -33,6 +33,8 @@ dependencies {
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
     implementation("io.github.resilience4j:resilience4j-spring-boot3")
 
+    implementation("org.jsoup:jsoup:1.22.1")
+
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation(kotlin("test"))
 }

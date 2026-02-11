@@ -1,4 +1,4 @@
-package io.github.luksal.book.config
+package io.github.luksal.config
 
 import feign.FeignException
 import feign.RequestInterceptor
@@ -6,16 +6,14 @@ import feign.Response
 import feign.RetryableException
 import feign.Retryer
 import feign.codec.ErrorDecoder
-import io.github.luksal.book.ext.logger
-import io.github.luksal.book.googlebooks.api.GoogleBooksClient
-import io.github.luksal.book.openlibrary.api.OpenLibraryClient
+import io.github.luksal.util.ext.logger
+import io.github.luksal.ingestion.source.googlebooks.api.GoogleBooksClient
+import io.github.luksal.ingestion.source.openlibrary.api.OpenLibraryClient
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.openfeign.EnableFeignClients
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.http.HttpStatus
 import java.io.IOException
-import java.nio.file.AccessDeniedException
 
 @Configuration
 @EnableFeignClients(clients = [OpenLibraryClient::class, GoogleBooksClient::class])

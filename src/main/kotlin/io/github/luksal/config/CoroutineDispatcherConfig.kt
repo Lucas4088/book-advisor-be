@@ -1,4 +1,4 @@
-package io.github.luksal.book.config
+package io.github.luksal.config
 
 import kotlinx.coroutines.asCoroutineDispatcher
 import org.springframework.context.annotation.Bean

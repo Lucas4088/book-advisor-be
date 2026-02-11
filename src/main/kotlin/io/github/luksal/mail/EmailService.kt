@@ -1,4 +1,4 @@
-package io.github.luksal.book.mail
+package io.github.luksal.mail
 
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.stereotype.Service

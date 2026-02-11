@@ -1,4 +1,4 @@
-package io.github.luksal.book.openlibrary.api.dto
+package io.github.luksal.ingestion.source.openlibrary.api.dto
 
 import com.fasterxml.jackson.annotation.JsonProperty
 

@@ -1,13 +1,12 @@
 package io.github.luksal.book.service
 
-import io.github.luksal.book.db.document.model.BookBasicInfoDocument
 import io.github.luksal.book.db.jpa.BookBasicDataPopulationJpaRepository
 import io.github.luksal.book.db.jpa.model.BookBasicDataPopulationScheduledYearEntity
-import io.github.luksal.book.ext.logger
-import io.github.luksal.book.googlebooks.api.GoogleBooksService
-import io.github.luksal.book.googlebooks.api.dto.toBook
-import io.github.luksal.book.mail.EmailService
-import io.github.luksal.book.openlibrary.api.OpenLibraryService
+import io.github.luksal.util.ext.logger
+import io.github.luksal.ingestion.source.googlebooks.GoogleBooksService
+import io.github.luksal.ingestion.source.googlebooks.api.dto.toBook
+import io.github.luksal.mail.EmailService
+import io.github.luksal.ingestion.source.openlibrary.OpenLibraryService
 import kotlinx.coroutines.*
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service

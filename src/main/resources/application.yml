@@ -27,5 +27,47 @@ spring:
       okhttp:
         enabled: false
       httpclient:
-          enabled: false
+        enabled: false
+
+app:
+  crawlers:
+    - name: goodreads
+      enabled: true
+      base-url: https://www.goodreads.com
+      rate-limit:
+        requests-per-minute: 30
+        burst: 5
+      headers:
+        user-agent: Mozilla/5.0
+        accept-language: en-US
+      path:
+        book-result-selector: "h3 > a[href^=/books/]"
+        search: /search?q={formattedTitle}
+        title-space-separator: +
+    - name: amazon-books
+      enabled: true
+      base-url: https://www.amazon.com
+      rate-limit:
+        requests-per-minute: 30
+        burst: 5
+      headers:
+        user-agent: Mozilla/5.0
+        accept-language: en-US
+      path:
+        search: /s?k={formattedTitle}&i=stripbooks
+        title-space-separator: +
+    - name: the-story-graph
+      enabled: true
+      base-url: https://app.thestorygraph.com
+      rate-limit:
+        requests-per-minute: 30
+        burst: 5
+      headers:
+        user-agent: Mozilla/5.0
+        accept-language: en-US
+      path:
+        search: /browse?search_term=
+        title-space-separator: +
+
+
 
