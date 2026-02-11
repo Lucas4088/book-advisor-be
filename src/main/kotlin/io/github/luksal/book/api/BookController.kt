@@ -40,4 +40,9 @@ class BookController(
     suspend fun populateBasicBookInfoCollection() {
         return bookDataPopulationService.populateBasicBookInfoCollection()
     }
+
+    @PostMapping(path = ["/populate"])
+    suspend fun populateBooksCollection() {
+        return bookDataPopulationService.populateBooksCollection()
+    }
 }

@@ -7,6 +7,7 @@ import feign.RetryableException
 import feign.Retryer
 import feign.codec.ErrorDecoder
 import io.github.luksal.book.ext.logger
+import io.github.luksal.book.googlebooks.api.GoogleBooksClient
 import io.github.luksal.book.openlibrary.api.OpenLibraryClient
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.openfeign.EnableFeignClients
@@ -17,7 +18,7 @@ import java.io.IOException
 import java.nio.file.AccessDeniedException
 
 @Configuration
-@EnableFeignClients(clients = [OpenLibraryClient::class])
+@EnableFeignClients(clients = [OpenLibraryClient::class, GoogleBooksClient::class])
 class FeignClientConfig {
 
     @Bean
@@ -32,7 +33,7 @@ class FeignClientConfig {
 @Configuration
 class FeignGoogleBooksConfig {
     @Bean
-    fun feignAuthInterceptor(@Value("#{app.service.google-books-api-auth.api-key}") apiKey: String): RequestInterceptor =
+    fun feignAuthInterceptor(@Value($$"${app.service.google-books-api.auth.api-key}") apiKey: String): RequestInterceptor =
         RequestInterceptor { template ->
             template.query("key", apiKey)
         }

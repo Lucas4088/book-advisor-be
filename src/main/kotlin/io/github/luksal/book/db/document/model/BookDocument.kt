@@ -1,17 +1,17 @@
 package io.github.luksal.book.db.document.model
 
 import org.springframework.data.annotation.Id
+import org.springframework.data.mongodb.core.index.Indexed
 import org.springframework.data.mongodb.core.mapping.Document
 import java.math.BigDecimal
 
 @Document(collection = "books")
 class BookDocument(
     @Id
-    val id: String? = null,
-
+    val id: String,
     val title: String,
     val description: String,
-    val publishingYear: Int,
+    val publishingYear: Int?,
     val pageCount: Int,
 
     val thumbnailUrl: String,
@@ -33,6 +33,7 @@ data class GenreEmbedded(
 )
 
 data class RatingEmbedded(
+    val id: Long,
     val rating: BigDecimal,
     val count: Int,
     val source: RatingSourceEmbedded

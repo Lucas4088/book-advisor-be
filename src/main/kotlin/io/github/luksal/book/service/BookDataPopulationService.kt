@@ -3,21 +3,20 @@ package io.github.luksal.book.service
 import io.github.luksal.book.db.jpa.BookBasicDataPopulationJpaRepository
 import io.github.luksal.book.db.jpa.model.BookBasicDataPopulationScheduledYearEntity
 import io.github.luksal.book.ext.logger
+import io.github.luksal.book.googlebooks.api.GoogleBooksService
+import io.github.luksal.book.googlebooks.api.dto.toBook
 import io.github.luksal.book.mail.EmailService
 import io.github.luksal.book.openlibrary.api.OpenLibraryService
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
+import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 
 @Service
 class BookDataPopulationService(
     private val bookService: BookService,
     private val bookBasicDataPopulationJpaRepository: BookBasicDataPopulationJpaRepository,
     private val openLibraryService: OpenLibraryService,
+    private val googleBooksService: GoogleBooksService,
     private val customInitializerDispatcher: CoroutineDispatcher,
     private val emailService: EmailService
 ) {
@@ -55,8 +54,10 @@ class BookDataPopulationService(
                     var page = 0
                     do {
                         page++
-                        val response = openLibraryService.searchBooks(scheduled.year, scheduled.year,
-                            scheduled.lang, page, limit)
+                        val response = openLibraryService.searchBooks(
+                            scheduled.year, scheduled.year,
+                            scheduled.lang, page, limit
+                        )
                         bookService.saveBookBasicInfo(response.docs, scheduled.lang)
 
                         savedCount += response.docs.size
@@ -72,12 +73,23 @@ class BookDataPopulationService(
                         savedCount,
                         e.message ?: "Unknown error"
                     )
-                    throw e
                 }
                 scheduled = bookBasicDataPopulationJpaRepository.findFirstByProcessedIsFalse() ?: break
             }
             sendBasicBookInfoSuccessNotificationEmail(fromYear, scheduled.year, scheduled.lang, totalSavedCount)
             log.info("Book basic info collection initialization completed")
+        }
+    }
+
+    suspend fun populateBooksCollection() {
+        withContext(customInitializerDispatcher) {
+            log.info("Starting book details collection initialization")
+            bookService.getBookBasicInfo(PageRequest.of(0, 10)).content.mapNotNull {
+                googleBooksService.findBookDetails(it.title, it.authors)?.items?.firstOrNull()?.toBook(it.publicId)
+            }.let {
+                bookService.saveBooks(it)
+            }
+            log.info("Book details collection initialization completed")
         }
     }
 

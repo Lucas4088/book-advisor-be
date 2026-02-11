@@ -36,28 +36,33 @@ spring:
           googleBooksClient:
             logger-level: basic
             url: https://www.googleapis.com/
-            path: books/v1/
 
 resilience4j:
-  timelimiter:
+  ratelimiter:
     instances:
       search-openLibraryRateLimiter:
         limitForPeriod: 20
         limitRefreshPeriod: 6s
         timeoutDuration: 1s
+      search-googleBooksRateLimiter:
+        limitForPeriod: 90
+        limitRefreshPeriod: 60s
+        timeoutDuration: 1s
+
   retry:
     instances:
       search-openLibraryRetry:
         max-attempts: 4
         wait-duration: 500ms
         exponential-backoff-multiplier: 2
-        max-wait-duration: 5s
+        exponential-max-wait-duration: 5s
         retry-exceptions:
           - feign.RetryableException
 
 logging:
   level:
     io.github.luksal.book.openlibrary: DEBUG
+    io.github.luksal.book.googlebooks: DEBUG
 
 app:
   mail:

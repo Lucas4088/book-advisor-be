@@ -5,4 +5,4 @@ import org.springframework.data.mongodb.repository.MongoRepository
 import org.springframework.stereotype.Repository
 
 @Repository
-interface BookBasicInfoRepository : MongoRepository<BookBasicInfoDocument, String>
+interface BookBasicInfoDocumentRepository : MongoRepository<BookBasicInfoDocument, String>

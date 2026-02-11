@@ -4,7 +4,7 @@ import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.index.Indexed
 import org.springframework.data.mongodb.core.mapping.Document
 
-@Document(collection = "book-basic-info-documents")
+@Document(collection = "book-basic-info")
 class BookBasicInfoDocument(
     @Id
     val id: String,
@@ -15,6 +15,6 @@ class BookBasicInfoDocument(
     val editionKey: String?,
     val editionTitle: String?,
     val firstPublishYear: Int?,
-    val authors: List<String>,
+    val authors: List<String> = emptyList(),
     val lang: String
 )

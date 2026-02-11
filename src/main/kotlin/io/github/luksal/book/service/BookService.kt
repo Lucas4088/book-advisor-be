@@ -1,13 +1,15 @@
 package io.github.luksal.book.service
 
 import io.github.luksal.book.api.dto.BookSearchResponse
-import io.github.luksal.book.db.document.BookBasicInfoRepository
+import io.github.luksal.book.db.document.BookBasicInfoDocumentRepository
 import io.github.luksal.book.db.document.BookDocumentRepository
 import io.github.luksal.book.db.document.model.BookBasicInfoDocument
 import io.github.luksal.book.db.jpa.BookJpaRepository
 import io.github.luksal.book.ext.logger
 import io.github.luksal.book.ext.normalize
 import io.github.luksal.book.ext.sha256
+import io.github.luksal.book.model.Book
+import io.github.luksal.book.model.toDocument
 import io.github.luksal.book.openlibrary.api.dto.OpenLibraryDoc
 import io.github.luksal.book.service.dto.BookSearchCriteriaDto
 import org.springframework.data.domain.Page
@@ -19,7 +21,7 @@ import kotlin.uuid.Uuid
 @Service
 class BookService(
     private val bookJpaRepository: BookJpaRepository,
-    private val bookBasicInfoRepository: BookBasicInfoRepository,
+    private val bookBasicInfoDocumentRepository: BookBasicInfoDocumentRepository,
     private val bookDocumentRepository: BookDocumentRepository
 ) {
 
@@ -40,6 +42,10 @@ class BookService(
             .orElseThrow()
     }
 
+    fun saveBooks(books: List<Book>) {
+        bookDocumentRepository.saveAll(books.map { it.toDocument() })
+    }
+
     @OptIn(ExperimentalUuidApi::class)
     fun saveBookBasicInfo(bookBasicInfo: List<OpenLibraryDoc> = emptyList(), lang: String): Int {
         return bookBasicInfo.map {
@@ -55,7 +61,11 @@ class BookService(
                 lang = lang
             )
         }.let {
-            bookBasicInfoRepository.saveAll(it).size
+            bookBasicInfoDocumentRepository.saveAll(it).size
         }
+    }
+
+    fun getBookBasicInfo(page: Pageable): Page<BookBasicInfoDocument> {
+        return bookBasicInfoDocumentRepository.findAll(page)
     }
 }
