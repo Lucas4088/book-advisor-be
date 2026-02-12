@@ -21,7 +21,7 @@ data class BookItem(
 )
 
 fun BookItem.toBook(publicId: String): Book = Book(
-    publicId = publicId,
+    id = publicId,
     title = volumeInfo.title,
     description = volumeInfo.description ?: "",
     publishingYear = volumeInfo.publishedDate?.take(4)?.toIntOrNull()?.let { Year.of(it) },

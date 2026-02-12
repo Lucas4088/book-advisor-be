@@ -1,5 +1,6 @@
 package io.github.luksal.book.db.jpa.model
 
+import io.github.luksal.book.api.dto.BookSearchResponse
 import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
@@ -18,7 +19,7 @@ class BookEntity(
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null,
+    val id: String? = null,
 
     @Column(nullable = false)
     val title: String,
@@ -52,4 +53,12 @@ class BookEntity(
 
     @OneToMany(mappedBy = "book", cascade = [CascadeType.ALL], orphanRemoval = true)
     val ratings: MutableList<RatingEntity> = mutableListOf()
-)
+) {
+    companion object {
+        fun toSearchResponse(book: BookEntity): BookSearchResponse = BookSearchResponse(
+            id = book.id,
+            title = book.title,
+            smallThumbnailUrl = book.smallThumbnailUrl
+        )
+    }
+}

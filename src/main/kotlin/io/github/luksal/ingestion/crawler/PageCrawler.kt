@@ -10,9 +10,10 @@ class PageCrawler {
     fun extractBookPageLink(html: String, crawlerSpecification: CrawlerSpecification): String? {
         val doc = Jsoup.parse(html)
 
+        //TODO handle element not found
         return doc.select(crawlerSpecification.path.bookResultSelector)
-            ?.map{"${crawlerSpecification.baseUrl}${it.attr("href")}"}
-            ?.first()
+            .map{"${crawlerSpecification.baseUrl}${it.attr("href")}"}
+            .firstOrNull()
     }
 }
 

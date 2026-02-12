@@ -1,5 +1,5 @@
 CREATE TABLE books (
-                       id BIGSERIAL PRIMARY KEY,
+                       id VARCHAR(36) PRIMARY KEY,
                        title VARCHAR(255) NOT NULL,
                        description TEXT,
                        publishing_year INT NOT NULL,
@@ -20,7 +20,7 @@ CREATE TABLE genres (
 );
 
 CREATE TABLE book_authors (
-                              book_id BIGINT NOT NULL,
+                              book_id VARCHAR(36) NOT NULL,
                               author_id BIGINT NOT NULL,
 
                               PRIMARY KEY (book_id, author_id),
@@ -38,7 +38,7 @@ CREATE TABLE book_authors (
 CREATE INDEX idx_book_authors_author_id ON book_authors(author_id);
 
 CREATE TABLE book_genres (
-                             book_id BIGINT NOT NULL,
+                             book_id VARCHAR(36) NOT NULL,
                              genre_id BIGINT NOT NULL,
 
                              PRIMARY KEY (book_id, genre_id),
@@ -63,7 +63,7 @@ CREATE TABLE rating_sources (
 
 CREATE TABLE ratings (
                          id BIGSERIAL PRIMARY KEY,
-                         book_id BIGINT NOT NULL,
+                         book_id VARCHAR(36) NOT NULL,
                          source_id INT NOT NULL,
 
                          rating NUMERIC(3,2) NOT NULL,

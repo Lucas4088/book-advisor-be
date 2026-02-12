@@ -3,7 +3,7 @@ package io.github.luksal.config
 import org.springframework.boot.context.properties.ConfigurationProperties
 
 @ConfigurationProperties(prefix = "app")
-data class AppProperties(
+data class CrawlerProperties(
     val crawlers: List<CrawlerSpecification>
 )
 
@@ -25,4 +25,10 @@ data class Path(
     val bookResultSelector: String,
     val search: String,
     val titleSpaceSeparator: String
+)
+
+@ConfigurationProperties(prefix = "app.scraping.proxy")
+data class ScrapingProxyProperties(
+    var url: String = "",
+    var apiKey: String? = null
 )

@@ -5,7 +5,7 @@ import io.github.luksal.book.service.dto.BookSearchCriteriaDto
 
 data class BookSearchCriteriaRequest(
     val title: String?,
-    val genres: Set<Genre> = emptySet(),
+    val genres: List<Genre> = emptyList(),
     val publishedYearRange: PublishedYearRange
 ) {
     fun toServiceDto(): BookSearchCriteriaDto = BookSearchCriteriaDto(
