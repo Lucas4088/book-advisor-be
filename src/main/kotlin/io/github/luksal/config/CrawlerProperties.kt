@@ -13,7 +13,8 @@ data class CrawlerSpecification(
     val baseUrl: String,
     val rateLimit: RateLimit,
     val headers: Map<String, String> = emptyMap(),
-    val path: Path
+    val path: Path,
+    val proxyEnabled: Boolean
 )
 
 data class RateLimit(
@@ -23,6 +24,8 @@ data class RateLimit(
 
 data class Path(
     val bookResultSelector: String,
+    val bookRatingScoreSelector: String,
+    val bookRatingCountSelector: String,
     val search: String,
     val titleSpaceSeparator: String
 )

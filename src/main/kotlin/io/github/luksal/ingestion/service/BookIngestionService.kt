@@ -1,5 +1,7 @@
 package io.github.luksal.ingestion.service
 
+import io.github.luksal.book.model.Rating
+import io.github.luksal.book.model.RatingSource
 import io.github.luksal.book.service.BookService
 import io.github.luksal.book.service.dto.BookSearchCriteriaDto
 import io.github.luksal.config.CrawlerProperties
@@ -9,6 +11,7 @@ import io.github.luksal.ingestion.fetcher.HttpFetcher
 import io.github.luksal.util.ext.logger
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
+import java.math.BigDecimal
 import java.net.URLEncoder
 
 @Service
@@ -22,6 +25,8 @@ class BookIngestionService(
 
     val log = logger()
 
+    //TODO split into mathods and component to make it more fault tolerant and testable
+    //TODO worker per crawler source???
     fun crawlAndIngest() {
         bookService.searchBooks(
             BookSearchCriteriaDto(publishedYearRange = 2000..2024),
@@ -32,14 +37,24 @@ class BookIngestionService(
                 val searchTitle = book.title/*.replace(" ", crawlerSpec.path.titleSpaceSeparator)*/
                     .let { URLEncoder.encode(it, "UTF-8") }
                 val searchPath = crawlerSpec.path.search.replace("{formattedTitle}", searchTitle)
-                val proxiedUrl = scrapingProxyProperties.url + "?url=" + URLEncoder.encode("${crawlerSpec.baseUrl}${searchPath}", "UTF-8") +
-                        (scrapingProxyProperties.apiKey?.let { "&x-api-key=$it" } ?: "") + "&browser=false"
-                val searchPageHtml = fetcher.fetch(proxiedUrl)
+                val searchUrl = "${crawlerSpec.baseUrl}$searchPath"
+                val proxiedSearchUrl = scrapingProxyProperties.url + "?url=" + "${crawlerSpec.baseUrl}${searchPath}"
+                val fetchUrl = if (crawlerSpec.proxyEnabled) proxiedSearchUrl else searchUrl
+
+                val searchPageHtml = fetcher.fetch(fetchUrl)
 
                 val bookPage = pageCrawler.extractBookPageLink(searchPageHtml, crawlerSpec)?.let {
                     log.info(it)
-                    fetcher.fetch(it)
+                    val bookDetailsPage = fetcher.fetch(it)
+                    val rating = Rating(
+                        0,
+                        pageCrawler.extractRatingScore(bookDetailsPage, crawlerSpec) ?: BigDecimal.ZERO,
+                        pageCrawler.extractRatingCount(bookDetailsPage, crawlerSpec) ?: 0,
+                        RatingSource(0, crawlerSpec.name, it)
+                    )
+                    log.info(rating.toString())
                 }
+
             }
         }
     }

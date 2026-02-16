@@ -72,5 +72,3 @@ app:
     google-books-api:
       auth:
         api-key: ${GOOGLE_BOOKS_API_KEY}
-
-https://github.com/ZFC-Digital/cf-clearance-scraper
