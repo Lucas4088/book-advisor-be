@@ -3,10 +3,9 @@ package io.github.luksal.ingestion.fetcher
 import io.github.luksal.util.ext.logger
 import org.jsoup.Jsoup
 import org.springframework.stereotype.Component
-import java.net.Proxy
 
 @Component
-class HttpFetcher {
+class PageFetcher {
 
     companion object {
         val log = logger()

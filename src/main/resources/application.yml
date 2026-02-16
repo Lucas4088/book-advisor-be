@@ -22,12 +22,10 @@ spring:
     mixed: true
   cloud:
     openfeign:
-      http2client:
-        enabled: true
-      okhttp:
-        enabled: false
       httpclient:
-        enabled: false
+        max-connections: 5
+        max-connections-per-route: 1
+        connection-timeout: 10000
 
 app:
   scraping:
@@ -36,7 +34,7 @@ app:
       api-key: ${SCRAPING_PROXY_API_KEY}
   crawlers:
     - name: goodreads
-      enabled: true
+      enabled: false
       base-url: https://www.goodreads.com
       rate-limit:
         requests-per-minute: 30
@@ -62,7 +60,7 @@ app:
         title-space-separator: +
       proxy-enabled: true
     - name: the-story-graph
-      enabled: true
+      enabled: false
       base-url: https://app.thestorygraph.com
       rate-limit:
         requests-per-minute: 30

@@ -5,9 +5,11 @@ import io.github.luksal.book.db.document.bookbasicinfo.repository.BookBasicInfoD
 import io.github.luksal.book.db.document.book.repository.BookDocumentRepository
 import io.github.luksal.book.db.document.bookbasicinfo.BookBasicInfoDocument
 import io.github.luksal.book.db.document.book.BookDocument
+import io.github.luksal.book.db.document.book.RatingEmbedded
 import io.github.luksal.book.db.jpa.BookJpaRepository
 import io.github.luksal.book.db.jpa.model.BookEntity
 import io.github.luksal.book.model.Book
+import io.github.luksal.book.model.Rating
 import io.github.luksal.book.service.dto.BookSearchCriteriaDto
 import io.github.luksal.ingestion.source.openlibrary.api.dto.OpenLibraryDoc
 import io.github.luksal.util.ext.logger
@@ -54,6 +56,9 @@ class BookService(
         }
         bulkSaveNoDuplicatesBooks(books)
     }
+
+    fun updateBookRating(bookId: String, rating: Rating): String? =
+        bookDocumentRepository.updateRating(bookId, RatingEmbedded.fromModel(rating))
 
     fun saveBookBasicInfo(bookBasicInfo: List<OpenLibraryDoc>, lang: String): Int {
         return bookBasicInfo.map { it.toBasicInfoDocument(lang) }.let {

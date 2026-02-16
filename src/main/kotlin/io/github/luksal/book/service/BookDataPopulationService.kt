@@ -36,8 +36,8 @@ class BookDataPopulationService(
         }.let { bookBasicDataPopulationJpaRepository.saveAll(it) }
     }
 
-    suspend fun populateBasicBookInfoCollection() {
-        withContext(customInitializerDispatcher) {
+    fun populateBasicBookInfoCollection() {
+        CoroutineScope(customInitializerDispatcher).launch {
             log.info("Starting book basic info collection initialization")
 
             val limit = 5000
@@ -45,7 +45,7 @@ class BookDataPopulationService(
             var scheduled = bookBasicDataPopulationJpaRepository.findFirstByProcessedIsFalse() ?: run {
                 sendBasicBookInfoSuccessNotificationEmail(0, 0, "", totalSavedCount)
                 log.info("No scheduled tasks found for book basic info collection initialization, exiting")
-                return@withContext
+                return@launch
             }
             val fromYear = scheduled.year
             while (true) {
@@ -81,8 +81,8 @@ class BookDataPopulationService(
         }
     }
 
-    suspend fun populateBooksCollection() {
-        withContext(customInitializerDispatcher) {
+    fun populateBooksCollection() {
+        CoroutineScope(customInitializerDispatcher).launch {
             log.info("Starting book details collection initialization")
             var pageNumber = 0
             val pageSize = 50
@@ -90,7 +90,7 @@ class BookDataPopulationService(
                 val unprocessedTitles = bookService.getUnprocessedBookBasicInfo(PageRequest.of(pageNumber, pageSize))
 
                 unprocessedTitles.content.mapNotNull {
-                    googleBooksService.findBookDetails(it.title, it.authors)?.items?.firstOrNull()?.toBook(it.publicId)
+                    googleBooksService.findBookDetails(it.title, it.authors)?.items?.firstOrNull()?.toBook(it.publicId, it.editionTitle, it.lang)
                 }.let {
                     bookService.saveBooks(it)
                 }
@@ -98,7 +98,6 @@ class BookDataPopulationService(
                 bookService.updateBookBasicInfo(unprocessedTitles.toList())
                 pageNumber++
             } while (!unprocessedTitles.isLast)
-
             log.info("Book details collection initialization completed")
         }
     }

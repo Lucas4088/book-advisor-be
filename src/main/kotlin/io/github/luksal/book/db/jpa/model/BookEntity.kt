@@ -56,7 +56,7 @@ class BookEntity(
 ) {
     companion object {
         fun toSearchResponse(book: BookEntity): BookSearchResponse = BookSearchResponse(
-            id = book.id,
+            id = book.id!!,
             title = book.title,
             smallThumbnailUrl = book.smallThumbnailUrl
         )

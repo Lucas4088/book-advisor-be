@@ -8,7 +8,7 @@ import java.math.BigDecimal
 @Component
 class PageCrawler {
 
-    fun extractBookPageLink(html: String, crawlerSpecification: CrawlerSpecification): String? {
+    fun extractBookPageUrl(html: String, crawlerSpecification: CrawlerSpecification): String? {
         val doc = Jsoup.parse(html)
 
         //TODO handle element not found
@@ -28,11 +28,11 @@ class PageCrawler {
 
     fun extractRatingCount(html: String, crawlerSpecification: CrawlerSpecification): Int? {
         val doc = Jsoup.parse(html)
-        val regex = Regex("""\d{1,3}(?:,\d{3})*""")
+        val regex = Regex("""\d+""")
 
         return doc.selectFirst(crawlerSpecification.path.bookRatingCountSelector)
             //Todo nie dziaa dla goodreads
-            ?.firstNotNullOfOrNull { regex.find(it.text().trim())?.value?.toIntOrNull() }
+            ?.firstNotNullOfOrNull { regex.find(it.text().trim().replace(Regex("""[.,]"""), ""))?.value?.toIntOrNull() }
     }
 }
 

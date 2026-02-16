@@ -2,8 +2,11 @@ package io.github.luksal.ingestion.source.googlebooks.api.dto
 
 import io.github.luksal.book.model.Author
 import io.github.luksal.book.model.Book
+import io.github.luksal.book.model.BookEdition
 import io.github.luksal.book.model.Genre
 import java.time.Year
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 data class GoogleBooksSearchResponse(
     val kind: String?,
@@ -20,15 +23,23 @@ data class BookItem(
     val searchInfo: SearchInfo?
 )
 
-fun BookItem.toBook(publicId: String): Book = Book(
+@OptIn(ExperimentalUuidApi::class)
+fun BookItem.toBook(publicId: String, editionTitle: String?, lang: String): Book = Book(
     id = publicId,
     title = volumeInfo.title,
     description = volumeInfo.description ?: "",
     publishingYear = volumeInfo.publishedDate?.take(4)?.toIntOrNull()?.let { Year.of(it) },
     pageCount = volumeInfo.pageCount ?: 0,
+    edition = editionTitle?.let { BookEdition(it, lang) },
     thumbnailUrl = volumeInfo.imageLinks?.thumbnail ?: "",
     smallThumbnailUrl = volumeInfo.imageLinks?.smallThumbnail ?: "",
-    authors = volumeInfo.authors?.mapIndexed { idx, name -> Author(id = idx.toLong(), name = name) } ?: emptyList(),
+    authors = volumeInfo.authors?.mapIndexed { idx, name ->
+        Author(
+            id = idx.toLong(),
+            publicId = Uuid.generateV7().toString(),
+            name = name
+        )
+    } ?: emptyList(),
     genres = volumeInfo.categories?.mapIndexed { idx, name -> Genre(id = idx.toLong(), name = name) } ?: emptyList(),
     ratings = emptyList()
 )
