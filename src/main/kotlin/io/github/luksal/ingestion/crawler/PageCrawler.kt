@@ -21,8 +21,7 @@ class PageCrawler {
         val doc = Jsoup.parse(html)
         val regex = Regex("""\d+[.,]\d+""")
 
-        return doc.select(crawlerSpecification.path.bookRatingScoreSelector)
-            .firstOrNull()
+        return doc.selectFirst(crawlerSpecification.path.bookRatingScoreSelector)
             ?.text()
             ?.toBigDecimalOrNull()
     }
@@ -31,11 +30,9 @@ class PageCrawler {
         val doc = Jsoup.parse(html)
         val regex = Regex("""\d{1,3}(?:,\d{3})*""")
 
-        return doc.select(crawlerSpecification.path.bookRatingCountSelector)
-            .firstOrNull()
-            ?.text()
-            ?.mapNotNull { regex.find(it.toString().trim())?.value?.toIntOrNull() }
-            ?.firstOrNull()
+        return doc.selectFirst(crawlerSpecification.path.bookRatingCountSelector)
+            //Todo nie dziaa dla goodreads
+            ?.firstNotNullOfOrNull { regex.find(it.text().trim())?.value?.toIntOrNull() }
     }
 }
 

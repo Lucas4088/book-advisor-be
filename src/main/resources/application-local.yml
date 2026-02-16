@@ -45,8 +45,8 @@ resilience4j:
         limitRefreshPeriod: 6s
         timeoutDuration: 1s
       search-googleBooksRateLimiter:
-        limitForPeriod: 90
-        limitRefreshPeriod: 60s
+        limitForPeriod: 120
+        limitRefreshPeriod: 120s
         timeoutDuration: 1s
 
   retry:

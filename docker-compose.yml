@@ -39,6 +39,16 @@ services:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
 
+  postgres-admin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    ports:
+      - "9090:9090"
+    environment:
+      PGADMIN_LISTEN_PORT: 9090
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+
   mailpit:
     image: axllent/mailpit:latest
     container_name: mailpit

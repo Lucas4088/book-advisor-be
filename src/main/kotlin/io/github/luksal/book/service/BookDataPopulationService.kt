@@ -84,14 +84,21 @@ class BookDataPopulationService(
     suspend fun populateBooksCollection() {
         withContext(customInitializerDispatcher) {
             log.info("Starting book details collection initialization")
-            val unprocessedTitles = bookService.getUnprocessedBookBasicInfo(PageRequest.of(0, 20))
-            unprocessedTitles.content.mapNotNull {
-                googleBooksService.findBookDetails(it.title, it.authors)?.items?.firstOrNull()?.toBook(it.publicId)
-            }.let {
-                bookService.saveBooks(it)
-            }
-            unprocessedTitles.forEach { info -> info.processed = true}
-            bookService.updateBookBasicInfo(unprocessedTitles.toList())
+            var pageNumber = 0
+            val pageSize = 50
+            do {
+                val unprocessedTitles = bookService.getUnprocessedBookBasicInfo(PageRequest.of(pageNumber, pageSize))
+
+                unprocessedTitles.content.mapNotNull {
+                    googleBooksService.findBookDetails(it.title, it.authors)?.items?.firstOrNull()?.toBook(it.publicId)
+                }.let {
+                    bookService.saveBooks(it)
+                }
+                unprocessedTitles.forEach { info -> info.processed = true}
+                bookService.updateBookBasicInfo(unprocessedTitles.toList())
+                pageNumber++
+            } while (!unprocessedTitles.isLast)
+
             log.info("Book details collection initialization completed")
         }
     }
