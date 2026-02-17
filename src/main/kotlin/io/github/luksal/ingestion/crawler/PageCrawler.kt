@@ -19,8 +19,6 @@ class PageCrawler {
 
     fun extractRatingScore(html: String, crawlerSpecification: CrawlerSpecification): BigDecimal? {
         val doc = Jsoup.parse(html)
-        val regex = Regex("""\d+[.,]\d+""")
-
         return doc.selectFirst(crawlerSpecification.path.bookRatingScoreSelector)
             ?.text()
             ?.toBigDecimalOrNull()
@@ -31,7 +29,6 @@ class PageCrawler {
         val regex = Regex("""\d+""")
 
         return doc.selectFirst(crawlerSpecification.path.bookRatingCountSelector)
-            //Todo nie dziaa dla goodreads
             ?.firstNotNullOfOrNull { regex.find(it.text().trim().replace(Regex("""[.,]"""), ""))?.value?.toIntOrNull() }
     }
 }

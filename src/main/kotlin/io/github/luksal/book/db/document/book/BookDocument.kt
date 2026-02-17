@@ -23,9 +23,9 @@ class BookDocument(
     val thumbnailUrl: String,
     val smallThumbnailUrl: String,
 
-    val authors: List<AuthorEmbedded>,
-    val genres: List<GenreEmbedded>,
-    val ratings: Set<RatingEmbedded>
+    val authors: List<AuthorEmbedded>? = emptyList(),
+    val genres: List<GenreEmbedded>? = emptyList(),
+    val ratings: Set<RatingEmbedded>? = emptySet()
 ) {
     companion object {
         fun fromModel(book: Book): BookDocument = BookDocument(
@@ -65,7 +65,7 @@ data class EditionEmbedded(
 }
 
 data class AuthorEmbedded(
-    val publicId: String,
+    val publicId: String?,
     val name: String
 )
 

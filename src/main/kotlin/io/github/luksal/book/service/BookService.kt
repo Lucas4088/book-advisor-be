@@ -11,8 +11,9 @@ import io.github.luksal.book.db.jpa.model.BookEntity
 import io.github.luksal.book.model.Book
 import io.github.luksal.book.model.Rating
 import io.github.luksal.book.service.dto.BookSearchCriteriaDto
-import io.github.luksal.ingestion.source.openlibrary.api.dto.OpenLibraryDoc
+import io.github.luksal.integration.source.openlibrary.api.dto.OpenLibraryDoc
 import io.github.luksal.util.ext.logger
+import jdk.jfr.Description
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -57,8 +58,12 @@ class BookService(
         bulkSaveNoDuplicatesBooks(books)
     }
 
+    //TODO single update method with Book model
     fun updateBookRating(bookId: String, rating: Rating): String? =
         bookDocumentRepository.updateRating(bookId, RatingEmbedded.fromModel(rating))
+
+    fun updateBookDescription(bookId: String, description: String): String? =
+        bookDocumentRepository.updateDescription(bookId, description)
 
     fun saveBookBasicInfo(bookBasicInfo: List<OpenLibraryDoc>, lang: String): Int {
         return bookBasicInfo.map { it.toBasicInfoDocument(lang) }.let {

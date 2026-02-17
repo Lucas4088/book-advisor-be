@@ -1,4 +1,4 @@
-package io.github.luksal.ingestion.source.googlebooks.api.dto
+package io.github.luksal.integration.source.googlebooks.api.dto
 
 import io.github.luksal.book.model.Author
 import io.github.luksal.book.model.Book

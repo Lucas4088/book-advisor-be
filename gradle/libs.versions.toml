@@ -1,0 +1,57 @@
+[versions]
+kotlin = "2.3.0"
+kotlin-spring = "2.2.20"
+kotlin-jpa = "2.3.10"
+
+spring-boot = "4.0.2"
+spring-dependency-management = "1.1.7"
+spring-cloud = "2025.1.1"
+
+postgresql = "42.7.9"
+flyway = "12.0.0"
+
+graphql-kotlin = "8.8.1"
+resilience4j = "2.2.0"
+jsoup = "1.22.1"
+
+[libraries]
+# Spring Boot Starters
+spring-boot-starter = { module = "org.springframework.boot:spring-boot-starter" }
+spring-boot-starter-web = { module = "org.springframework.boot:spring-boot-starter-web" }
+spring-boot-starter-data-jpa = { module = "org.springframework.boot:spring-boot-starter-data-jpa" }
+spring-boot-starter-data-mongodb = { module = "org.springframework.boot:spring-boot-starter-data-mongodb" }
+spring-boot-starter-flyway = { module = "org.springframework.boot:spring-boot-starter-flyway" }
+spring-boot-starter-mail = { module = "org.springframework.boot:spring-boot-starter-mail" }
+spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
+
+# Database
+postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
+flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
+flyway-postgres = { module = "org.flywaydb:flyway-database-postgresql" }
+
+# Kotlin
+kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
+kotlin-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core" }
+kotlin-coroutines-reactor = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactor" }
+
+# Spring Cloud
+spring-cloud-openfeign = { module = "org.springframework.cloud:spring-cloud-starter-openfeign" }
+
+# GraphQL
+graphql-kotlin-client = { module = "com.expediagroup:graphql-kotlin-spring-client", version.ref = "graphql-kotlin" }
+
+# Resilience4j
+resilience4j-spring-boot = { module = "io.github.resilience4j:resilience4j-spring-boot3", version.ref = "resilience4j" }
+
+# Jsoup
+jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
+
+[bundles]
+spring-boot-starters = [
+    "spring-boot-starter",
+    "spring-boot-starter-web",
+    "spring-boot-starter-data-jpa",
+    "spring-boot-starter-data-mongodb",
+    "spring-boot-starter-flyway",
+    "spring-boot-starter-mail"
+]

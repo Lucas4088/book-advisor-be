@@ -1,0 +1,69 @@
+package io.github.luksal.integration.source.openlibrary.api.dto
+
+data class OpenLibraryBookDetails(
+    val description: String? = null,
+    val links: List<Link>? = emptyList(),
+    val title: String?,
+    val covers: List<Long>? = emptyList(),
+    val subjectPlaces: List<String>? = emptyList(),
+    val subjectPeople: List<String>? = emptyList(),
+    val key: String,
+    val authors: List<AuthorRole>? = emptyList(),
+    val subjects: List<String>? = emptyList(),
+    val subjectTimes: List<String>? = emptyList(),
+    val latestRevision: Int? = null,
+    val revision: Int? = null,
+    val created: DateValue? = null,
+    val lastModified: DateValue? = null
+) {
+    override fun toString(): String =
+        buildString {
+            appendLine("Title: ${title ?: "N/A"}")
+            appendLine()
+
+            appendLine("Description:")
+            appendLine(description ?: "N/A")
+            appendLine()
+
+            appendLine("Authors:")
+            authors?.forEach {
+                appendLine("- ${it.author?.key}")
+            } ?: appendLine("N/A")
+            appendLine()
+
+            appendLine("Subjects:")
+            subjects?.forEach {
+                appendLine("- $it")
+            } ?: appendLine("N/A")
+        }
+}
+
+data class Link(
+    val title: String?,
+    val url: String?,
+    val type: TypeRef?
+)
+
+data class AuthorRole(
+    val author: KeyRef?,
+    val type: TypeRef?
+)
+
+data class Excerpt(
+    val excerpt: String?,
+    val comment: String? = null,
+    val author: KeyRef? = null
+)
+
+data class KeyRef(
+    val key: String?
+)
+
+data class TypeRef(
+    val key: String?
+)
+
+data class DateValue(
+    val type: String?,
+    val value: String?
+)

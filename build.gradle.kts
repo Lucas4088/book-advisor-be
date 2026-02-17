@@ -1,9 +1,10 @@
 plugins {
-    kotlin("jvm") version "2.3.0"
-    kotlin("plugin.spring") version "2.2.20"
-    id("org.springframework.boot") version "4.0.2"
-    id("io.spring.dependency-management") version "1.1.7"
-    id("org.jetbrains.kotlin.plugin.jpa") version "2.3.10"
+    kotlin("jvm")
+    kotlin("plugin.spring")
+    id("org.springframework.boot")
+    id("io.spring.dependency-management")
+    id("org.jetbrains.kotlin.plugin.jpa")
+    id("com.expediagroup.graphql")
 }
 
 group = "io.github.luksal"
@@ -14,34 +15,32 @@ repositories {
 }
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter")
-    implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
-    implementation("org.springframework.boot:spring-boot-starter-flyway")
-    implementation("org.springframework.boot:spring-boot-starter-mail")
+    implementation(libs.bundles.spring.boot.starters)
 
-    implementation("org.postgresql:postgresql:42.7.9")
-    implementation("org.flywaydb:flyway-core:12.0.0")
-    runtimeOnly("org.flywaydb:flyway-database-postgresql")
+    implementation(libs.postgresql)
+    implementation(libs.flyway.core)
+    runtimeOnly(libs.flyway.postgres)
 
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
+    implementation(libs.kotlin.reflect)
+    implementation(libs.kotlin.coroutines.core)
+    implementation(libs.kotlin.coroutines.reactor)
 
-    implementation(platform("org.springframework.cloud:spring-cloud-dependencies:2025.1.1"))
-    implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
-    implementation("io.github.resilience4j:resilience4j-spring-boot3")
+    implementation(platform("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}"))
+    implementation(libs.spring.cloud.openfeign)
 
-    implementation("org.jsoup:jsoup:1.22.1")
+    implementation(libs.graphql.kotlin.client)
+    implementation(libs.resilience4j.spring.boot)
 
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    implementation(libs.jsoup)
+
+    testImplementation(libs.spring.boot.starter.test)
     testImplementation(kotlin("test"))
 }
 
 tasks.test {
     useJUnitPlatform()
 }
+
 kotlin {
     jvmToolchain(24)
 }

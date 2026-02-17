@@ -1,12 +1,17 @@
-package io.github.luksal.ingestion.source.googlebooks
+package io.github.luksal.integration.source.googlebooks
 
-import io.github.luksal.ingestion.source.googlebooks.api.GoogleBooksClient
-import io.github.luksal.ingestion.source.googlebooks.api.dto.GoogleBooksSearchResponse
+import io.github.luksal.exception.DailyQuotaExceededException
+import io.github.luksal.integration.source.googlebooks.api.GoogleBooksClient
+import io.github.luksal.integration.source.googlebooks.api.dto.GoogleBooksSearchResponse
+import io.github.luksal.util.ext.logger
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter
 import org.springframework.stereotype.Service
+import kotlin.math.log
 
 @Service
 class GoogleBooksService(private val googleBooksClient: GoogleBooksClient) {
+
+    private val log = logger()
 
     @RateLimiter(name = "search-googleBooksRateLimiter")
     fun findBookDetails(title: String, authors: List<String>?): GoogleBooksSearchResponse? {
@@ -18,6 +23,11 @@ class GoogleBooksService(private val googleBooksClient: GoogleBooksClient) {
                 append("+inauthor:$formattedAuthors")
             }
         }
-        return googleBooksClient.searchBookDetails(query = query, maxResults = 1)
+        return try {
+            return googleBooksClient.searchBookDetails(query = query, maxResults = 1)
+        } catch (e: DailyQuotaExceededException) {
+            log.warn("Google books daily quota exceeded : SKIPPING")
+            null
+        }
     }
 }

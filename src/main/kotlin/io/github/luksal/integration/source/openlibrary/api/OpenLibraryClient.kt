@@ -1,8 +1,10 @@
-package io.github.luksal.ingestion.source.openlibrary.api
+package io.github.luksal.integration.source.openlibrary.api
 
-import io.github.luksal.ingestion.source.openlibrary.api.dto.OpenLibrarySearchResponse
+import io.github.luksal.integration.source.openlibrary.api.dto.OpenLibraryBookDetails
+import io.github.luksal.integration.source.openlibrary.api.dto.OpenLibrarySearchResponse
 import org.springframework.cloud.openfeign.FeignClient
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestParam
 
 @FeignClient(name = "openLibraryClient")
@@ -14,4 +16,8 @@ interface OpenLibraryClient {
                     @RequestParam("language") language: String,
                     @RequestParam("page") page: Int,
                     @RequestParam("limit") limit: Int): OpenLibrarySearchResponse
+
+
+    @GetMapping("{id}")
+    fun getBook(@PathVariable("id") id: String): OpenLibraryBookDetails
 }

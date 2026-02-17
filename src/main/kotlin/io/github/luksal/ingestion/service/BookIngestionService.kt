@@ -38,15 +38,15 @@ class BookIngestionService(
             BookSearchCriteriaDto(publishedYearRange = 2000..2024),
             PageRequest.of(0, 20)
         ).forEach { book ->
-            log.info("Crawling for book: ${book.title}")
             crawlerProperties.crawlers.filter { it.enabled }.forEach { crawlerSpec ->
                 val searchUrl = composeSearchBookUrl(book, crawlerSpec)
                 log.info("Composed search url: $searchUrl")
                 val searchPageHtml = pageFetcher.fetch(searchUrl)
 
                 pageCrawler.extractBookPageUrl(searchPageHtml, crawlerSpec)?.let {
-                    log.info("Found book page url: $it")
-                    pageFetcher.fetch(it).takeIf { bookPage -> bookPage.isNotEmpty() }?.let { bookPage ->
+                    val pageUrl = composeBookPageUrl(it, crawlerSpec)
+                    log.info("Composed page url: $pageUrl")
+                    pageFetcher.fetch(composeBookPageUrl(it, crawlerSpec)).takeIf { bookPage -> bookPage.isNotEmpty() }?.let { bookPage ->
                         createAndSaveRating(bookPage, crawlerSpec, book)
                     }
                 }
@@ -59,8 +59,13 @@ class BookIngestionService(
             .let { URLEncoder.encode(it, Charsets.UTF_8) }
         val searchPath = crawlerSpec.path.search.replace(FORMATTED_TITLE_PLACEHOLDER, searchTitle)
         val searchUrl = "${crawlerSpec.baseUrl}$searchPath"
-        val proxiedSearchUrl = scrapingProxyProperties.url + "?url=" + "${crawlerSpec.baseUrl}${searchPath}"
+        val proxiedSearchUrl = "${scrapingProxyProperties.url}?url=${crawlerSpec.baseUrl}${searchPath}"
         return if (crawlerSpec.proxyEnabled) proxiedSearchUrl else searchUrl
+    }
+
+    private fun composeBookPageUrl(pageUrl: String, crawlerSpec: CrawlerSpecification): String {
+        val proxiedSearchUrl = "${scrapingProxyProperties.url}?url=${pageUrl}"
+        return if (crawlerSpec.proxyEnabled) proxiedSearchUrl else pageUrl
     }
 
     private fun createAndSaveRating(

@@ -34,7 +34,7 @@ app:
       api-key: ${SCRAPING_PROXY_API_KEY}
   crawlers:
     - name: goodreads
-      enabled: false
+      enabled: true
       base-url: https://www.goodreads.com
       rate-limit:
         requests-per-minute: 30
@@ -60,7 +60,7 @@ app:
         title-space-separator: +
       proxy-enabled: true
     - name: the-story-graph
-      enabled: false
+      enabled: true
       base-url: https://app.thestorygraph.com
       rate-limit:
         requests-per-minute: 30

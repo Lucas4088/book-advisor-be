@@ -2,14 +2,22 @@ package io.github.luksal.book.service
 
 import io.github.luksal.book.db.jpa.BookBasicDataPopulationJpaRepository
 import io.github.luksal.book.db.jpa.model.BookBasicDataPopulationScheduledYearEntity
-import io.github.luksal.util.ext.logger
-import io.github.luksal.ingestion.source.googlebooks.GoogleBooksService
-import io.github.luksal.ingestion.source.googlebooks.api.dto.toBook
+import io.github.luksal.integration.source.archivebooks.ArchiveBooksService
+import io.github.luksal.integration.source.archivebooks.api.dto.ArchiveSearchDoc
+import io.github.luksal.integration.source.googlebooks.GoogleBooksService
+import io.github.luksal.integration.source.googlebooks.api.dto.toBook
+import io.github.luksal.integration.source.openlibrary.OpenLibraryService
 import io.github.luksal.mail.EmailService
-import io.github.luksal.ingestion.source.openlibrary.OpenLibraryService
-import kotlinx.coroutines.*
+import io.github.luksal.util.ext.levenshteinDistance
+import io.github.luksal.util.ext.logger
+import io.github.luksal.util.ext.normalizeStandardChars
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
+import tools.jackson.databind.ObjectMapper
 
 @Service
 class BookDataPopulationService(
@@ -17,6 +25,7 @@ class BookDataPopulationService(
     private val bookBasicDataPopulationJpaRepository: BookBasicDataPopulationJpaRepository,
     private val openLibraryService: OpenLibraryService,
     private val googleBooksService: GoogleBooksService,
+    private val archiveBooksService: ArchiveBooksService,
     private val customInitializerDispatcher: CoroutineDispatcher,
     private val emailService: EmailService
 ) {
@@ -89,12 +98,29 @@ class BookDataPopulationService(
             do {
                 val unprocessedTitles = bookService.getUnprocessedBookBasicInfo(PageRequest.of(pageNumber, pageSize))
 
-                unprocessedTitles.content.mapNotNull {
-                    googleBooksService.findBookDetails(it.title, it.authors)?.items?.firstOrNull()?.toBook(it.publicId, it.editionTitle, it.lang)
+                unprocessedTitles.content.mapNotNull { unprocessed ->
+                    val archiveBookResponse = archiveBooksService.search(unprocessed.title, unprocessed.authors.firstOrNull())
+                    archiveBookResponse.minWithOrNull(
+                        compareBy<ArchiveSearchDoc> { response ->
+                            response.title?.levenshteinDistance(unprocessed.title)
+                        }
+                            .thenByDescending { response -> response.description?.maxOfOrNull { it.normalizeStandardChars().length } ?: 0}
+                            .thenByDescending { response -> response.collection?.size ?: 0 }
+                    )?.let { it: ArchiveSearchDoc ->
+                        log.info(ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(it))
+                    }
+                    unprocessed.openLibraryKey?.let {
+                        val details = openLibraryService.getBookDetails(it)
+                        log.info(details.toString())
+                        details.description?.let { dsc ->bookService.updateBookDescription(unprocessed.publicId, dsc) }
+
+                    }
+                    googleBooksService.findBookDetails(unprocessed.title, unprocessed.authors)?.items?.firstOrNull()
+                        ?.toBook(unprocessed.publicId, unprocessed.editionTitle, unprocessed.lang)
                 }.let {
                     bookService.saveBooks(it)
                 }
-                unprocessedTitles.forEach { info -> info.processed = true}
+                unprocessedTitles.forEach { info -> info.processed = true }
                 bookService.updateBookBasicInfo(unprocessedTitles.toList())
                 pageNumber++
             } while (!unprocessedTitles.isLast)

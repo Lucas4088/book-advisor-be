@@ -1,8 +1,8 @@
-package io.github.luksal.ingestion.source.openlibrary.api.dto
+package io.github.luksal.integration.source.openlibrary.api.dto
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.github.luksal.book.db.document.bookbasicinfo.BookBasicInfoDocument
-import io.github.luksal.util.ext.normalize
+import io.github.luksal.util.ext.normalizeWhiteChars
 import io.github.luksal.util.ext.sha256
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -35,12 +35,12 @@ data class OpenLibraryDoc(
 
     @OptIn(ExperimentalUuidApi::class)
     fun toBasicInfoDocument(lang: String) = BookBasicInfoDocument(
-        id = (title + editionTitle()).normalize().sha256(),
+        id = (title + editionTitle()).normalizeWhiteChars().sha256(),
         title = title,
         publicId = Uuid.generateV7().toString(),
-        key = key,
+        openLibraryKey = key,
         editionTitle = editionTitle(),
-        editionKey = editionKey(),
+        openLibraryEditionKey = editionKey(),
         authors = authorName ?: emptyList(),
         firstPublishYear = firstPublishYear,
         lang = lang

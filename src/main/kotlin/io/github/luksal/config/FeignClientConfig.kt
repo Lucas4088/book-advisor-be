@@ -6,9 +6,11 @@ import feign.Response
 import feign.RetryableException
 import feign.Retryer
 import feign.codec.ErrorDecoder
+import io.github.luksal.exception.DailyQuotaExceededException
+import io.github.luksal.integration.source.archivebooks.api.ArchiveBooksClient
 import io.github.luksal.util.ext.logger
-import io.github.luksal.ingestion.source.googlebooks.api.GoogleBooksClient
-import io.github.luksal.ingestion.source.openlibrary.api.OpenLibraryClient
+import io.github.luksal.integration.source.googlebooks.api.GoogleBooksClient
+import io.github.luksal.integration.source.openlibrary.api.OpenLibraryClient
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.openfeign.EnableFeignClients
 import org.springframework.context.annotation.Bean
@@ -16,7 +18,7 @@ import org.springframework.context.annotation.Configuration
 import java.io.IOException
 
 @Configuration
-@EnableFeignClients(clients = [OpenLibraryClient::class, GoogleBooksClient::class])
+@EnableFeignClients(clients = [OpenLibraryClient::class, GoogleBooksClient::class, ArchiveBooksClient::class])
 class FeignClientConfig {
 
     @Bean
@@ -28,7 +30,6 @@ class FeignClientConfig {
         Retryer.NEVER_RETRY
 }
 
-@Configuration
 class FeignGoogleBooksConfig {
     @Bean
     fun feignAuthInterceptor(@Value($$"${app.service.google-books-api.auth.api-key}") apiKey: String): RequestInterceptor =
@@ -50,6 +51,10 @@ class FeignErrorDecoder : ErrorDecoder {
             methodKey, response?.status(), responseBody
         )
 
+        if (response?.status() == 429) {
+            return DailyQuotaExceededException()
+        }
+
         return when (response?.status()) {
             500, 502, 503, 504 ->
                 RetryableException(
@@ -59,16 +64,6 @@ class FeignErrorDecoder : ErrorDecoder {
                     1,
                     response.request()
                 )
-
-            429 ->
-                RetryableException(
-                    response.status(),
-                    "Rate limit exceeded",
-                    response.request().httpMethod(),
-                    1,
-                    response.request()
-                )
-
             404 ->
                 FeignException.NotFound(
                     "Not found",

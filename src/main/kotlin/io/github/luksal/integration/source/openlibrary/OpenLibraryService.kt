@@ -1,7 +1,8 @@
-package io.github.luksal.ingestion.source.openlibrary
+package io.github.luksal.integration.source.openlibrary
 
-import io.github.luksal.ingestion.source.openlibrary.api.OpenLibraryClient
-import io.github.luksal.ingestion.source.openlibrary.api.dto.OpenLibrarySearchResponse
+import io.github.luksal.integration.source.openlibrary.api.OpenLibraryClient
+import io.github.luksal.integration.source.openlibrary.api.dto.OpenLibraryBookDetails
+import io.github.luksal.integration.source.openlibrary.api.dto.OpenLibrarySearchResponse
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter
 import io.github.resilience4j.retry.annotation.Retry
 import org.springframework.stereotype.Service
@@ -18,5 +19,12 @@ class OpenLibraryService(private val openLibraryClient: OpenLibraryClient) {
     fun searchBooks(startYear: Int, endYear: Int, lang: String, page: Int, limit: Int): OpenLibrarySearchResponse {
         val query = "publish_year:[$startYear TO $endYear]"
         return openLibraryClient.searchBooks(query, FIELDS.joinToString(","), lang, page, limit)
+    }
+
+    @RateLimiter(name = "get-openLibraryRateLimiter")
+    @Retry(name = "get-openLibraryRetry")
+    fun getBookDetails(id: String): OpenLibraryBookDetails {
+        val id = "$id.json"
+        return openLibraryClient.getBook(id)
     }
 }

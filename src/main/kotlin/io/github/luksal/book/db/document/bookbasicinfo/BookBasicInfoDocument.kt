@@ -11,8 +11,8 @@ class BookBasicInfoDocument(
     @Indexed(unique = true)
     val publicId: String,
     val title: String,
-    val key: String,
-    val editionKey: String?,
+    val openLibraryKey: String?,
+    val openLibraryEditionKey: String?,
     val editionTitle: String?,
     val firstPublishYear: Int?,
     val authors: List<String> = emptyList(),

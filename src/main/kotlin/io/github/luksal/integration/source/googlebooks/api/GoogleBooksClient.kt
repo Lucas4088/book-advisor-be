@@ -1,7 +1,7 @@
-package io.github.luksal.ingestion.source.googlebooks.api
+package io.github.luksal.integration.source.googlebooks.api
 
 import io.github.luksal.config.FeignGoogleBooksConfig
-import io.github.luksal.ingestion.source.googlebooks.api.dto.GoogleBooksSearchResponse
+import io.github.luksal.integration.source.googlebooks.api.dto.GoogleBooksSearchResponse
 import org.springframework.cloud.openfeign.FeignClient
 import org.springframework.cloud.openfeign.FeignClientProperties
 import org.springframework.web.bind.annotation.GetMapping
