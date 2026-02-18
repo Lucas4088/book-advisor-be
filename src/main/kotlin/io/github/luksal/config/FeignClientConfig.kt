@@ -43,7 +43,6 @@ class FeignErrorDecoder : ErrorDecoder {
     private val log = logger()
 
     override fun decode(methodKey: String?, response: Response?): Exception? {
-        //val status = HttpStatus.valueOf(response?.status() ?: HttpStatus.INTERNAL_SERVER_ERROR.value())
         val responseBody = extractResponseBody(response)
 
         log.error(

@@ -28,7 +28,6 @@ dependencies {
     implementation(platform("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}"))
     implementation(libs.spring.cloud.openfeign)
 
-    implementation(libs.graphql.kotlin.client)
     implementation(libs.resilience4j.spring.boot)
 
     implementation(libs.jsoup)

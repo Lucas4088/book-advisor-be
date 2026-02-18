@@ -19,7 +19,7 @@ class BookController(
 
     @GetMapping(params = ["title", "genres", "publishedYearRange"])
     fun search(request: BookSearchCriteriaRequest, page: Pageable): Page<BookSearchResponse> {
-        return bookService.searchBooks(criteria = request.toServiceDto(), pageable = page)
+        return bookService.searchBookDocuments(criteria = request.toServiceDto(), pageable = page)
     }
 
     @GetMapping("/{id}")

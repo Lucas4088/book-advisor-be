@@ -37,9 +37,6 @@ kotlin-coroutines-reactor = { module = "org.jetbrains.kotlinx:kotlinx-coroutines
 # Spring Cloud
 spring-cloud-openfeign = { module = "org.springframework.cloud:spring-cloud-starter-openfeign" }
 
-# GraphQL
-graphql-kotlin-client = { module = "com.expediagroup:graphql-kotlin-spring-client", version.ref = "graphql-kotlin" }
-
 # Resilience4j
 resilience4j-spring-boot = { module = "io.github.resilience4j:resilience4j-spring-boot3", version.ref = "resilience4j" }
 

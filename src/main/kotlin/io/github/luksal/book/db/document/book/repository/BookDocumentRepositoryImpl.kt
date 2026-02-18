@@ -4,7 +4,10 @@ import com.mongodb.bulk.BulkWriteUpsert
 import io.github.luksal.book.db.document.DocumentCustomRepository
 import io.github.luksal.book.db.document.book.BookDocument
 import io.github.luksal.book.db.document.book.RatingEmbedded
-import io.github.luksal.book.model.Book
+import io.github.luksal.book.mapper.BookMapper
+import io.github.luksal.book.model.BookUpdate
+import io.github.luksal.util.ext.pushIfNotEmpty
+import io.github.luksal.util.ext.setIfNotEmpty
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
@@ -15,7 +18,6 @@ import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.core.query.Update
-import org.springframework.data.mongodb.core.query.UpdateDefinition
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -68,39 +70,25 @@ class BookDocumentRepositoryImpl(
         return PageImpl(books, pageable, count)
     }
 
-    override fun updateRating(bookId: String, newValue: RatingEmbedded): String? =
-        mongoTemplate.updateFirst(
-            Query(Criteria.where("_id").`is`(bookId)),
-            Update().addToSet("ratings", newValue),
-            BookDocument::class.java
-        ).upsertedId?.toString()
-
-    override fun updateDescription(bookId: String, newValue: String): String? =
-        mongoTemplate.updateFirst(
-            Query(Criteria.where("_id").`is`(bookId)),
-            Update().set("description", newValue),
-            BookDocument::class.java
-        ).upsertedId?.toString()
-
-    override fun update(book: Book): String? {
-        var update: UpdateDefinition
-     /*   book.title.let { update.set("title", it) }
-        book.description.let { update.set("description", it) }
-        book.publishingYear?.let { update.set("publishingYear", it) }
-        book.pageCount.let { update.set("pageCount", it) }
-        book.thumbnailUrl.let { update.set("thumbnailUrl", it) }
-        book.smallThumbnailUrl.let { update.set("smallThumbnailUrl", it) }
-
-        book.edition?.let { update.set("edition", it) }
-        book.authors?.let { update.set("authors", it) }
-        book.genres?.let { update.set("genres", it) }
-        book.ratings?.let { update.set("ratings", it) }*/
-
+    override fun update(book: BookUpdate): String? {
+        val update = Update().apply {
+            BookMapper.map(book).let { document ->
+                setIfNotEmpty("description", document.description)
+                setIfNotEmpty("title", document.title)
+                setIfNotEmpty("publishingYear", document.publishingYear)
+                setIfNotEmpty("pageCount", document.pageCount)
+                setIfNotEmpty("thumbnailUrl", document.thumbnailUrl)
+                setIfNotEmpty("smallThumbnailUrl", document.smallThumbnailUrl)
+                setIfNotEmpty("edition", document.edition)
+                pushIfNotEmpty("authors", document.authors)
+                pushIfNotEmpty("genres", document.genres)
+                pushIfNotEmpty("ratings", document.ratings)
+            }
+        }
         return mongoTemplate.updateFirst(
             Query(Criteria.where("_id").`is`(book.id)),
-            Update().set("description", book.description),
+            update,
             BookDocument::class.java
         ).upsertedId?.toString()
     }
-
 }

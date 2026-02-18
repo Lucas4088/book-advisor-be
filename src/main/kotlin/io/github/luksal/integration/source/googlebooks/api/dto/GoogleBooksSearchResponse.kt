@@ -23,27 +23,6 @@ data class BookItem(
     val searchInfo: SearchInfo?
 )
 
-@OptIn(ExperimentalUuidApi::class)
-fun BookItem.toBook(publicId: String, editionTitle: String?, lang: String): Book = Book(
-    id = publicId,
-    title = volumeInfo.title,
-    description = volumeInfo.description ?: "",
-    publishingYear = volumeInfo.publishedDate?.take(4)?.toIntOrNull()?.let { Year.of(it) },
-    pageCount = volumeInfo.pageCount ?: 0,
-    edition = editionTitle?.let { BookEdition(it, lang) },
-    thumbnailUrl = volumeInfo.imageLinks?.thumbnail ?: "",
-    smallThumbnailUrl = volumeInfo.imageLinks?.smallThumbnail ?: "",
-    authors = volumeInfo.authors?.mapIndexed { idx, name ->
-        Author(
-            id = idx.toLong(),
-            publicId = Uuid.generateV7().toString(),
-            name = name
-        )
-    } ?: emptyList(),
-    genres = volumeInfo.categories?.mapIndexed { idx, name -> Genre(id = idx.toLong(), name = name) } ?: emptyList(),
-    ratings = emptyList()
-)
-
 data class VolumeInfo(
     val title: String,
     val subtitle: String? = null,

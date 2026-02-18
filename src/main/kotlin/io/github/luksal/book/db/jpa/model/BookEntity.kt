@@ -53,12 +53,4 @@ class BookEntity(
 
     @OneToMany(mappedBy = "book", cascade = [CascadeType.ALL], orphanRemoval = true)
     val ratings: MutableList<RatingEntity> = mutableListOf()
-) {
-    companion object {
-        fun toSearchResponse(book: BookEntity): BookSearchResponse = BookSearchResponse(
-            id = book.id!!,
-            title = book.title,
-            smallThumbnailUrl = book.smallThumbnailUrl
-        )
-    }
-}
+)

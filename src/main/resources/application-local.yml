@@ -36,6 +36,9 @@ spring:
           googleBooksClient:
             logger-level: basic
             url: https://www.googleapis.com/
+          archiveBooksClient:
+            logger-level: basic
+            url: https://archive.org/
 
 resilience4j:
   ratelimiter:
@@ -48,21 +51,55 @@ resilience4j:
         limitForPeriod: 120
         limitRefreshPeriod: 120s
         timeoutDuration: 1s
+      get-openLibraryRateLimiter:
+        limitForPeriod: 55
+        limitRefreshPeriod: 60s
+        timeoutDuration: 7s
 
+  circuitbreaker:
+    instances:
+        search-openLibraryCircuitBreaker:
+            registerHealthIndicator: true
+            slidingWindowType: COUNT_BASED
+            slidingWindowSize: 10
+            minimumNumberOfCalls: 5
+            failureRateThreshold: 50
+            waitDurationInOpenState: 3m
+            permittedNumberOfCallsInHalfOpenState: 3
+            automaticTransitionFromOpenToHalfOpenEnabled: true
+        search-googleBooksCircuitBreaker:
+          registerHealthIndicator: true
+          slidingWindowType: COUNT_BASED
+          slidingWindowSize: 10
+          minimumNumberOfCalls: 5
+          failureRateThreshold: 50
+          waitDurationInOpenState: 24h
+          permittedNumberOfCallsInHalfOpenState: 3
+          automaticTransitionFromOpenToHalfOpenEnabled: true
+          record-exceptions:
+            - io.github.luksal.exception.DailyQuotaExceededException
   retry:
     instances:
       search-openLibraryRetry:
         max-attempts: 4
         wait-duration: 500ms
         exponential-backoff-multiplier: 2
-        exponential-max-wait-duration: 20s
+        exponential-max-wait-duration: 40s
+        retry-exceptions:
+          - feign.RetryableException
+      get-openLibraryRetry:
+        max-attempts: 4
+        wait-duration: 500ms
+        exponential-backoff-multiplier: 2
+        exponential-max-wait-duration: 40s
         retry-exceptions:
           - feign.RetryableException
 
 logging:
   level:
-    io.github.luksal.ingestion.source.openlibrary: DEBUG
-    io.github.luksal.ingestion.source.googlebooks: DEBUG
+    io.github.luksal.integration.source.openlibrary: DEBUG
+    io.github.luksal.integration.source.googlebooks: DEBUG
+    io.github.luksal.integration.source.archivebooks: DEBUG
 
 app:
   mail:

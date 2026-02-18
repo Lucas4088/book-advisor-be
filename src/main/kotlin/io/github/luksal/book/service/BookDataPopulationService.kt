@@ -2,10 +2,10 @@ package io.github.luksal.book.service
 
 import io.github.luksal.book.db.jpa.BookBasicDataPopulationJpaRepository
 import io.github.luksal.book.db.jpa.model.BookBasicDataPopulationScheduledYearEntity
+import io.github.luksal.book.mapper.BookMapper
 import io.github.luksal.integration.source.archivebooks.ArchiveBooksService
 import io.github.luksal.integration.source.archivebooks.api.dto.ArchiveSearchDoc
 import io.github.luksal.integration.source.googlebooks.GoogleBooksService
-import io.github.luksal.integration.source.googlebooks.api.dto.toBook
 import io.github.luksal.integration.source.openlibrary.OpenLibraryService
 import io.github.luksal.mail.EmailService
 import io.github.luksal.util.ext.levenshteinDistance
@@ -99,12 +99,15 @@ class BookDataPopulationService(
                 val unprocessedTitles = bookService.getUnprocessedBookBasicInfo(PageRequest.of(pageNumber, pageSize))
 
                 unprocessedTitles.content.mapNotNull { unprocessed ->
-                    val archiveBookResponse = archiveBooksService.search(unprocessed.title, unprocessed.authors.firstOrNull())
+                    val archiveBookResponse =
+                        archiveBooksService.search(unprocessed.title, unprocessed.authors.firstOrNull())
                     archiveBookResponse.minWithOrNull(
                         compareBy<ArchiveSearchDoc> { response ->
                             response.title?.levenshteinDistance(unprocessed.title)
                         }
-                            .thenByDescending { response -> response.description?.maxOfOrNull { it.normalizeStandardChars().length } ?: 0}
+                            .thenByDescending { response ->
+                                response.description?.maxOfOrNull { it.normalizeStandardChars().length } ?: 0
+                            }
                             .thenByDescending { response -> response.collection?.size ?: 0 }
                     )?.let { it: ArchiveSearchDoc ->
                         log.info(ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(it))
@@ -112,13 +115,12 @@ class BookDataPopulationService(
                     unprocessed.openLibraryKey?.let {
                         val details = openLibraryService.getBookDetails(it)
                         log.info(details.toString())
-                        details.description?.let { dsc ->bookService.updateBookDescription(unprocessed.publicId, dsc) }
-
+                        bookService.updateBook(BookMapper.map(details))
                     }
                     googleBooksService.findBookDetails(unprocessed.title, unprocessed.authors)?.items?.firstOrNull()
-                        ?.toBook(unprocessed.publicId, unprocessed.editionTitle, unprocessed.lang)
+                        ?.let { BookMapper.map(it, unprocessed.publicId, unprocessed.editionTitle, unprocessed.lang) }
                 }.let {
-                    bookService.saveBooks(it)
+                    bookService.saveBookDocuments(it)
                 }
                 unprocessedTitles.forEach { info -> info.processed = true }
                 bookService.updateBookBasicInfo(unprocessedTitles.toList())

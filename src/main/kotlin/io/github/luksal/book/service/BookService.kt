@@ -1,19 +1,16 @@
 package io.github.luksal.book.service
 
 import io.github.luksal.book.api.dto.BookSearchResponse
-import io.github.luksal.book.db.document.bookbasicinfo.repository.BookBasicInfoDocumentRepository
 import io.github.luksal.book.db.document.book.repository.BookDocumentRepository
 import io.github.luksal.book.db.document.bookbasicinfo.BookBasicInfoDocument
-import io.github.luksal.book.db.document.book.BookDocument
-import io.github.luksal.book.db.document.book.RatingEmbedded
+import io.github.luksal.book.db.document.bookbasicinfo.repository.BookBasicInfoDocumentRepository
 import io.github.luksal.book.db.jpa.BookJpaRepository
-import io.github.luksal.book.db.jpa.model.BookEntity
+import io.github.luksal.book.mapper.BookMapper
 import io.github.luksal.book.model.Book
-import io.github.luksal.book.model.Rating
+import io.github.luksal.book.model.BookUpdate
 import io.github.luksal.book.service.dto.BookSearchCriteriaDto
 import io.github.luksal.integration.source.openlibrary.api.dto.OpenLibraryDoc
 import io.github.luksal.util.ext.logger
-import jdk.jfr.Description
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -28,29 +25,22 @@ class BookService(
 
     private val log = logger()
 
-    fun searchBooks(criteria: BookSearchCriteriaDto, pageable: Pageable): Page<BookSearchResponse> {
-       /* return bookJpaRepository.searchAll(
-            title = criteria.title,
-            startYear = criteria.publishedYearRange.first,
-            endYear = criteria.publishedYearRange.last,
-            genres = criteria.genres?.map { it.name },
-            pageable = pageable
-        ).map { BookSearchResponse.fromEntity(book = it) }*/
+    fun searchBookDocuments(criteria: BookSearchCriteriaDto, pageable: Pageable): Page<BookSearchResponse> {
         return bookDocumentRepository.search(
             title = criteria.title,
             startYear = criteria.publishedYearRange.first,
             endYear = criteria.publishedYearRange.last,
             genres = criteria.genres?.map { it.name },
             pageable = pageable
-        ).map { BookDocument.toSearchResponse(it) }
+        ).map { BookMapper.map(it) }
     }
 
     fun getBookById(id: Long): BookSearchResponse {
-        return bookJpaRepository.findById(id).map { BookEntity.toSearchResponse(it) }
+        return bookJpaRepository.findById(id).map { BookMapper.map(it) }
             .orElseThrow()
     }
 
-    fun saveBooks(books: List<Book>) {
+    fun saveBookDocuments(books: List<Book>) {
         if (books.isEmpty()) {
             log.info("No books to save")
             return
@@ -58,12 +48,8 @@ class BookService(
         bulkSaveNoDuplicatesBooks(books)
     }
 
-    //TODO single update method with Book model
-    fun updateBookRating(bookId: String, rating: Rating): String? =
-        bookDocumentRepository.updateRating(bookId, RatingEmbedded.fromModel(rating))
-
-    fun updateBookDescription(bookId: String, description: String): String? =
-        bookDocumentRepository.updateDescription(bookId, description)
+    fun updateBook(bookUpdate: BookUpdate): String? =
+        bookDocumentRepository.update(bookUpdate)
 
     fun saveBookBasicInfo(bookBasicInfo: List<OpenLibraryDoc>, lang: String): Int {
         return bookBasicInfo.map { it.toBasicInfoDocument(lang) }.let {
@@ -83,7 +69,7 @@ class BookService(
         bookBasicInfoDocumentRepository.findByProcessed(false, page)
 
     private fun bulkSaveNoDuplicatesBooks(books: List<Book>) =
-        bookDocumentRepository.saveBulkWithDeduplication(books.map { BookDocument.fromModel(it) })
+        bookDocumentRepository.saveBulkWithDeduplication(books.map { BookMapper.map(it) })
 
 
     private fun bulkSaveNoDuplicatesBasicBookInfo(documents: List<BookBasicInfoDocument>): Int =

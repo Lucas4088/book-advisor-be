@@ -1,8 +1,9 @@
 package io.github.luksal.ingestion.service
 
 import io.github.luksal.book.api.dto.BookSearchResponse
-import io.github.luksal.book.model.Rating
-import io.github.luksal.book.model.RatingSource
+import io.github.luksal.book.model.BookUpdate
+import io.github.luksal.book.model.RatingSourceUpdate
+import io.github.luksal.book.model.RatingUpdate
 import io.github.luksal.book.service.BookService
 import io.github.luksal.book.service.dto.BookSearchCriteriaDto
 import io.github.luksal.config.CrawlerProperties
@@ -34,7 +35,7 @@ class BookIngestionService(
     //TODO split into mathods and component to make it more fault tolerant and testable
     //TODO worker per crawler source???
     fun crawlAndIngest() {
-        bookService.searchBooks(
+        bookService.searchBookDocuments(
             BookSearchCriteriaDto(publishedYearRange = 2000..2024),
             PageRequest.of(0, 20)
         ).forEach { book ->
@@ -73,12 +74,12 @@ class BookIngestionService(
         crawlerSpec: CrawlerSpecification,
         book: BookSearchResponse
     ) {
-        val rating = Rating(
+        val rating = RatingUpdate(
             score = pageCrawler.extractRatingScore(bookPage, crawlerSpec) ?: BigDecimal.ZERO,
             count = pageCrawler.extractRatingCount(bookPage, crawlerSpec) ?: 0,
-            source = RatingSource(name = crawlerSpec.name, url = crawlerSpec.baseUrl)
+            source = RatingSourceUpdate(name = crawlerSpec.name, url = crawlerSpec.baseUrl)
         )
-        bookService.updateBookRating(book.id, rating)
+        bookService.updateBook(BookUpdate(id = book.id, ratings = listOf(rating)))
         log.info("Extracted rating for book ${book.title} from source ${crawlerSpec.name}: $rating")
     }
 }

@@ -1,7 +1,12 @@
 package io.github.luksal.integration.source.openlibrary.api.dto
 
+import io.github.luksal.integration.source.openlibrary.api.util.TypeRefDeserializer
+import io.github.luksal.integration.source.openlibrary.api.util.TypeValueDeserializer
+import tools.jackson.databind.annotation.JsonDeserialize
+
 data class OpenLibraryBookDetails(
-    val description: String? = null,
+    @JsonDeserialize(using = TypeValueDeserializer::class)
+    val description: TypeValue? = null,
     val links: List<Link>? = emptyList(),
     val title: String?,
     val covers: List<Long>? = emptyList(),
@@ -46,6 +51,7 @@ data class Link(
 
 data class AuthorRole(
     val author: KeyRef?,
+    @JsonDeserialize(using = TypeRefDeserializer::class)
     val type: TypeRef?
 )
 
@@ -67,3 +73,9 @@ data class DateValue(
     val type: String?,
     val value: String?
 )
+
+data class TypeValue(
+    val type: String?,
+    val value: String?
+)
+
