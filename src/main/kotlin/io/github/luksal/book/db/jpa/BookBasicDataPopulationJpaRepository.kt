@@ -1,6 +1,6 @@
 package io.github.luksal.book.db.jpa
 
-import io.github.luksal.book.db.jpa.model.BookBasicDataPopulationScheduledYearEntity
+import io.github.luksal.book.db.jpa.model.event.BookBasicDataPopulationScheduledYearEntity
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
 

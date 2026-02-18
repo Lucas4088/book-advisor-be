@@ -5,7 +5,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5435/book-advisor-db
     username: postgres
-    password: password
+    password: postgres
     hikari:
       pool-name: BookAdvisorHikariCP
       maximum-pool-size: 5
@@ -47,14 +47,18 @@ resilience4j:
         limitForPeriod: 20
         limitRefreshPeriod: 6s
         timeoutDuration: 1s
-      search-googleBooksRateLimiter:
-        limitForPeriod: 120
-        limitRefreshPeriod: 120s
-        timeoutDuration: 1s
       get-openLibraryRateLimiter:
         limitForPeriod: 55
         limitRefreshPeriod: 60s
-        timeoutDuration: 7s
+        timeoutDuration: 20s
+      search-googleBooksRateLimiter:
+        limitForPeriod: 5
+        limitRefreshPeriod: 3s
+        timeoutDuration: 1s
+      page-fetcherRateLimiter:
+        limitForPeriod: 20
+        limitRefreshPeriod: 1s
+        timeoutDuration: 0
 
   circuitbreaker:
     instances:

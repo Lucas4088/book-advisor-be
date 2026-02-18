@@ -1,6 +1,11 @@
-package io.github.luksal.book.db.jpa.model
+package io.github.luksal.book.db.jpa.model.event
 
-import jakarta.persistence.*
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.GeneratedValue
+import jakarta.persistence.GenerationType
+import jakarta.persistence.Id
+import jakarta.persistence.Table
 
 @Entity
 @Table(name = "book_basic_data_population_scheduled_years")
@@ -19,5 +24,5 @@ class BookBasicDataPopulationScheduledYearEntity(
     var processed: Boolean = false,
 
     @Column(nullable = false)
-    val timestamp: Long?
+    val timestamp: Long
 )

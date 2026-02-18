@@ -1,7 +1,7 @@
 package io.github.luksal.book.service
 
 import io.github.luksal.book.db.jpa.BookBasicDataPopulationJpaRepository
-import io.github.luksal.book.db.jpa.model.BookBasicDataPopulationScheduledYearEntity
+import io.github.luksal.book.db.jpa.model.event.BookBasicDataPopulationScheduledYearEntity
 import io.github.luksal.book.mapper.BookMapper
 import io.github.luksal.integration.source.archivebooks.ArchiveBooksService
 import io.github.luksal.integration.source.archivebooks.api.dto.ArchiveSearchDoc

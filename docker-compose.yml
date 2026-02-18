@@ -56,10 +56,14 @@ services:
     environment:
       MP_UI_AUTH: ${MAILPIT_LOGIN}:${MAILPIT_PASSWORD}
 
-  cloudflare-bypass:
-    image: sarperavci/cloudflare-bypass-for-scraping
+  proxy:
+    image: lukasz408/proxy:1.0
+    container_name: proxy
     ports:
-      - "8086:8080"
+      - "8000:8000"
+    environment:
+      TIMEOUT: 15000
+
 volumes:
   mongo_data:
   postgres_data:

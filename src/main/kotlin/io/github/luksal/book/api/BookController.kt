@@ -4,6 +4,7 @@ import io.github.luksal.book.api.dto.BookSearchCriteriaRequest
 import io.github.luksal.book.api.dto.BookSearchResponse
 import io.github.luksal.book.service.BookDataPopulationService
 import io.github.luksal.book.service.BookService
+import io.github.luksal.book.service.SyncBookDataService
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Controller
@@ -11,10 +12,11 @@ import org.springframework.web.bind.annotation.*
 
 @Controller
 @RestController
-@RequestMapping("/books")
+@RequestMapping("/api/books")
 class BookController(
     private val bookService: BookService,
-    private val bookDataPopulationService: BookDataPopulationService
+    private val bookDataPopulationService: BookDataPopulationService,
+    private val syncBookDataService: SyncBookDataService,
 ) {
 
     @GetMapping(params = ["title", "genres", "publishedYearRange"])
@@ -44,5 +46,12 @@ class BookController(
     @PostMapping(path = ["/populate"])
     fun populateBooksCollection() {
         return bookDataPopulationService.populateBooksCollection()
+    }
+
+
+    //TODO add also job
+    @PostMapping(path = ["/sync"])
+    fun syncBooks() {
+        return syncBookDataService.syncBookData()
     }
 }

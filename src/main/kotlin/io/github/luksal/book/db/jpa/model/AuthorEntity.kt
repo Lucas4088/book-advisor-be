@@ -1,6 +1,9 @@
 package io.github.luksal.book.db.jpa.model
 
+import io.github.luksal.book.db.jpa.util.StringListToStringConverter
 import jakarta.persistence.Column
+import jakarta.persistence.Convert
+import jakarta.persistence.Converter
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
@@ -14,6 +17,13 @@ class AuthorEntity(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
 
+    @Column(nullable = false, unique = true)
+    val publicId: String,
+
     @Column(nullable = false)
-    val name: String
+    val name: String,
+
+    @Column(nullable = false)
+    @Convert(converter = StringListToStringConverter::class)
+    val otherNames: List<String>? = null
 )

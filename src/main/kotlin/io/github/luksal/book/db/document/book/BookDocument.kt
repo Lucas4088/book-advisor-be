@@ -34,8 +34,9 @@ data class EditionEmbedded(
 )
 
 data class AuthorEmbedded(
-    val publicId: String?,
-    val name: String
+    val publicId: String,
+    val name: String,
+    val otherNames: List<String>? = emptyList()
 )
 
 data class GenreEmbedded(

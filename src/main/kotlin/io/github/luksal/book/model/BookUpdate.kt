@@ -23,7 +23,7 @@ data class BookEditionUpdate(
 
 data class AuthorUpdate(
     val id: Long?,
-    val publicId: String?,
+    val publicId: String,
     val name: String,
     val otherNames: List<String>? = null
 )

@@ -2,7 +2,7 @@ CREATE TABLE books (
                        id VARCHAR(36) PRIMARY KEY,
                        title VARCHAR(255) NOT NULL,
                        description TEXT,
-                       publishing_year INT NOT NULL,
+                       publishing_year INT,
                        page_count INT NOT NULL,
                        thumbnail_url TEXT,
                        small_thumbnail_url TEXT
@@ -11,7 +11,9 @@ CREATE INDEX idx_books_publishing_year ON books(publishing_year);
 
 CREATE TABLE authors (
                          id BIGSERIAL PRIMARY KEY,
-                         name VARCHAR(255) NOT NULL
+                         public_id VARCHAR(36) NOT NULL UNIQUE,
+                         name VARCHAR(255) NOT NULL,
+                         other_names VARCHAR(512)
 );
 
 CREATE TABLE genres (
@@ -66,7 +68,7 @@ CREATE TABLE ratings (
                          book_id VARCHAR(36) NOT NULL,
                          source_id INT NOT NULL,
 
-                         rating NUMERIC(3,2) NOT NULL,
+                         score NUMERIC(3,2) NOT NULL,
                          count INT,
 
                          CONSTRAINT fk_ratings_book

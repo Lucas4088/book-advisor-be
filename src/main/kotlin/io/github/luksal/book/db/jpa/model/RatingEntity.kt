@@ -23,7 +23,7 @@ class RatingEntity(
     val book: BookEntity,
 
     @Column(precision = 3, scale = 2, nullable = false)
-    val rating: BigDecimal,
+    val score: BigDecimal,
 
     val count: Int?,
 

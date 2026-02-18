@@ -2,17 +2,12 @@ package io.github.luksal.book.mapper
 
 import io.github.luksal.book.api.dto.BookSearchResponse
 import io.github.luksal.book.db.document.book.*
-import io.github.luksal.book.db.jpa.model.BookEntity
-import io.github.luksal.book.model.Author
-import io.github.luksal.book.model.AuthorUpdate
-import io.github.luksal.book.model.Book
-import io.github.luksal.book.model.BookEdition
-import io.github.luksal.book.model.BookUpdate
-import io.github.luksal.book.model.Genre
-import io.github.luksal.book.model.GenreUpdate
-import io.github.luksal.book.model.RatingUpdate
+import io.github.luksal.book.db.jpa.model.*
+import io.github.luksal.book.db.jpa.model.event.SyncBookEventEntity
+import io.github.luksal.book.model.*
 import io.github.luksal.integration.source.googlebooks.api.dto.BookItem
 import io.github.luksal.integration.source.openlibrary.api.dto.OpenLibraryBookDetails
+import java.time.Instant
 import java.time.Year
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -55,8 +50,91 @@ object BookMapper {
             )
         }?.toSet() ?: emptySet()
 
-    fun map(book: Book): BookDocument {
-        return BookDocument(
+    fun mapToEntity(book: BookDocument): BookEntity {
+        return BookEntity(
+            id = book.id,
+            title = book.title,
+            description = book.description ?: "",
+            publishingYear = book.publishingYear,
+            pageCount = book.pageCount,
+            thumbnailUrl = book.thumbnailUrl.ifEmpty { "" },
+            smallThumbnailUrl = book.smallThumbnailUrl.ifEmpty { "" },
+            authors = book.authors?.takeIf { it.isNotEmpty() }?.map {
+                AuthorEntity(
+                    publicId = it.publicId,
+                    name = it.name,
+                    otherNames = it.otherNames
+                )
+            }?.toMutableSet() ?: mutableSetOf(),
+            genres = book.genres?.takeIf { it.isNotEmpty() }?.map {
+                GenreEntity(
+                    id = null,
+                    name = it.name
+                )
+            }?.toMutableSet() ?: mutableSetOf()
+        )
+    }
+
+    fun map(bookEntity: BookEntity, sourceEntity: RatingSourceEntity, rating: RatingEmbedded): RatingEntity =
+        RatingEntity(
+            id = null,
+            score = rating.rating,
+            count = rating.count,
+            book = bookEntity,
+            source = sourceEntity
+        )
+
+    fun map(ratingSource: RatingSourceEmbedded) =
+        RatingSourceEntity(
+            id = null,
+            name = ratingSource.name,
+            url = ratingSource.url
+        )
+
+    fun mapToEntity(book: Book): BookEntity {
+        return BookEntity(
+            id = book.id,
+            title = book.title,
+            description = book.description,
+            publishingYear = book.publishingYear?.value,
+            pageCount = book.pageCount,
+            thumbnailUrl = book.thumbnailUrl.ifEmpty { "" },
+            smallThumbnailUrl = book.smallThumbnailUrl.ifEmpty { "" },
+            authors = book.authors.takeIf { it.isNotEmpty() }?.map {
+                AuthorEntity(
+                    publicId = it.publicId,
+                    name = it.name,
+                    otherNames = it.otherNames
+                )
+            }?.toMutableSet() ?: mutableSetOf(),
+            genres = book.genres.takeIf { it.isNotEmpty() }?.map {
+                GenreEntity(
+                    id = null,
+                    name = it.name
+                )
+            }?.toMutableSet() ?: mutableSetOf()
+        )
+    }
+
+    fun map(bookEntity: BookEntity, sourceEntity: RatingSourceEntity, rating: Rating): RatingEntity =
+        RatingEntity(
+            id = null,
+            score = rating.score,
+            count = rating.count,
+            book = bookEntity,
+            source = sourceEntity
+        )
+
+    fun map(ratingSource: RatingSource) =
+        RatingSourceEntity(
+            id = null,
+            name = ratingSource.name,
+            url = ratingSource.url
+        )
+
+
+    fun map(book: Book): BookDocument =
+        BookDocument(
             id = book.id,
             title = book.title,
             description = book.description,
@@ -92,7 +170,7 @@ object BookMapper {
                 )
             }.toSet()
         )
-    }
+
 
     fun map(book: BookEntity): BookSearchResponse = BookSearchResponse(
         id = book.id!!,
@@ -106,29 +184,35 @@ object BookMapper {
         smallThumbnailUrl = book.smallThumbnailUrl
     )
 
+    fun mapTpSyncEvent(book: Book): SyncBookEventEntity = SyncBookEventEntity(
+        bookId = book.id,
+        processed = false,
+        timestamp = Instant.now().toEpochMilli(),
+    )
+
     fun map(details: OpenLibraryBookDetails): BookUpdate = BookUpdate(
         id = details.key,
         description = details.description?.value,
-       /* publishingYear = details.created?.value?.let { value ->
-            try {
-                java.time.Year.parse(value.take(4))
-            } catch (e: Exception) {
-                null
-            }
-        },*/
+        /* publishingYear = details.created?.value?.let { value ->
+             try {
+                 java.time.Year.parse(value.take(4))
+             } catch (e: Exception) {
+                 null
+             }
+         },*/
         //edition = details.title?.let { io.github.luksal.book.model.BookEdition(it, null) },
         //thumbnailUrl = details.covers?.firstOrNull()?.let { "https://covers.openlibrary.org/b/id/$it-L.jpg" },
         //smallThumbnailUrl = details.covers?.firstOrNull()?.let { "https://covers.openlibrary.org/b/id/$it-S.jpg" },
-       /* authors = details.authors?.mapNotNull { authorRole ->
-            authorRole.author?.key?.let { key ->
-                io.github.luksal.book.model.Author(
-                    id = null,
-                    publicId = key,
-                    name = "",
-                    otherNames = null
-                )
-            }
-        },*/
+        /* authors = details.authors?.mapNotNull { authorRole ->
+             authorRole.author?.key?.let { key ->
+                 io.github.luksal.book.model.Author(
+                     id = null,
+                     publicId = key,
+                     name = "",
+                     otherNames = null
+                 )
+             }
+         },*/
         genres = details.subjects?.map { subject ->
             GenreUpdate(
                 id = null,
@@ -154,7 +238,8 @@ object BookMapper {
                 name = name
             )
         } ?: emptyList(),
-        genres = item.volumeInfo.categories?.mapIndexed { idx, name -> Genre(id = idx.toLong(), name = name) } ?: emptyList(),
+        genres = item.volumeInfo.categories?.mapIndexed { idx, name -> Genre(id = idx.toLong(), name = name) }
+            ?: emptyList(),
         ratings = emptyList()
     )
 }
