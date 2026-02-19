@@ -5,6 +5,9 @@ import io.github.luksal.book.api.dto.BookSearchResponse
 import io.github.luksal.book.service.BookDataPopulationService
 import io.github.luksal.book.service.BookService
 import io.github.luksal.book.service.SyncBookDataService
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Controller
@@ -17,6 +20,7 @@ class BookController(
     private val bookService: BookService,
     private val bookDataPopulationService: BookDataPopulationService,
     private val syncBookDataService: SyncBookDataService,
+    private val customInitializerDispatcher: CoroutineDispatcher,
 ) {
 
     @GetMapping(params = ["title", "genres", "publishedYearRange"])
@@ -40,12 +44,17 @@ class BookController(
 
     @PostMapping(path = ["/basic-info/populate"])
     fun populateBasicBookInfoCollection() {
-        return bookDataPopulationService.populateBasicBookInfoCollection()
+
+        CoroutineScope(Dispa).launch {
+            return bookDataPopulationService.populateBasicBookInfoCollection()
+        }
     }
 
     @PostMapping(path = ["/populate"])
     fun populateBooksCollection() {
-        return bookDataPopulationService.populateBooksCollection()
+        CoroutineScope(customInitializerDispatcher).launch {
+            return bookDataPopulationService.populateBooksCollection()
+        }
     }
 
 

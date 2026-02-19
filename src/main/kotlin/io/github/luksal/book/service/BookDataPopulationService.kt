@@ -35,7 +35,6 @@ class BookDataPopulationService(
     private val openLibraryService: OpenLibraryService,
     private val googleBooksService: GoogleBooksService,
     private val archiveBooksService: ArchiveBooksService,
-    private val customInitializerDispatcher: CoroutineDispatcher,
     private val emailService: EmailService
 ) {
 
@@ -54,15 +53,13 @@ class BookDataPopulationService(
     }
 
     fun populateBasicBookInfoCollection() {
-        CoroutineScope(customInitializerDispatcher).launch {
             log.info("Starting book basic info collection initialization")
-
             val limit = 5000
             var totalSavedCount = 0
             var scheduled = bookBasicDataPopulationJpaRepository.findFirstByMeta_Status(EventStatus.PENDING) ?: run {
                 sendBasicBookInfoSuccessNotificationEmail(0, 0, "", totalSavedCount)
                 log.info("No scheduled tasks found for book basic info collection initialization, exiting")
-                return@launch
+                return
             }
             val fromYear = scheduled.year
             while (true) {
@@ -104,13 +101,11 @@ class BookDataPopulationService(
             }
             sendBasicBookInfoSuccessNotificationEmail(fromYear, scheduled.year, scheduled.lang, totalSavedCount)
             log.info("Book basic info collection initialization completed")
-        }
     }
 
-    //TODO check if tx works
     @Transactional
     fun populateBooksCollection() {
-        CoroutineScope(customInitializerDispatcher).launch {
+
             log.info("Starting book details collection initialization")
             var pageNumber = 0
             val pageSize = 20
@@ -147,7 +142,6 @@ class BookDataPopulationService(
                 pageNumber++
             } while (!unprocessedTitles.isLast)
             log.info("Book details collection initialization completed")
-        }
     }
 
     private fun findBookDetails(bookInfo: BookBasicInfoDocument): Book? =
