@@ -6,12 +6,12 @@ import java.time.Year
 data class Book(
     val id: String,
     val title: String,
-    val description: String,
+    val description: String?,
     val publishingYear: Year?,
-    val pageCount: Int,
+    val pageCount: Int?,
     val edition: BookEdition? = null,
-    val thumbnailUrl: String,
-    val smallThumbnailUrl: String,
+    val thumbnailUrl: String? = null,
+    val smallThumbnailUrl: String? = null,
     val authors: List<Author>,
     val genres: List<Genre>,
     val ratings: List<Rating>,
@@ -23,14 +23,14 @@ data class BookEdition(
 )
 
 data class Author(
-    val id: Long,
-    val publicId: String,
+    val id: Long? = null,
+    val publicId: String? = null,
     val name: String,
     val otherNames: List<String>? = emptyList()
 )
 
 data class Genre(
-    val id: Long,
+    val id: Long? = null,
     val name: String
 )
 

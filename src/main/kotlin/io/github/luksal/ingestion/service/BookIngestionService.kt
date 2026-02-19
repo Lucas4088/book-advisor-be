@@ -61,6 +61,12 @@ class BookIngestionService(
         val searchPath = crawlerSpec.path.search.replace(FORMATTED_TITLE_PLACEHOLDER, searchTitle)
         val searchUrl = "${crawlerSpec.baseUrl}$searchPath"
         val proxiedSearchUrl = "${scrapingProxyProperties.url}?url=${crawlerSpec.baseUrl}${searchPath}"
+        //TODO missing book page for amazon - eg Dracula
+        /*2026-02-19T15:50:48.472+01:00  INFO 24248 --- [nio-8090-exec-1] i.g.l.i.service.BookIngestionService     : Composed search url: http://localhost:8000/html?url=https://www.amazon.com/s?k=Dracula&i=stripbooks
+        2026-02-19T15:50:48.472+01:00  INFO 24248 --- [nio-8090-exec-1] i.g.l.i.fetcher.PageFetcher$Companion    : Fetching http://localhost:8000/html?url=https://www.amazon.com/s?k=Dracula&i=stripbooks
+        2026-02-19T15:50:58.259+01:00  INFO 24248 --- [nio-8090-exec-1] i.g.l.i.service.BookIngestionService     : Composed page url: http://localhost:8000/html?url=https://www.amazon.com#
+        2026-02-19T15:50:58.259+01:00  INFO 24248 --- [nio-8090-exec-1] i.g.l.i.fetcher.PageFetcher$Companion    : Fetching http://localhost:8000/html?url=https://www.amazon.com#
+        2026-02-19T15:51:08.177+01:00  INFO 24248 --- [nio-8090-exec-1] i.g.l.i.service.BookIngestionService     : Extracted rating for book Dracula from source amazon-books: RatingUpdate(id=null, score=0, count=0, source=RatingSourceUpdate(id=null, name=amazon-books, url=https://www.amazon.com))*/
         return if (crawlerSpec.proxyEnabled) proxiedSearchUrl else searchUrl
     }
 

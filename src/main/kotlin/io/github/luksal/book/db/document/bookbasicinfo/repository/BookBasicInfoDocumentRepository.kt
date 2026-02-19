@@ -10,5 +10,6 @@ import org.springframework.stereotype.Repository
 @Repository
 interface BookBasicInfoDocumentRepository : MongoRepository<BookBasicInfoDocument, String>,
     DocumentCustomRepository<BookBasicInfoDocument> {
-    fun findByProcessed(processed: Boolean, page: Pageable): Page<BookBasicInfoDocument>
+
+    fun findAllByPublicIdIn(bookIds: List<String>, page: Pageable): Page<BookBasicInfoDocument>
 }

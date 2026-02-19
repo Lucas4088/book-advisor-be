@@ -10,6 +10,7 @@ data class OpenLibraryBookDetails(
     val links: List<Link>? = emptyList(),
     val title: String?,
     val covers: List<Long>? = emptyList(),
+    val numberOfPages: Int? = null,
     val subjectPlaces: List<String>? = emptyList(),
     val subjectPeople: List<String>? = emptyList(),
     val key: String,

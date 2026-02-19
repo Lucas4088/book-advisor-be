@@ -3,7 +3,7 @@ CREATE TABLE books (
                        title VARCHAR(255) NOT NULL,
                        description TEXT,
                        publishing_year INT,
-                       page_count INT NOT NULL,
+                       page_count INT,
                        thumbnail_url TEXT,
                        small_thumbnail_url TEXT
 );

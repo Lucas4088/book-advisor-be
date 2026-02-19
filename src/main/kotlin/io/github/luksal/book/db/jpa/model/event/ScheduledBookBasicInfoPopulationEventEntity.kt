@@ -4,14 +4,17 @@ import io.github.luksal.book.common.jpa.event.EventMeta
 import jakarta.persistence.*
 
 @Entity
-@Table(name = "sync_books_events")
-class SyncBookEventEntity(
+@Table(name = "book_basic_data_population_events")
+class ScheduledBookBasicInfoPopulationEventEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long? = null,
+    val id: Long? = null,
 
     @Column(nullable = false)
-    val bookId: String,
+    val year: Int,
+
+    @Column(nullable = false)
+    val lang: String,
 
     @Embedded
     @AttributeOverrides(

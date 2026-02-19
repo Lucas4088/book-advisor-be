@@ -14,15 +14,15 @@ class BookEntity(
     val title: String,
 
     @Column(columnDefinition = "TEXT")
-    val description: String,
+    val description: String?,
 
     @Column(nullable = false)
     val publishingYear: Int?,
 
-    val pageCount: Int,
+    val pageCount: Int?,
 
-    val thumbnailUrl: String,
-    val smallThumbnailUrl: String,
+    val thumbnailUrl: String?,
+    val smallThumbnailUrl: String?,
 
     @ManyToMany
     @JoinTable(

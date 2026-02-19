@@ -17,6 +17,8 @@ interface OpenLibraryClient {
                     @RequestParam("page") page: Int,
                     @RequestParam("limit") limit: Int): OpenLibrarySearchResponse
 
+    @GetMapping("/search.json")
+    fun searchBooks(@RequestParam("q") query: String): OpenLibrarySearchResponse
 
     @GetMapping("{id}")
     fun getBook(@PathVariable("id") id: String): OpenLibraryBookDetails

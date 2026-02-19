@@ -16,9 +16,16 @@ class OpenLibraryService(private val openLibraryClient: OpenLibraryClient) {
 
     @RateLimiter(name = "search-openLibraryRateLimiter")
     @Retry(name = "search-openLibraryRetry")
-    fun searchBooks(startYear: Int, endYear: Int, lang: String, page: Int, limit: Int): OpenLibrarySearchResponse {
+    fun searchBy(startYear: Int, endYear: Int, lang: String, page: Int, limit: Int): OpenLibrarySearchResponse {
         val query = "publish_year:[$startYear TO $endYear]"
         return openLibraryClient.searchBooks(query, FIELDS.joinToString(","), lang, page, limit)
+    }
+
+    @RateLimiter(name = "search-openLibraryRateLimiter")
+    @Retry(name = "search-openLibraryRetry")
+    fun searchBy(title: String, authorName: String): OpenLibrarySearchResponse {
+        val query = "title:\"$title\" author:\"$authorName\"$]"
+        return openLibraryClient.searchBooks(query)
     }
 
     @RateLimiter(name = "get-openLibraryRateLimiter")

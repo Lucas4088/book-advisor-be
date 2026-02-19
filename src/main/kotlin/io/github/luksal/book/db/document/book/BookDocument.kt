@@ -1,10 +1,5 @@
 package io.github.luksal.book.db.document.book
 
-import io.github.luksal.book.api.dto.BookSearchResponse
-import io.github.luksal.book.model.Book
-import io.github.luksal.book.model.BookEdition
-import io.github.luksal.book.model.Rating
-import io.github.luksal.book.model.RatingSource
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
 import java.math.BigDecimal
@@ -16,12 +11,12 @@ class BookDocument(
     val title: String,
     val description: String?,
     val publishingYear: Int?,
-    val pageCount: Int,
+    val pageCount: Int?,
 
     val edition: EditionEmbedded? = null,
 
-    val thumbnailUrl: String,
-    val smallThumbnailUrl: String,
+    val thumbnailUrl: String?,
+    val smallThumbnailUrl: String?,
 
     val authors: List<AuthorEmbedded>? = emptyList(),
     val genres: List<GenreEmbedded>? = emptyList(),
@@ -34,7 +29,7 @@ data class EditionEmbedded(
 )
 
 data class AuthorEmbedded(
-    val publicId: String,
+    val publicId: String?,
     val name: String,
     val otherNames: List<String>? = emptyList()
 )

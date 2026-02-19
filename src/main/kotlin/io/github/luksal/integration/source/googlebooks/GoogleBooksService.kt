@@ -7,7 +7,6 @@ import io.github.luksal.util.ext.logger
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter
 import org.springframework.stereotype.Service
-import kotlin.math.log
 
 @Service
 class GoogleBooksService(private val googleBooksClient: GoogleBooksClient) {

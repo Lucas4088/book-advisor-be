@@ -4,8 +4,8 @@ import io.github.luksal.book.common.jpa.event.EventMeta
 import jakarta.persistence.*
 
 @Entity
-@Table(name = "sync_books_events")
-class SyncBookEventEntity(
+@Table(name = "populate_book_details_events")
+data class PopulateBookDetailsEventEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long? = null,

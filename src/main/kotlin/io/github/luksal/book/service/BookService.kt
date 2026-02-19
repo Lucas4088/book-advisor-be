@@ -6,9 +6,11 @@ import io.github.luksal.book.db.document.book.repository.BookDocumentRepository
 import io.github.luksal.book.db.document.bookbasicinfo.BookBasicInfoDocument
 import io.github.luksal.book.db.document.bookbasicinfo.repository.BookBasicInfoDocumentRepository
 import io.github.luksal.book.db.jpa.BookJpaRepository
-import io.github.luksal.book.db.jpa.SyncBookEventJpaRepository
+import io.github.luksal.book.db.jpa.event.SyncBookEventJpaRepository
 import io.github.luksal.book.db.jpa.model.BookEntity
-import io.github.luksal.book.db.jpa.model.event.EventStatus
+import io.github.luksal.book.common.jpa.event.EventStatus
+import io.github.luksal.book.db.jpa.event.PopulateBookDetailsEventJpaRepository
+import io.github.luksal.book.db.jpa.model.event.PopulateBookDetailsEventEntity
 import io.github.luksal.book.db.jpa.model.event.SyncBookEventEntity
 import io.github.luksal.book.mapper.BookMapper
 import io.github.luksal.book.model.Book
@@ -28,7 +30,8 @@ class BookService(
     private val bookJpaRepository: BookJpaRepository,
     private val bookBasicInfoDocumentRepository: BookBasicInfoDocumentRepository,
     private val bookDocumentRepository: BookDocumentRepository,
-    private val syncBookEventJpaRepository: SyncBookEventJpaRepository
+    private val syncBookEventJpaRepository: SyncBookEventJpaRepository,
+    private val populateBookDetailsEventJpaRepository: PopulateBookDetailsEventJpaRepository
 ) {
 
     private val log = logger()
@@ -58,14 +61,7 @@ class BookService(
             log.info("No book documents to save")
             return
         }
-        books.map {
-            SyncBookEventEntity(
-                processed = false,
-                bookId = it.id,
-                status = EventStatus.NEW,
-                timestamp = Instant.now().toEpochMilli(),
-            )
-        }.let {
+        books.map { SyncBookEventEntity(bookId = it.id) }.let {
             syncBookEventJpaRepository.saveAll(it)
         }
         bulkSaveNoDuplicatesBooks(books)
@@ -82,13 +78,16 @@ class BookService(
     fun updateBook(bookUpdate: BookUpdate): String? =
         bookDocumentRepository.update(bookUpdate)
 
+    @Transactional
     fun saveBookBasicInfo(bookBasicInfo: List<OpenLibraryDoc>, lang: String): Int {
-        return bookBasicInfo.map { it.toBasicInfoDocument(lang) }.let {
-            if (it.isEmpty()) {
+        return bookBasicInfo.map { it.toBasicInfoDocument(lang) }.let { bookBasicInfo ->
+            if (bookBasicInfo.isEmpty()) {
                 log.info("No book basic info to save for lang=$lang")
                 return@let 0
             }
-            bulkSaveNoDuplicatesBasicBookInfo(it)
+            bookBasicInfo.map { PopulateBookDetailsEventEntity(bookId = it.publicId) }
+                .let { populateBookDetailsEventJpaRepository.saveAll(it) }
+            bulkSaveNoDuplicatesBasicBookInfo(bookBasicInfo)
         }
     }
 
@@ -96,12 +95,11 @@ class BookService(
         bookBasicInfoDocumentRepository.saveAll(bookBasicInfoDocument)
 
 
-    fun getUnprocessedBookBasicInfo(page: Pageable): Page<BookBasicInfoDocument> =
-        bookBasicInfoDocumentRepository.findByProcessed(false, page)
+    fun getUnprocessedBookBasicInfo(bookIds: List<String>, page: Pageable): Page<BookBasicInfoDocument> =
+        bookBasicInfoDocumentRepository.findAllByPublicIdIn(bookIds, page)
 
     private fun bulkSaveNoDuplicatesBooks(books: List<Book>) =
         bookDocumentRepository.saveBulkWithDeduplication(books.map { BookMapper.map(it) })
-
 
     private fun bulkSaveNoDuplicatesBasicBookInfo(documents: List<BookBasicInfoDocument>): Int =
         bookBasicInfoDocumentRepository.saveBulkWithDeduplication(documents).size

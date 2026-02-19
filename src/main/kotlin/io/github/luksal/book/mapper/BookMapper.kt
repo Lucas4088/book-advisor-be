@@ -2,12 +2,13 @@ package io.github.luksal.book.mapper
 
 import io.github.luksal.book.api.dto.BookSearchResponse
 import io.github.luksal.book.db.document.book.*
+import io.github.luksal.book.db.document.bookbasicinfo.BookBasicInfoDocument
 import io.github.luksal.book.db.jpa.model.*
-import io.github.luksal.book.db.jpa.model.event.SyncBookEventEntity
 import io.github.luksal.book.model.*
+import io.github.luksal.integration.source.archivebooks.api.dto.ArchiveSearchDoc
 import io.github.luksal.integration.source.googlebooks.api.dto.BookItem
 import io.github.luksal.integration.source.openlibrary.api.dto.OpenLibraryBookDetails
-import java.time.Instant
+import io.github.luksal.integration.source.openlibrary.api.dto.OpenLibraryDoc
 import java.time.Year
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -50,18 +51,19 @@ object BookMapper {
             )
         }?.toSet() ?: emptySet()
 
+    @OptIn(ExperimentalUuidApi::class)
     fun mapToEntity(book: BookDocument): BookEntity {
         return BookEntity(
             id = book.id,
             title = book.title,
-            description = book.description ?: "",
+            description = book.description,
             publishingYear = book.publishingYear,
             pageCount = book.pageCount,
-            thumbnailUrl = book.thumbnailUrl.ifEmpty { "" },
-            smallThumbnailUrl = book.smallThumbnailUrl.ifEmpty { "" },
+            thumbnailUrl = book.thumbnailUrl,
+            smallThumbnailUrl = book.smallThumbnailUrl,
             authors = book.authors?.takeIf { it.isNotEmpty() }?.map {
                 AuthorEntity(
-                    publicId = it.publicId,
+                    publicId = it.publicId ?: Uuid.generateV7().toString(),
                     name = it.name,
                     otherNames = it.otherNames
                 )
@@ -91,6 +93,7 @@ object BookMapper {
             url = ratingSource.url
         )
 
+    @OptIn(ExperimentalUuidApi::class)
     fun mapToEntity(book: Book): BookEntity {
         return BookEntity(
             id = book.id,
@@ -98,11 +101,11 @@ object BookMapper {
             description = book.description,
             publishingYear = book.publishingYear?.value,
             pageCount = book.pageCount,
-            thumbnailUrl = book.thumbnailUrl.ifEmpty { "" },
-            smallThumbnailUrl = book.smallThumbnailUrl.ifEmpty { "" },
+            thumbnailUrl = book.thumbnailUrl,
+            smallThumbnailUrl = book.smallThumbnailUrl,
             authors = book.authors.takeIf { it.isNotEmpty() }?.map {
                 AuthorEntity(
-                    publicId = it.publicId,
+                    publicId = it.publicId ?: Uuid.generateV7().toString(),
                     name = it.name,
                     otherNames = it.otherNames
                 )
@@ -184,12 +187,6 @@ object BookMapper {
         smallThumbnailUrl = book.smallThumbnailUrl
     )
 
-    fun mapTpSyncEvent(book: Book): SyncBookEventEntity = SyncBookEventEntity(
-        bookId = book.id,
-        processed = false,
-        timestamp = Instant.now().toEpochMilli(),
-    )
-
     fun map(details: OpenLibraryBookDetails): BookUpdate = BookUpdate(
         id = details.key,
         description = details.description?.value,
@@ -221,24 +218,39 @@ object BookMapper {
         }
     )
 
-    @OptIn(ExperimentalUuidApi::class)
-    fun map(item: BookItem, publicId: String, editionTitle: String?, lang: String): Book = Book(
-        id = publicId,
+    fun map(
+        openDetails: OpenLibraryBookDetails?, openDoc: OpenLibraryDoc?, archiveDetails: ArchiveSearchDoc?,
+        basicInfo: BookBasicInfoDocument
+    ) = Book(
+        id = basicInfo.publicId,
+        title = basicInfo.title,
+        description = openDetails?.description?.value ?: archiveDetails?.description?.firstOrNull(),
+        publishingYear = openDoc?.firstPublishYear?.let { Year.of(it) },
+        pageCount = openDetails?.numberOfPages,
+        edition = basicInfo.editionTitle?.let { BookEdition(it, basicInfo.lang) },
+        authors = openDoc?.authorName?.map { name -> Author(name = name, otherNames = null) }
+            ?.takeIf { it.isNotEmpty() }
+            ?: archiveDetails?.creator?.map { name -> Author(name = name, otherNames = null) }
+            ?: emptyList(),
+        genres = openDetails?.subjects?.map { Genre(name = it) } ?: emptyList(),
+        ratings = emptyList()
+    )
+
+    fun map(item: BookItem, basicInfo: BookBasicInfoDocument): Book = Book(
+        id = basicInfo.publicId,
         title = item.volumeInfo.title,
         description = item.volumeInfo.description ?: "",
         publishingYear = item.volumeInfo.publishedDate?.take(4)?.toIntOrNull()?.let { Year.of(it) },
         pageCount = item.volumeInfo.pageCount ?: 0,
-        edition = editionTitle?.let { BookEdition(it, lang) },
+        edition = basicInfo.editionTitle?.let { BookEdition(it, basicInfo.lang) },
         thumbnailUrl = item.volumeInfo.imageLinks?.thumbnail ?: "",
         smallThumbnailUrl = item.volumeInfo.imageLinks?.smallThumbnail ?: "",
-        authors = item.volumeInfo.authors?.mapIndexed { idx, name ->
+        authors = item.volumeInfo.authors?.map { name ->
             Author(
-                id = idx.toLong(),
-                publicId = Uuid.generateV7().toString(),
                 name = name
             )
         } ?: emptyList(),
-        genres = item.volumeInfo.categories?.mapIndexed { idx, name -> Genre(id = idx.toLong(), name = name) }
+        genres = item.volumeInfo.categories?.map { name -> Genre(name = name) }
             ?: emptyList(),
         ratings = emptyList()
     )
