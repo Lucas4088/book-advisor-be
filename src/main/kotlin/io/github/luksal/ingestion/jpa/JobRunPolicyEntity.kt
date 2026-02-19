@@ -8,12 +8,14 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.Table
 
 @Entity
-data class JobRunPolicy(
+@Table(name = "job_run_policy")
+data class JobRunPolicyEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long?,
+    val id: Long? = null,
 
     @Column(unique = true, nullable = false)
     @Enumerated(EnumType.STRING)

@@ -1,5 +1,6 @@
 package io.github.luksal.ingestion.api
 
+import io.github.luksal.ingestion.jpa.JobRunPolicyEntity
 import io.github.luksal.ingestion.jpa.JobRunPolicyRepository
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -13,7 +14,16 @@ class PopulationManagementController(val jobRunPolicyRepository: JobRunPolicyRep
 
     @PutMapping
     fun setPolicy(@RequestBody request: JobRunPolicyRequest) {
-        jobRunPolicyRepository.findByName(request.name.name)
-            ?.let { jobRunPolicyRepository.save(it) }
+        val entity = jobRunPolicyRepository.findByName(request.name)
+            ?.apply {
+                enabled = request.enabled
+            }
+            ?: JobRunPolicyEntity(
+                name = request.name,
+                enabled = request.enabled,
+                updatedAt = System.currentTimeMillis()
+            )
+
+        jobRunPolicyRepository.save(entity)
     }
 }

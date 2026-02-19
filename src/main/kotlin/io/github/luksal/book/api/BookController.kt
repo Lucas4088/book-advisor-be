@@ -44,16 +44,15 @@ class BookController(
 
     @PostMapping(path = ["/basic-info/populate"])
     fun populateBasicBookInfoCollection() {
-
-        CoroutineScope(Dispa).launch {
-            return bookDataPopulationService.populateBasicBookInfoCollection()
+        CoroutineScope(customInitializerDispatcher).launch {
+            bookDataPopulationService.populateBasicBookInfoCollection()
         }
     }
 
     @PostMapping(path = ["/populate"])
     fun populateBooksCollection() {
         CoroutineScope(customInitializerDispatcher).launch {
-            return bookDataPopulationService.populateBooksCollection()
+            bookDataPopulationService.populateBooksCollection()
         }
     }
 

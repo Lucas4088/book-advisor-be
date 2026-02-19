@@ -19,7 +19,6 @@ import io.github.luksal.util.ext.levenshteinDistance
 import io.github.luksal.util.ext.logger
 import io.github.luksal.util.ext.normalizeStandardChars
 import jakarta.transaction.Transactional
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -53,95 +52,80 @@ class BookDataPopulationService(
     }
 
     fun populateBasicBookInfoCollection() {
-            log.info("Starting book basic info collection initialization")
-            val limit = 5000
-            var totalSavedCount = 0
-            var scheduled = bookBasicDataPopulationJpaRepository.findFirstByMeta_Status(EventStatus.PENDING) ?: run {
-                sendBasicBookInfoSuccessNotificationEmail(0, 0, "", totalSavedCount)
-                log.info("No scheduled tasks found for book basic info collection initialization, exiting")
-                return
+        log.info("Starting book basic info collection initialization")
+        val limit = 5000
+        var scheduled = bookBasicDataPopulationJpaRepository.findFirstByMeta_Status(EventStatus.PENDING) ?: run {
+            log.info("No scheduled tasks found for book basic info collection initialization, exiting")
+            return
+        }
+        val fromYear = scheduled.year
+        var savedCount = 0
+        runCatching {
+            val response = openLibraryService.searchBy(
+                scheduled.year, scheduled.year,
+                scheduled.lang, 1, limit
+            )
+            savedCount = response.docs.size
+            bookService.saveBookBasicInfo(response.docs, scheduled.lang)
+            scheduled.apply {
+                meta.status = EventStatus.SUCCESS
+                meta.updatedAt = System.currentTimeMillis()
             }
-            val fromYear = scheduled.year
-            while (true) {
-                var savedCount = 0
-                try {
-                    var page = 0
-                    do {
-                        page++
-                        val response = openLibraryService.searchBy(
-                            scheduled.year, scheduled.year,
-                            scheduled.lang, page, limit
-                        )
-                        bookService.saveBookBasicInfo(response.docs, scheduled.lang)
-
-                        savedCount += response.docs.size
-                        totalSavedCount += savedCount
-
-                    } while (response.docs.isNotEmpty())
-                    scheduled.apply {
-                        meta.status = EventStatus.SUCCESS
-                        meta.updatedAt = System.currentTimeMillis()
-                    }
-                } catch (e: Exception) {
-                    log.error("Error during initialization: ${e.message}", e)
-                    scheduled.apply {
-                        meta.status = EventStatus.ERROR
-                        meta.updatedAt = System.currentTimeMillis()
-                        meta.errorMessage = e.message
-                    }
-                    sendBasicBookInfoErrorNotificationEmail(
-                        scheduled.year,
-                        scheduled.lang,
-                        savedCount,
-                        e.message ?: "Unknown error"
-                    )
-                }
-                bookBasicDataPopulationJpaRepository.save(scheduled)
-                scheduled = bookBasicDataPopulationJpaRepository.findFirstByMeta_Status(EventStatus.PENDING) ?: break
+        }.onFailure { e ->
+            log.error("Error during initialization: ${e.message}", e)
+            scheduled.apply {
+                meta.status = EventStatus.ERROR
+                meta.updatedAt = System.currentTimeMillis()
+                meta.errorMessage = e.message
             }
-            sendBasicBookInfoSuccessNotificationEmail(fromYear, scheduled.year, scheduled.lang, totalSavedCount)
-            log.info("Book basic info collection initialization completed")
+            sendBasicBookInfoErrorNotificationEmail(
+                scheduled.year,
+                scheduled.lang,
+                e.message ?: "Unknown error"
+            )
+        }
+        bookBasicDataPopulationJpaRepository.save(scheduled)
+        scheduled = bookBasicDataPopulationJpaRepository.findFirstByMeta_Status(EventStatus.PENDING) ?: return
+        //TODO move to jobs otherwise it will be a spam
+        sendBasicBookInfoSuccessNotificationEmail(fromYear, scheduled.year, scheduled.lang, savedCount)
+        log.info("Book basic info collection initialization completed")
     }
 
     @Transactional
     fun populateBooksCollection() {
-
-            log.info("Starting book details collection initialization")
-            var pageNumber = 0
-            val pageSize = 20
-            do {
-                val populateEventMap = populateBookDetailsEventJpaRepository.findAllPending(PageRequest.of(pageNumber, pageSize)).content
-                        .associateBy { it.bookId }
-                if(populateEventMap.isEmpty()) {
-                    log.info("No pending events found for book details collection initialization, exiting")
-                    break
+        log.info("Starting book details collection initialization")
+        val pageNumber = 0
+        val pageSize = 20
+        val populateEventMap = populateBookDetailsEventJpaRepository.findAllPending(PageRequest.of(pageNumber, pageSize)).content
+                .associateBy { it.bookId }
+        if(populateEventMap.isEmpty()) {
+            log.info("No pending events found for book details collection initialization, exiting")
+            return
+        }
+        val unprocessedTitles = bookService.getUnprocessedBookBasicInfo(
+            populateEventMap.values.map { it.bookId },
+            PageRequest.of(pageNumber, pageSize)
+        )
+        unprocessedTitles.content.mapNotNull { bookInfo ->
+            val populateEvent = populateEventMap[bookInfo.publicId]
+            runCatching {
+                findBookDetails(bookInfo)
+            }.onSuccess { book ->
+                if (book != null) {
+                    populateEvent?.meta?.markAsSuccess()
+                } else {
+                    populateEvent?.meta?.markAsSkipped()
+                    log.warn("No details found for book with title='${bookInfo.title}' and authors='${bookInfo.authors.joinToString(",")}'")
                 }
-                val unprocessedTitles = bookService.getUnprocessedBookBasicInfo(
-                    populateEventMap.values.map { it.bookId },
-                    PageRequest.of(pageNumber, pageSize)
-                )
-                unprocessedTitles.content.mapNotNull { bookInfo ->
-                    val populateEvent = populateEventMap[bookInfo.publicId]
-                    runCatching {
-                        findBookDetails(bookInfo)
-                    }.onSuccess { book ->
-                        if (book != null) {
-                            populateEvent?.meta?.markAsSuccess()
-                        } else {
-                            populateEvent?.meta?.markAsSkipped()
-                            log.warn("No details found for book with title='${bookInfo.title}' and authors='${bookInfo.authors.joinToString(",")}'")
-                        }
-                    }.onFailure { e ->
-                        populateEvent?.meta?.markAsFailed(e.message ?: "Unknown error")
-                        log.error("Error processing book with title='${bookInfo.title}' and authors='${bookInfo.authors.joinToString(",")}': ${e.message}", e)
-                    }.getOrNull()
-                }.let {
-                    bookService.saveBookDocuments(it)
-                    populateBookDetailsEventJpaRepository.saveAll(populateEventMap.values)
-                }
-                pageNumber++
-            } while (!unprocessedTitles.isLast)
-            log.info("Book details collection initialization completed")
+            }.onFailure { e ->
+                populateEvent?.meta?.markAsFailed(e.message ?: "Unknown error")
+                log.error("Error processing book with title='${bookInfo.title}' and authors='${bookInfo.authors.joinToString(",")}': ${e.message}", e)
+            }.getOrNull()
+        }.let {
+            bookService.saveBookDocuments(it)
+            populateBookDetailsEventJpaRepository.saveAll(populateEventMap.values)
+        }
+        log.info("Book details collection initialization completed")
     }
 
     private fun findBookDetails(bookInfo: BookBasicInfoDocument): Book? =
@@ -219,7 +203,6 @@ class BookDataPopulationService(
     private fun sendBasicBookInfoErrorNotificationEmail(
         year: Int,
         lang: String,
-        savedCount: Int,
         errorMessage: String
     ) = CoroutineScope(Dispatchers.IO).launch {
         log.error("Sending error notification email for book basic info collection initialization failure")
@@ -227,7 +210,6 @@ class BookDataPopulationService(
             "lukasz4088@gmail.com", "Book basic info collection initialization failed",
             """
                     The initialization of the book basic info collection for year $year and language $lang has failed.
-                    Total saved records before failure: $savedCount.
                     Error message: $errorMessage
                     """.trimIndent()
         )

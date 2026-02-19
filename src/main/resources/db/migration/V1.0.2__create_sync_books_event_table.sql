@@ -4,7 +4,7 @@ CREATE TABLE sync_books_events
     book_id       VARCHAR(36) NOT NULL,
     processed     BOOLEAN     NOT NULL DEFAULT FALSE,
     status        VARCHAR(64) NOT NULL,
-    error_message VARCHAR(256),
+    error_message VARCHAR(456),
     created_at    BIGINT      NOT NULL,
     updated_at    BIGINT
 );

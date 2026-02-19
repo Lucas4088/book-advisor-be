@@ -14,10 +14,9 @@ class BookDetailsPopulateJob(
 
     @Scheduled(fixedDelay = 1000)
     fun run() {
-        var isEnabled = jobRunPolicyRepository.findByName(JobName.POPULATE_BOOK_DETAILS.name)?.enabled ?: false
-        while (isEnabled) {
+        val isEnabled = jobRunPolicyRepository.findByName(JobName.POPULATE_BOOK_DETAILS)?.enabled ?: false
+        if (isEnabled) {
             bookPopulateService.populateBasicBookInfoCollection()
-            isEnabled = jobRunPolicyRepository.findByName(JobName.POPULATE_BOOK_DETAILS.name)?.enabled ?: false
         }
     }
 
