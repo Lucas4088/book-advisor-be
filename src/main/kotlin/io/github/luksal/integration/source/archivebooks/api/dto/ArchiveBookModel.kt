@@ -11,7 +11,7 @@ data class ArchiveBookDetailsResponse(
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Metadata(
     val identifier: String?,
-    val title: String?,
+    val title: String,
     val creator: String?,
     val publisher: String?,
     val date: String?,
