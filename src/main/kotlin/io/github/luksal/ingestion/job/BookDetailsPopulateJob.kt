@@ -16,7 +16,7 @@ class BookDetailsPopulateJob(
     fun run() {
         val isEnabled = jobRunPolicyRepository.findByName(JobName.POPULATE_BOOK_DETAILS)?.enabled ?: false
         if (isEnabled) {
-            bookPopulateService.populateBasicBookInfoCollection()
+            bookPopulateService.populateBooksCollection()
         }
     }
 
