@@ -9,7 +9,7 @@ import io.github.luksal.book.service.dto.BookSearchCriteriaDto
 import io.github.luksal.config.CrawlerProperties
 import io.github.luksal.config.CrawlerSpecification
 import io.github.luksal.config.ScrapingProxyProperties
-import io.github.luksal.ingestion.crawler.PageCrawler
+import io.github.luksal.ingestion.crawler.service.PageCrawler
 import io.github.luksal.ingestion.fetcher.PageFetcher
 import io.github.luksal.util.ext.logger
 import org.springframework.data.domain.PageRequest
