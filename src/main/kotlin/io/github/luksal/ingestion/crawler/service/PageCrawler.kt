@@ -1,4 +1,4 @@
-package io.github.luksal.ingestion.crawler
+package io.github.luksal.ingestion.crawler.service
 
 import io.github.luksal.config.CrawlerSpecification
 import org.jsoup.Jsoup
@@ -32,5 +32,3 @@ class PageCrawler {
             ?.firstNotNullOfOrNull { regex.find(it.text().trim().replace(Regex("""[.,]"""), ""))?.value?.toIntOrNull() }
     }
 }
-
-
