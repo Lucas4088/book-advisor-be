@@ -35,7 +35,6 @@ class CrawlerController(
     fun findAll(): List<Crawler> =
         crawlerCrudService.findAll()
 
-
     @DeleteMapping("/{id}")
     fun delete(id: Long) =
         crawlerCrudService.delete(id)
