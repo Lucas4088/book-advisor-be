@@ -2,6 +2,7 @@ package io.github.luksal.ingestion.crawler.api.dto
 
 data class Crawler(
     var id: Long? = null,
+    var name: String,
     val enabled: Boolean,
     val baseUrl: String,
     val rateLimit: RateLimit,
@@ -20,4 +21,11 @@ data class Path(
     val bookRatingScoreSelector: String,
     val search: String,
     val titleSpaceSeparator: String
+)
+
+data class CrawlerSearchDetails(
+    var id: Long,
+    var name: String,
+    val enabled: Boolean,
+    val baseUrl: String,
 )
