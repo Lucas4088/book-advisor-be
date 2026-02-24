@@ -17,6 +17,9 @@ data class PageCrawlerConfigEntity(
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long?,
 
+    @Column(unique = true, nullable = false)
+    val name: String,
+
     @Column(nullable = false)
     val enabled: Boolean,
 

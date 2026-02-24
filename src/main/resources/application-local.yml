@@ -5,7 +5,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5435/book-advisor-db
     username: postgres
-    password: postgres
+    password: password
     hikari:
       pool-name: BookAdvisorHikariCP
       maximum-pool-size: 5
@@ -13,6 +13,12 @@ spring:
       connection-timeout: 30000
       idle-timeout: 600000
       max-lifetime: 1800000
+  jpa:
+    properties:
+      hibernate:
+        default_schema: public
+  flyway:
+    schemas: public
   mail:
     host: localhost
     port: 1025

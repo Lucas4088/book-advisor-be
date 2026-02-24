@@ -1,8 +1,9 @@
 CREATE TABLE crawler_configs
 (
     id                         BIGSERIAL PRIMARY KEY,
+    name                       VARCHAR(255) NOT NULL UNIQUE,
     enabled                    BOOLEAN      NOT NULL,
-    base_url                   VARCHAR(500) NOT NULL,
+    base_url                   VARCHAR(500) NOT NULL UNIQUE,
     proxy_enabled              BOOLEAN      NOT NULL,
 
     requests_per_minute        INTEGER      NOT NULL,

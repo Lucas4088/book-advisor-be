@@ -1,6 +1,7 @@
 package io.github.luksal.ingestion.crawler.mapper
 
 import io.github.luksal.ingestion.crawler.api.dto.Crawler
+import io.github.luksal.ingestion.crawler.api.dto.CrawlerSearchDetails
 import io.github.luksal.ingestion.crawler.api.dto.Path
 import io.github.luksal.ingestion.crawler.api.dto.RateLimit
 import io.github.luksal.ingestion.crawler.jpa.entity.CrawlerPath
@@ -10,6 +11,7 @@ object CrawlerConfigMapper {
     fun map(entity: PageCrawlerConfigEntity): Crawler =
         Crawler(
             id = entity.id,
+            name = entity.name,
             enabled = entity.enabled,
             baseUrl = entity.baseUrl,
             rateLimit = RateLimit(
@@ -29,6 +31,7 @@ object CrawlerConfigMapper {
     fun map(id: Long? = null, domain: Crawler): PageCrawlerConfigEntity =
         PageCrawlerConfigEntity(
             id = id ?: domain.id,
+            name = domain.name,
             enabled = domain.enabled,
             baseUrl = domain.baseUrl,
             rateLimit = io.github.luksal.ingestion.crawler.jpa.entity.RateLimit(
@@ -43,5 +46,13 @@ object CrawlerConfigMapper {
                 titleSpaceSeparator = domain.path.titleSpaceSeparator
             ),
             proxyEnabled = domain.proxyEnabled
+        )
+
+    fun mapToSearchResponse(entity: Crawler): CrawlerSearchDetails =
+        CrawlerSearchDetails(
+            id = entity.id!!,
+            name = entity.name,
+            enabled = entity.enabled,
+            baseUrl = entity.baseUrl
         )
 }
