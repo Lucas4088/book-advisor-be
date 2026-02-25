@@ -9,7 +9,7 @@ data class OpenLibraryBookDetails(
     val description: TypeValue? = null,
     val links: List<Link>? = emptyList(),
     val title: String,
-    val firstPublishYear: String, //"April 11, 1947"
+    val firstPublishYear: String?, //"April 11, 1947"
     val covers: List<Long>? = emptyList(),
     val numberOfPages: Int? = null,
     val subjectPlaces: List<String>? = emptyList(),

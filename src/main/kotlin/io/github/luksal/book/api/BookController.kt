@@ -18,9 +18,7 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/api/books")
 class BookController(
     private val bookService: BookService,
-    private val bookDataPopulationService: BookDataPopulationService,
     private val syncBookDataService: SyncBookDataService,
-    private val customInitializerDispatcher: CoroutineDispatcher,
 ) {
 
     @GetMapping(params = ["title", "genres", "publishedYearRange"])
@@ -32,30 +30,6 @@ class BookController(
     fun getById(@PathVariable id: Long): BookSearchResponse {
         return bookService.getBookById(id = id)
     }
-
-    @PostMapping(path = ["/basic-info/schedule-population"], params = ["fromYear", "toYear", "lang"])
-    fun scheduleBookBasicDataPopulation(fromYear: Int, toYear: Int, lang: String) {
-        return bookDataPopulationService.scheduleBasicBookInfoCollection(
-            fromYear = fromYear,
-            toYear = toYear,
-            lang = lang
-        )
-    }
-
-    @PostMapping(path = ["/basic-info/populate"])
-    fun populateBasicBookInfoCollection() {
-        CoroutineScope(customInitializerDispatcher).launch {
-            bookDataPopulationService.populateBasicBookInfoCollection()
-        }
-    }
-
-    @PostMapping(path = ["/populate"])
-    fun populateBooksCollection() {
-        CoroutineScope(customInitializerDispatcher).launch {
-            bookDataPopulationService.populateBooksCollection()
-        }
-    }
-
 
     //TODO add also job
     @PostMapping(path = ["/sync"])

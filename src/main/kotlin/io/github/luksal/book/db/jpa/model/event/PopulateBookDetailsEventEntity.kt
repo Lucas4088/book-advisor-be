@@ -17,7 +17,8 @@ data class PopulateBookDetailsEventEntity(
     @AttributeOverrides(
         AttributeOverride(name = "status", column = Column(name = "status", nullable = false)),
         AttributeOverride(name = "errorMessage", column = Column(name = "error_message")),
-        AttributeOverride(name = "timestamp", column = Column(name = "timestamp", nullable = false)),
+        AttributeOverride(name = "createdAt", column = Column(name = "created_at", nullable = false)),
+        AttributeOverride(name = "updatedAt", column = Column(name = "updated_at", nullable = false)),
     )
     var meta: EventMeta = EventMeta(),
 )

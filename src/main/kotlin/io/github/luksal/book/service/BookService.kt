@@ -8,7 +8,6 @@ import io.github.luksal.book.db.document.bookbasicinfo.repository.BookBasicInfoD
 import io.github.luksal.book.db.jpa.BookJpaRepository
 import io.github.luksal.book.db.jpa.event.SyncBookEventJpaRepository
 import io.github.luksal.book.db.jpa.model.BookEntity
-import io.github.luksal.book.common.jpa.event.EventStatus
 import io.github.luksal.book.db.jpa.event.PopulateBookDetailsEventJpaRepository
 import io.github.luksal.book.db.jpa.model.event.PopulateBookDetailsEventEntity
 import io.github.luksal.book.db.jpa.model.event.SyncBookEventEntity
@@ -22,7 +21,6 @@ import jakarta.transaction.Transactional
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
-import java.time.Instant
 
 
 @Service
@@ -95,7 +93,7 @@ class BookService(
         bookBasicInfoDocumentRepository.saveAll(bookBasicInfoDocument)
 
 
-    fun getUnprocessedBookBasicInfo(bookIds: List<String>, page: Pageable): Page<BookBasicInfoDocument> =
+    fun getBookBasicInfo(bookIds: List<String>, page: Pageable): Page<BookBasicInfoDocument> =
         bookBasicInfoDocumentRepository.findAllByPublicIdIn(bookIds, page)
 
     private fun bulkSaveNoDuplicatesBooks(books: List<Book>) =
