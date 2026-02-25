@@ -8,6 +8,9 @@ import io.github.luksal.book.db.jpa.event.PopulateBookDetailsEventJpaRepository
 import io.github.luksal.book.db.jpa.model.event.ScheduledBookBasicInfoPopulationEventEntity
 import io.github.luksal.book.mapper.BookMapper
 import io.github.luksal.book.model.Book
+import io.github.luksal.ingestion.api.dto.ScheduledBasicInfoSearchRequest
+import io.github.luksal.ingestion.api.dto.ScheduledBookBasicInfoPopulationEvent
+import io.github.luksal.ingestion.mappper.IngestionMapper
 import io.github.luksal.integration.source.archivebooks.ArchiveBooksService
 import io.github.luksal.integration.source.archivebooks.api.dto.ArchiveSearchDoc
 import io.github.luksal.integration.source.googlebooks.GoogleBooksService
@@ -22,7 +25,10 @@ import jakarta.transaction.Transactional
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.springframework.data.domain.Example
+import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import tools.jackson.databind.ObjectMapper
 
@@ -38,6 +44,12 @@ class BookDataPopulationService(
 ) {
 
     private val log = logger()
+
+    fun searchBasicBookInfoSchedule(request: ScheduledBasicInfoSearchRequest, page: Pageable): Page<ScheduledBookBasicInfoPopulationEvent> {
+        return bookBasicDataPopulationJpaRepository.searchAll(
+            request.fromYear, request.toYear, request.lang, request.status, page
+        ).map { IngestionMapper.map(it) }
+    }
 
     fun scheduleBasicBookInfoCollection(fromYear: Int, toYear: Int, lang: String) {
         (fromYear..toYear).filter {

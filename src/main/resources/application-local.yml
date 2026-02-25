@@ -5,7 +5,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5435/book-advisor-db
     username: postgres
-    password: password
+    password: postgres
     hikari:
       pool-name: BookAdvisorHikariCP
       maximum-pool-size: 5
