@@ -2,7 +2,8 @@ package io.github.luksal.ingestion.api
 
 import io.github.luksal.book.service.BookDataPopulationService
 import io.github.luksal.ingestion.api.dto.JobRunPolicy
-import io.github.luksal.ingestion.api.dto.ScheduledBasicInfoSearchRequest
+import io.github.luksal.ingestion.api.dto.ScheduleBookBasicInfoRequest
+import io.github.luksal.ingestion.api.dto.ScheduledBookBasicInfoSearchRequest
 import io.github.luksal.ingestion.api.dto.ScheduledBookBasicInfoPopulationEvent
 import io.github.luksal.ingestion.job.dto.JobName
 import io.github.luksal.ingestion.jpa.JobRunPolicyEntity
@@ -11,7 +12,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.springframework.data.domain.Page
-import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.web.bind.annotation.*
 
@@ -45,18 +45,18 @@ class PopulationManagementController(
             JobRunPolicy(name = it.name, enabled = it.enabled)
         }
 
-    @PostMapping(path = ["/book-basic-info-schedule"], params = ["fromYear", "toYear", "lang"])
-    fun scheduleBookBasicDataPopulation(fromYear: Int, toYear: Int, lang: String) {
+    @PostMapping(path = ["/schedule/book-basic-info"])
+    fun scheduleBookBasicDataPopulation(@RequestBody request: ScheduleBookBasicInfoRequest) {
         return bookDataPopulationService.scheduleBasicBookInfoCollection(
-            fromYear = fromYear,
-            toYear = toYear,
-            lang = lang
+            fromYear = request.fromYear,
+            toYear = request.toYear,
+            lang = request.lang
         )
     }
 
-    @GetMapping("/book-basic-info-schedule")
-    fun fetchScheduleBookBasicInfo(
-        @RequestBody request: ScheduledBasicInfoSearchRequest,
+    @PostMapping("/book-basic-info-schedule")
+    fun fetchScheduledBookBasicInfo(
+        @RequestBody request: ScheduledBookBasicInfoSearchRequest,
         page: Pageable,
     ): Page<ScheduledBookBasicInfoPopulationEvent> {
         return bookDataPopulationService.searchBasicBookInfoSchedule(request, page)

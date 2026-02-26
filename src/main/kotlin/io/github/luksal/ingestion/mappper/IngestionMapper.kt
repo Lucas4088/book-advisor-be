@@ -2,7 +2,6 @@ package io.github.luksal.ingestion.mappper
 
 import io.github.luksal.book.db.jpa.model.event.ScheduledBookBasicInfoPopulationEventEntity
 import io.github.luksal.commons.dto.EventMeta
-import io.github.luksal.ingestion.api.dto.ScheduledBasicInfoSearchRequest
 import io.github.luksal.ingestion.api.dto.ScheduledBookBasicInfoPopulationEvent
 
 
