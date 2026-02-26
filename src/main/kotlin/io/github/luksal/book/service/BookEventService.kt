@@ -5,6 +5,7 @@ import io.github.luksal.book.db.jpa.event.PopulateBookDetailsEventJpaRepository
 import io.github.luksal.book.db.jpa.event.SyncBookEventJpaRepository
 import org.springframework.stereotype.Service
 
+//TODO we will see
 @Service
 class BookEventService(
     val populateBookDetailsEventJpaRepository: PopulateBookDetailsEventJpaRepository,

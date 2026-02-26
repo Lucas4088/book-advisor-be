@@ -6,18 +6,17 @@ import io.github.luksal.book.db.document.book.repository.BookDocumentRepository
 import io.github.luksal.book.db.document.bookbasicinfo.BookBasicInfoDocument
 import io.github.luksal.book.db.document.bookbasicinfo.repository.BookBasicInfoDocumentRepository
 import io.github.luksal.book.db.jpa.BookJpaRepository
-import io.github.luksal.book.db.jpa.event.SyncBookEventJpaRepository
 import io.github.luksal.book.db.jpa.model.BookEntity
-import io.github.luksal.book.db.jpa.event.PopulateBookDetailsEventJpaRepository
-import io.github.luksal.book.db.jpa.model.event.PopulateBookDetailsEventEntity
-import io.github.luksal.book.db.jpa.model.event.SyncBookEventEntity
 import io.github.luksal.book.mapper.BookMapper
 import io.github.luksal.book.model.Book
+import io.github.luksal.book.model.BookBasicInfoDocumentSavedEvent
+import io.github.luksal.book.model.BookDocumentSavedEvent
 import io.github.luksal.book.model.BookUpdate
 import io.github.luksal.book.service.dto.BookSearchCriteriaDto
 import io.github.luksal.integration.source.openlibrary.api.dto.OpenLibraryDoc
 import io.github.luksal.util.ext.logger
 import jakarta.transaction.Transactional
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -28,8 +27,7 @@ class BookService(
     private val bookJpaRepository: BookJpaRepository,
     private val bookBasicInfoDocumentRepository: BookBasicInfoDocumentRepository,
     private val bookDocumentRepository: BookDocumentRepository,
-    private val syncBookEventJpaRepository: SyncBookEventJpaRepository,
-    private val populateBookDetailsEventJpaRepository: PopulateBookDetailsEventJpaRepository
+    private val publisher: ApplicationEventPublisher
 ) {
 
     private val log = logger()
@@ -42,6 +40,10 @@ class BookService(
             genres = criteria.genres?.map { it.name },
             pageable = pageable
         ).map { BookMapper.map(it) }
+    }
+
+    fun getBooksByIds(bookPublicIds: List<String>): List<BookSearchResponse> {
+        return bookJpaRepository.findAllByBookPublicIdIn(bookPublicIds).map { BookMapper.map(it) }
     }
 
     fun getBookById(id: Long): BookSearchResponse {
@@ -59,8 +61,8 @@ class BookService(
             log.info("No book documents to save")
             return
         }
-        books.map { SyncBookEventEntity(bookId = it.id) }.let {
-            syncBookEventJpaRepository.saveAll(it)
+        books.forEach {
+             event -> publisher.publishEvent(BookDocumentSavedEvent(bookId = event.id))
         }
         bulkSaveNoDuplicatesBooks(books)
     }
@@ -71,6 +73,9 @@ class BookService(
             return
         }
         bookJpaRepository.saveAll(books)
+        books.forEach {
+            publisher.publishEvent(BookDocumentSavedEvent(bookId = it.id!!))
+        }
     }
 
     fun updateBook(bookUpdate: BookUpdate): String? =
@@ -83,8 +88,9 @@ class BookService(
                 log.info("No book basic info to save for lang=$lang")
                 return@let 0
             }
-            bookBasicInfo.map { PopulateBookDetailsEventEntity(bookId = it.publicId) }
-                .let { populateBookDetailsEventJpaRepository.saveAll(it) }
+            bookBasicInfo.forEach {
+                publisher.publishEvent(BookBasicInfoDocumentSavedEvent(bookId = it.publicId))
+            }
             bulkSaveNoDuplicatesBasicBookInfo(bookBasicInfo)
         }
     }

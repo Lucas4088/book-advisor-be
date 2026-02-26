@@ -8,7 +8,9 @@ import io.github.luksal.book.service.BookService
 import io.github.luksal.book.service.dto.BookSearchCriteriaDto
 import io.github.luksal.config.CrawlerProperties
 import io.github.luksal.config.CrawlerSpecification
+import io.github.luksal.config.Path
 import io.github.luksal.config.ScrapingProxyProperties
+import io.github.luksal.ingestion.crawler.jpa.PageCrawlerJpaRepository
 import io.github.luksal.ingestion.crawler.service.PageCrawler
 import io.github.luksal.ingestion.fetcher.PageFetcher
 import io.github.luksal.util.ext.logger
@@ -16,12 +18,15 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.net.URLEncoder
+import kotlin.String
 
 @Service
 class BookIngestionService(
     private val pageFetcher: PageFetcher,
     private val pageCrawler: PageCrawler,
     private val bookService: BookService,
+    private val pageCrawlerRepository: PageCrawlerJpaRepository,
+    //TODO Deprecated
     private val crawlerProperties: CrawlerProperties,
     private val scrapingProxyProperties: ScrapingProxyProperties
 ) {
@@ -32,6 +37,26 @@ class BookIngestionService(
         private const val FORMATTED_TITLE_PLACEHOLDER = "{formattedTitle}"
     }
 
+    fun crawl(crawlerId: Long, bookIds: List<String>) {
+        val crawlerConfig = pageCrawlerRepository.findById(crawlerId).orElseThrow()
+        bookService.getBooksByIds(bookIds).forEach {
+            if(crawlerConfig.enabled) {
+                crawlAndIngest(it, CrawlerSpecification(
+                    name = crawlerConfig.name,
+                    baseUrl = crawlerConfig.baseUrl,
+                    path = Path(
+                         bookResultSelector =
+                    bookRatingScoreSelector=
+                    bookRatingCountSelector: String,
+                search: String,
+                titleSpaceSeparator: String
+                    ),
+                    proxyEnabled = crawlerConfig.proxyEnabled
+                ))
+            }
+        }
+    }
+
     //TODO split into mathods and component to make it more fault tolerant and testable
     //TODO worker per crawler source???
     fun crawlAndIngest() {
@@ -40,18 +65,26 @@ class BookIngestionService(
             PageRequest.of(0, 20)
         ).forEach { book ->
             crawlerProperties.crawlers.filter { it.enabled }.forEach { crawlerSpec ->
-                val searchUrl = composeSearchBookUrl(book, crawlerSpec)
-                log.info("Composed search url: $searchUrl")
-                val searchPageHtml = pageFetcher.fetch(searchUrl)
-
-                pageCrawler.extractBookPageUrl(searchPageHtml, crawlerSpec)?.let {
-                    val pageUrl = composeBookPageUrl(it, crawlerSpec)
-                    log.info("Composed page url: $pageUrl")
-                    pageFetcher.fetch(composeBookPageUrl(it, crawlerSpec)).takeIf { bookPage -> bookPage.isNotEmpty() }?.let { bookPage ->
-                        createAndSaveRating(bookPage, crawlerSpec, book)
-                    }
-                }
+                crawlAndIngest(book, crawlerSpec)
             }
+        }
+    }
+
+    private fun crawlAndIngest(
+        book: BookSearchResponse,
+        crawlerSpec: CrawlerSpecification
+    ) {
+        val searchUrl = composeSearchBookUrl(book, crawlerSpec)
+        log.info("Composed search url: $searchUrl")
+        val searchPageHtml = pageFetcher.fetch(searchUrl)
+
+        pageCrawler.extractBookPageUrl(searchPageHtml, crawlerSpec)?.let {
+            val pageUrl = composeBookPageUrl(it, crawlerSpec)
+            log.info("Composed page url: $pageUrl")
+            pageFetcher.fetch(composeBookPageUrl(it, crawlerSpec)).takeIf { bookPage -> bookPage.isNotEmpty() }
+                ?.let { bookPage ->
+                    createAndSaveRating(bookPage, crawlerSpec, book)
+                }
         }
     }
 

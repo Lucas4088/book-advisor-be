@@ -18,4 +18,6 @@ interface BookJpaRepository : JpaRepository<BookEntity, Long> {
            and (:genres is null or :genres member of b.genres)
     """)
     fun searchAll(title: String?, startYear: Int, endYear: Int, genres: List<String>?, pageable: Pageable): Page<BookEntity>
+
+    fun findAllByBookPublicIdIn(bookPublicIds: List<String>): List<BookEntity>
 }

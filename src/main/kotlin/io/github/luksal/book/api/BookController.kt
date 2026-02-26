@@ -31,7 +31,7 @@ class BookController(
         return bookService.getBookById(id = id)
     }
 
-    //TODO add also job
+    //TODO add kafka stream processing
     @PostMapping(path = ["/sync"])
     fun syncBooks() {
         return syncBookDataService.syncBookData()
