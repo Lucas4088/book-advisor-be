@@ -3,8 +3,8 @@ package io.github.luksal.ingestion.api
 import io.github.luksal.book.service.BookDataPopulationService
 import io.github.luksal.ingestion.api.dto.JobRunPolicy
 import io.github.luksal.ingestion.api.dto.ScheduleBookBasicInfoRequest
-import io.github.luksal.ingestion.api.dto.ScheduledBookBasicInfoSearchRequest
 import io.github.luksal.ingestion.api.dto.ScheduledBookBasicInfoPopulationEvent
+import io.github.luksal.ingestion.api.dto.ScheduledBookBasicInfoSearchRequest
 import io.github.luksal.ingestion.job.dto.JobName
 import io.github.luksal.ingestion.jpa.JobRunPolicyEntity
 import io.github.luksal.ingestion.jpa.JobRunPolicyRepository

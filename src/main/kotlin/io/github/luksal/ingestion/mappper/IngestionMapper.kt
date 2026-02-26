@@ -7,7 +7,7 @@ import io.github.luksal.ingestion.api.dto.ScheduledBookBasicInfoPopulationEvent
 
 object IngestionMapper {
 
-    fun map(source: ScheduledBookBasicInfoPopulationEventEntity):ScheduledBookBasicInfoPopulationEvent  {
+    fun map(source: ScheduledBookBasicInfoPopulationEventEntity): ScheduledBookBasicInfoPopulationEvent {
         return ScheduledBookBasicInfoPopulationEvent(
             id = source.id!!,
             year = source.year,

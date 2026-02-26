@@ -8,8 +8,8 @@ import io.github.luksal.book.db.jpa.event.PopulateBookDetailsEventJpaRepository
 import io.github.luksal.book.db.jpa.model.event.ScheduledBookBasicInfoPopulationEventEntity
 import io.github.luksal.book.mapper.BookMapper
 import io.github.luksal.book.model.Book
-import io.github.luksal.ingestion.api.dto.ScheduledBookBasicInfoSearchRequest
 import io.github.luksal.ingestion.api.dto.ScheduledBookBasicInfoPopulationEvent
+import io.github.luksal.ingestion.api.dto.ScheduledBookBasicInfoSearchRequest
 import io.github.luksal.ingestion.mappper.IngestionMapper
 import io.github.luksal.integration.source.archivebooks.ArchiveBooksService
 import io.github.luksal.integration.source.archivebooks.api.dto.ArchiveSearchDoc
