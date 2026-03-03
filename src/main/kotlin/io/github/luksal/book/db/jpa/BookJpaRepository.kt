@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 
 @Repository
-interface BookJpaRepository : JpaRepository<BookEntity, Long> {
+interface BookJpaRepository : JpaRepository<BookEntity, String> {
 
     @Query("""
         select b from BookEntity b 
@@ -19,5 +19,4 @@ interface BookJpaRepository : JpaRepository<BookEntity, Long> {
     """)
     fun searchAll(title: String?, startYear: Int, endYear: Int, genres: List<String>?, pageable: Pageable): Page<BookEntity>
 
-    fun findAllByBookPublicIdIn(bookPublicIds: List<String>): List<BookEntity>
 }

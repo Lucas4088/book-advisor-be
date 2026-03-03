@@ -8,10 +8,7 @@ import io.github.luksal.book.db.document.bookbasicinfo.repository.BookBasicInfoD
 import io.github.luksal.book.db.jpa.BookJpaRepository
 import io.github.luksal.book.db.jpa.model.BookEntity
 import io.github.luksal.book.mapper.BookMapper
-import io.github.luksal.book.model.Book
-import io.github.luksal.book.model.BookBasicInfoDocumentSavedEvent
-import io.github.luksal.book.model.BookDocumentSavedEvent
-import io.github.luksal.book.model.BookUpdate
+import io.github.luksal.book.model.*
 import io.github.luksal.book.service.dto.BookSearchCriteriaDto
 import io.github.luksal.integration.source.openlibrary.api.dto.OpenLibraryDoc
 import io.github.luksal.util.ext.logger
@@ -42,18 +39,18 @@ class BookService(
         ).map { BookMapper.map(it) }
     }
 
-    fun getBooksByIds(bookPublicIds: List<String>): List<BookSearchResponse> {
-        return bookJpaRepository.findAllByBookPublicIdIn(bookPublicIds).map { BookMapper.map(it) }
-    }
+    fun getBooksByIds(bookPublicIds: List<String>): List<BookSearchResponse> =
+        bookJpaRepository.findAllById(bookPublicIds).map { BookMapper.map(it) }
 
-    fun getBookById(id: Long): BookSearchResponse {
-        return bookJpaRepository.findById(id).map { BookMapper.map(it) }
-            .orElseThrow()
-    }
+    //TODO think more of this failover strategy
+    fun getBookById(id: String): BookSearchResponse =
+        bookJpaRepository.findById(id)
+            .orElse(bookDocumentRepository.findById(id).map { BookMapper.mapToEntity(it) }.orElseThrow())
+            .let { BookMapper.map(it) }
 
-    fun getBookDocumentByIds(ids: List<String>): List<BookDocument> {
-        return bookDocumentRepository.findAllById(ids)
-    }
+
+    fun getBookDocumentByIds(ids: List<String>): List<BookDocument> =
+        bookDocumentRepository.findAllById(ids)
 
     @Transactional
     fun saveBookDocuments(books: List<Book>) {
@@ -61,8 +58,8 @@ class BookService(
             log.info("No book documents to save")
             return
         }
-        books.forEach {
-             event -> publisher.publishEvent(BookDocumentSavedEvent(bookId = event.id))
+        books.forEach { event ->
+            publisher.publishEvent(BookDocumentSavedEvent(bookId = event.id))
         }
         bulkSaveNoDuplicatesBooks(books)
     }
@@ -74,7 +71,7 @@ class BookService(
         }
         bookJpaRepository.saveAll(books)
         books.forEach {
-            publisher.publishEvent(BookDocumentSavedEvent(bookId = it.id!!))
+            publisher.publishEvent(BookEntitySavedEvent(bookId = it.id!!))
         }
     }
 

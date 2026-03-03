@@ -8,21 +8,18 @@ import java.math.BigDecimal
 @Component
 class PageCrawler {
 
-    fun extractBookPageUrl(html: String, crawlerSpecification: CrawlerSpecification): String? {
-        val doc = Jsoup.parse(html)
-
-        //TODO handle element not found
-        return doc.select(crawlerSpecification.path.bookResultSelector)
-            .map{"${crawlerSpecification.baseUrl}${it.attr("href")}"}
+    fun extractBookPageUrl(html: String, crawlerSpecification: CrawlerSpecification): String? =
+        Jsoup.parse(html)
+            .select(crawlerSpecification.path.bookResultSelector)
+            .map { "${crawlerSpecification.baseUrl}${it.attr("href")}" }
             .firstOrNull()
-    }
 
-    fun extractRatingScore(html: String, crawlerSpecification: CrawlerSpecification): BigDecimal? {
-        val doc = Jsoup.parse(html)
-        return doc.selectFirst(crawlerSpecification.path.bookRatingScoreSelector)
+    fun extractRatingScore(html: String, crawlerSpecification: CrawlerSpecification): BigDecimal? =
+        Jsoup.parse(html)
+            .selectFirst(crawlerSpecification.path.bookRatingScoreSelector)
             ?.text()
             ?.toBigDecimalOrNull()
-    }
+
 
     fun extractRatingCount(html: String, crawlerSpecification: CrawlerSpecification): Int? {
         val doc = Jsoup.parse(html)

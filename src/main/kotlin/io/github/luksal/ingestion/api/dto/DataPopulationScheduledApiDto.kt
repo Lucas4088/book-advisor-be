@@ -1,6 +1,6 @@
 package io.github.luksal.ingestion.api.dto
 
-import io.github.luksal.book.common.jpa.event.EventStatus
+import io.github.luksal.commons.dto.EventStatus
 import io.github.luksal.commons.dto.EventMeta
 
 data class ScheduleBookBasicInfoRequest(

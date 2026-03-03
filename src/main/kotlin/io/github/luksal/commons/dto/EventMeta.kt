@@ -1,13 +1,14 @@
 package io.github.luksal.commons.dto
 
-import io.github.luksal.book.common.jpa.event.EventStatus
+import io.github.luksal.commons.dto.EventStatus
+import java.time.Instant
 
 data class EventMeta(
     var status: EventStatus,
 
     var errorMessage: String?,
 
-    val createdAt: Long,
+    val createdAt: Instant,
 
-    var updatedAt: Long?,
+    var updatedAt: Instant?,
 )

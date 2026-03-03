@@ -1,6 +1,6 @@
 package io.github.luksal.ingestion.crawler.jpa.entity
 
-import io.github.luksal.book.common.jpa.event.EventMeta
+import io.github.luksal.commons.jpa.EventMeta
 import io.github.luksal.ingestion.crawler.api.dto.Crawler
 import jakarta.persistence.AttributeOverride
 import jakarta.persistence.AttributeOverrides
@@ -15,7 +15,7 @@ import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
 
 @Entity
-@Table("scheduled_book_crawler_events")
+@Table(name = "scheduled_book_crawler_events")
 class ScheduledBookCrawlerEventEntity(
 
     @Id

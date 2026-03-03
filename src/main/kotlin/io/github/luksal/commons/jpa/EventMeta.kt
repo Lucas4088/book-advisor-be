@@ -1,9 +1,11 @@
-package io.github.luksal.book.common.jpa.event
+package io.github.luksal.commons.jpa
 
+import io.github.luksal.commons.dto.EventStatus
 import jakarta.persistence.Column
 import jakarta.persistence.Embeddable
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
+import java.time.Instant
 
 @Embeddable
 class EventMeta(
@@ -15,24 +17,30 @@ class EventMeta(
     var errorMessage: String? = null,
 
     @Column(nullable = false)
-    val createdAt: Long = System.currentTimeMillis(),
+    val createdAt: Instant = Instant.now(),
 
     @Column
-    var updatedAt: Long? = null,
+    var updatedAt: Instant? = null,
 ) {
+
+    fun markAsInProgress() {
+        status = EventStatus.IN_PROGRESS
+        updatedAt = Instant.now()
+    }
+
     fun markAsSuccess() {
         status = EventStatus.SUCCESS
-        updatedAt = System.currentTimeMillis()
+        updatedAt = Instant.now()
     }
 
     fun markAsSkipped() {
         status = EventStatus.SKIPPED
-        updatedAt = System.currentTimeMillis()
+        updatedAt = Instant.now()
     }
 
     fun markAsFailed(errorMessage: String) {
         status = EventStatus.ERROR
         this.errorMessage = errorMessage
-        updatedAt = System.currentTimeMillis()
+        updatedAt = Instant.now()
     }
 }

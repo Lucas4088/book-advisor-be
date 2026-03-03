@@ -5,6 +5,6 @@ CREATE TABLE book_basic_data_population_events
     lang          VARCHAR(255) NOT NULL,
     status        VARCHAR(64)  NOT NULL,
     error_message VARCHAR(456),
-    created_at    BIGINT       NOT NULL,
-    updated_at     BIGINT
+    created_at    TIMESTAMP    NOT NULL,
+    updated_at    TIMESTAMP
 );

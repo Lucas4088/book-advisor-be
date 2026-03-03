@@ -27,7 +27,7 @@ class BookController(
     }
 
     @GetMapping("/{id}")
-    fun getById(@PathVariable id: Long): BookSearchResponse {
+    fun getById(@PathVariable id: String): BookSearchResponse {
         return bookService.getBookById(id = id)
     }
 

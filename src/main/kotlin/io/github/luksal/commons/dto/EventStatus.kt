@@ -1,7 +1,8 @@
-package io.github.luksal.book.common.jpa.event
+package io.github.luksal.commons.dto
 
 enum class EventStatus {
     PENDING,
+    IN_PROGRESS,
     SUCCESS,
     SKIPPED,
     ERROR

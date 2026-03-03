@@ -56,13 +56,42 @@ services:
     environment:
       MP_UI_AUTH: ${MAILPIT_LOGIN}:${MAILPIT_PASSWORD}
 
+  #proxy-old:
+  #  image:
+  #    lukasz408/proxy:1.0
+  #  expose:
+  #      - "8000"
+  #  environment:
+  #    TIMEOUT: 50000
+  #  labels:
+  #    - "traefik.enable=true"
+  #    - "traefik.http.routers.proxy.rule=Host(`proxy.localhost`)"
+  #    - "traefik.http.routers.proxy.entrypoints=web"
+
   proxy:
-    image: lukasz408/proxy:1.0
-    container_name: proxy
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    expose:
+      - "8191"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.proxy.rule=Host(`proxy.localhost`)"
+      - "traefik.http.routers.proxy.entrypoints=web"
+
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
+    command:
+      - "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
     ports:
-      - "8000:8000"
-    environment:
-      TIMEOUT: 15000
+      - "80:80"
+    depends_on:
+      - proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
 
 volumes:
   mongo_data:

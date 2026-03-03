@@ -1,6 +1,6 @@
 package io.github.luksal.ingestion.api.dto
 
-import io.github.luksal.book.common.jpa.event.EventStatus
+import io.github.luksal.commons.dto.EventStatus
 
 data class ScheduledBasicInfoSearchRequest(
     val fromYear: Int?,

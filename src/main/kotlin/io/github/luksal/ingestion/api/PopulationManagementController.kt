@@ -5,9 +5,8 @@ import io.github.luksal.ingestion.api.dto.JobRunPolicy
 import io.github.luksal.ingestion.api.dto.ScheduleBookBasicInfoRequest
 import io.github.luksal.ingestion.api.dto.ScheduledBookBasicInfoPopulationEvent
 import io.github.luksal.ingestion.api.dto.ScheduledBookBasicInfoSearchRequest
-import io.github.luksal.ingestion.job.dto.JobName
-import io.github.luksal.ingestion.jpa.JobRunPolicyEntity
-import io.github.luksal.ingestion.jpa.JobRunPolicyRepository
+import io.github.luksal.book.job.dto.JobName
+import io.github.luksal.ingestion.service.JobRunPolicyService
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -20,30 +19,18 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping(value = ["/api/population-management"])
 class PopulationManagementController(
     private val bookDataPopulationService: BookDataPopulationService,
-    private val jobRunPolicyRepository: JobRunPolicyRepository,
+    private val jobRunPolicyService: JobRunPolicyService,
     private val customInitializerDispatcher: CoroutineDispatcher,
 ) {
 
     @PutMapping("/job-run-policy")
-    fun setPolicy(@RequestBody request: JobRunPolicy) {
-        val entity = jobRunPolicyRepository.findByName(request.name)
-            ?.apply {
-                enabled = request.enabled
-            }
-            ?: JobRunPolicyEntity(
-                name = request.name,
-                enabled = request.enabled,
-                updatedAt = System.currentTimeMillis()
-            )
+    fun setPolicy(@RequestBody request: JobRunPolicy) =
+        jobRunPolicyService.setPolicy(request)
 
-        jobRunPolicyRepository.save(entity)
-    }
 
     @GetMapping("/job-run-policy/{name}")
     fun findPolicy(@PathVariable name: JobName): JobRunPolicy? =
-        jobRunPolicyRepository.findByName(name)?.let {
-            JobRunPolicy(name = it.name, enabled = it.enabled)
-        }
+        jobRunPolicyService.findPolicy(name)
 
     @PostMapping(path = ["/schedule/book-basic-info"])
     fun scheduleBookBasicDataPopulation(@RequestBody request: ScheduleBookBasicInfoRequest) {

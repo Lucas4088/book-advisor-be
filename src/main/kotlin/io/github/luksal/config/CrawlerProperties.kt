@@ -33,5 +33,6 @@ data class Path(
 @ConfigurationProperties(prefix = "app.scraping.proxy")
 data class ScrapingProxyProperties(
     var url: String = "",
+    var maxTimeout: Long = 0,
     var apiKey: String? = null
 )

@@ -5,7 +5,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5435/book-advisor-db
     username: postgres
-    password: postgres
+    password: password
     hikari:
       pool-name: BookAdvisorHikariCP
       maximum-pool-size: 5
@@ -104,6 +104,11 @@ resilience4j:
         exponential-max-wait-duration: 40s
         retry-exceptions:
           - feign.RetryableException
+      page-fetcherRetry:
+        max-attempts: 4
+        wait-duration: 500ms
+        exponential-backoff-multiplier: 2
+        exponential-max-wait-duration: 40s
 
 logging:
   level:

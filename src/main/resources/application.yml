@@ -1,5 +1,9 @@
 server:
   port: 8090
+  tomcat:
+    threads:
+      max: 100
+      min-spare: 10
 
 spring:
   datasource:
@@ -20,6 +24,12 @@ spring:
     out-of-order: true
     baseline-on-migrate: true
     mixed: true
+  task:
+    execution:
+      pool:
+        core-size: 10
+        max-size: 20
+        queue-capacity: 100
   cloud:
     openfeign:
       httpclient:
@@ -30,8 +40,10 @@ spring:
 app:
   scraping:
     proxy:
-      url: http://localhost:8000/html
-      api-key: ${SCRAPING_PROXY_API_KEY}
+      #url: http://proxy.localhost/html
+      url: http://proxy.localhost/v1
+      max-timeout: 100000
+
   crawlers:
     - name: goodreads
       enabled: true

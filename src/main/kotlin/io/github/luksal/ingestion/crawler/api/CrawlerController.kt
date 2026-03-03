@@ -5,14 +5,7 @@ import io.github.luksal.ingestion.crawler.api.dto.CrawlerSearchDetails
 import io.github.luksal.ingestion.crawler.mapper.CrawlerConfigMapper
 import io.github.luksal.ingestion.crawler.service.PageCrawlerCrudService
 import io.github.luksal.ingestion.service.BookIngestionService
-import org.springframework.web.bind.annotation.DeleteMapping
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RequestMapping("/api/crawler")
 @RestController
@@ -21,9 +14,9 @@ class CrawlerController(
     val crawlerCrudService: PageCrawlerCrudService
 ) {
 
-    @PostMapping("/crawl")
-    fun crawl(): String {
-        bookIngestionService.crawlAndIngest()
+    @PostMapping("/crawl/{crawlerId}")
+    fun crawl(@PathVariable("crawlerId") crawlerId: Long): String {
+        bookIngestionService.crawlForRating(crawlerId)
         return "Crawling finished"
     }
 
@@ -45,7 +38,7 @@ class CrawlerController(
         crawlerCrudService.delete(id)
 
     @PutMapping("/{id}")
-        fun update(@PathVariable id: Long, @RequestBody request: Crawler) =
-            crawlerCrudService.update(id, request)
+    fun update(@PathVariable id: Long, @RequestBody request: Crawler) =
+        crawlerCrudService.update(id, request)
 
 }

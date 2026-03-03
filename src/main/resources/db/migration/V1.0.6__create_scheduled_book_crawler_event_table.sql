@@ -8,5 +8,5 @@ CREATE TABLE scheduled_book_crawler_events (
                             status VARCHAR(50) NOT NULL,
                             error_message TEXT,
                             created_at TIMESTAMP NOT NULL,
-                            updated_at TIMESTAMP NOT NULL
+                            updated_at TIMESTAMP
 );

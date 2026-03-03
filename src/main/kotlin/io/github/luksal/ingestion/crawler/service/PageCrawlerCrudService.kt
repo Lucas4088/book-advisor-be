@@ -2,8 +2,6 @@ package io.github.luksal.ingestion.crawler.service
 
 import io.github.luksal.ingestion.crawler.api.dto.Crawler
 import io.github.luksal.ingestion.crawler.jpa.PageCrawlerJpaRepository
-import io.github.luksal.ingestion.crawler.jpa.ScheduledBookCrawlerEventJpa
-import io.github.luksal.ingestion.crawler.jpa.entity.ScheduledBookCrawlerEventEntity
 import io.github.luksal.ingestion.crawler.mapper.CrawlerConfigMapper
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable

@@ -1,6 +1,6 @@
 package io.github.luksal.book.db.jpa.model.event
 
-import io.github.luksal.book.common.jpa.event.EventMeta
+import io.github.luksal.commons.jpa.EventMeta
 import jakarta.persistence.*
 
 @Entity

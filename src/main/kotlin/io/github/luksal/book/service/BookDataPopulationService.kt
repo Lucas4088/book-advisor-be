@@ -1,13 +1,13 @@
 package io.github.luksal.book.service
 
-import io.github.luksal.book.common.jpa.event.EventMeta
-import io.github.luksal.book.common.jpa.event.EventStatus
 import io.github.luksal.book.db.document.bookbasicinfo.BookBasicInfoDocument
 import io.github.luksal.book.db.jpa.event.PopulateBookBasicDataJpaRepository
 import io.github.luksal.book.db.jpa.event.PopulateBookDetailsEventJpaRepository
 import io.github.luksal.book.db.jpa.model.event.ScheduledBookBasicInfoPopulationEventEntity
 import io.github.luksal.book.mapper.BookMapper
 import io.github.luksal.book.model.Book
+import io.github.luksal.commons.dto.EventStatus
+import io.github.luksal.commons.jpa.EventMeta
 import io.github.luksal.ingestion.api.dto.ScheduledBookBasicInfoPopulationEvent
 import io.github.luksal.ingestion.api.dto.ScheduledBookBasicInfoSearchRequest
 import io.github.luksal.ingestion.mappper.IngestionMapper
@@ -44,6 +44,7 @@ class BookDataPopulationService(
 
     private val log = logger()
 
+    @Transactional
     fun searchBasicBookInfoSchedule(
         request: ScheduledBookBasicInfoSearchRequest,
         page: Pageable
@@ -108,8 +109,7 @@ class BookDataPopulationService(
         log.info("Starting book details collection initialization")
         val pageNumber = 0
         val pageSize = 20
-        val populateEventMap =
-            populateBookDetailsEventJpaRepository.findAllPending(PageRequest.of(pageNumber, pageSize)).content
+        val populateEventMap = populateBookDetailsEventJpaRepository.findAllPending(PageRequest.of(pageNumber, pageSize)).content
                 .associateBy { it.bookId }
         if (populateEventMap.isEmpty()) {
             log.info("No pending events found for book details collection initialization, exiting")
@@ -121,7 +121,7 @@ class BookDataPopulationService(
         )
 
         //TODO handle this case, it shouldn't be like this, there is some inconsistency in the data
-        if(!populateEventMap.isEmpty() && bookBasicInfo.content.isEmpty()) {
+        if (!populateEventMap.isEmpty() && bookBasicInfo.content.isEmpty()) {
             populateEventMap.values.forEach {
                 it.meta.markAsSkipped()
                 log.warn("No basic info found for book with id='${it.bookId}'")
