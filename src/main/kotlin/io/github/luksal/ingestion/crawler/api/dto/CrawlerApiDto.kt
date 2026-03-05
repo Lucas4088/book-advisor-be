@@ -7,7 +7,8 @@ data class Crawler(
     val baseUrl: String,
     val rateLimit: RateLimit,
     val path: Path,
-    val proxyEnabled: Boolean
+    val proxyEnabled: Boolean,
+    val proxyName: String? = null,
 )
 
 data class RateLimit(

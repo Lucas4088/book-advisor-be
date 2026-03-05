@@ -25,12 +25,12 @@ spring:
     username: admin
     password: admin
     properties:
-        mail:
-            smtp:
-            auth: false
-            starttls:
-                enable: false
-            debug: true
+      mail:
+        smtp:
+        auth: false
+        starttls:
+          enable: false
+        debug: true
 
   cloud:
     openfeign:
@@ -68,26 +68,26 @@ resilience4j:
 
   circuitbreaker:
     instances:
-        search-openLibraryCircuitBreaker:
-            registerHealthIndicator: true
-            slidingWindowType: COUNT_BASED
-            slidingWindowSize: 10
-            minimumNumberOfCalls: 5
-            failureRateThreshold: 50
-            waitDurationInOpenState: 3m
-            permittedNumberOfCallsInHalfOpenState: 3
-            automaticTransitionFromOpenToHalfOpenEnabled: true
-        search-googleBooksCircuitBreaker:
-          registerHealthIndicator: true
-          slidingWindowType: COUNT_BASED
-          slidingWindowSize: 10
-          minimumNumberOfCalls: 5
-          failureRateThreshold: 50
-          waitDurationInOpenState: 24h
-          permittedNumberOfCallsInHalfOpenState: 3
-          automaticTransitionFromOpenToHalfOpenEnabled: true
-          record-exceptions:
-            - io.github.luksal.exception.DailyQuotaExceededException
+      search-openLibraryCircuitBreaker:
+        registerHealthIndicator: true
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 3m
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+      search-googleBooksCircuitBreaker:
+        registerHealthIndicator: true
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 24h
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        record-exceptions:
+          - io.github.luksal.exception.DailyQuotaExceededException
   retry:
     instances:
       search-openLibraryRetry:
@@ -124,3 +124,18 @@ app:
     google-books-api:
       auth:
         api-key: ${GOOGLE_BOOKS_API_KEY}
+  proxies:
+    - name: flaresolverr
+      url: http://localhost:8191/v1
+      max-timeout: 100000
+      headers:
+        "Content-Type" : "application/json"
+        "Accept" : "application/json"
+    - name: decodo
+      url: http://proxy.localhost/html
+      max-timeout: 100000
+      headers:
+        "Content-Type": "application/json"
+        "Accept": "application/json"
+
+

@@ -45,7 +45,8 @@ object CrawlerConfigMapper {
                 search = domain.path.search,
                 titleSpaceSeparator = domain.path.titleSpaceSeparator
             ),
-            proxyEnabled = domain.proxyEnabled
+            proxyEnabled = domain.proxyEnabled,
+            proxyName = domain.proxyName
         )
 
     fun mapToSearchResponse(entity: Crawler): CrawlerSearchDetails =

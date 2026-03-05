@@ -14,7 +14,8 @@ data class CrawlerSpecification(
     val rateLimit: RateLimit,
     val headers: Map<String, String> = emptyMap(),
     val path: Path,
-    val proxyEnabled: Boolean
+    val proxyEnabled: Boolean,
+    val proxyName: String?
 )
 
 data class RateLimit(
@@ -30,9 +31,15 @@ data class Path(
     val titleSpaceSeparator: String
 )
 
-@ConfigurationProperties(prefix = "app.scraping.proxy")
+@ConfigurationProperties(prefix = "app")
+data class ProxiesProperties(
+    val proxies: List<ScrapingProxyProperties>
+)
+
+@ConfigurationProperties()
 data class ScrapingProxyProperties(
+    val name: String,
     var url: String = "",
+    val headers: Map<String, String> = emptyMap(),
     var maxTimeout: Long = 0,
-    var apiKey: String? = null
 )

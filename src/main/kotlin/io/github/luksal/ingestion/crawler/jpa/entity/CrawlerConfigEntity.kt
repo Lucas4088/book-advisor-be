@@ -33,7 +33,10 @@ data class PageCrawlerConfigEntity(
     val path: CrawlerPath,
 
     @Column(nullable = false)
-    val proxyEnabled: Boolean
+    val proxyEnabled: Boolean,
+
+    @Column
+    val proxyName: String?,
 )
 
 @Embeddable

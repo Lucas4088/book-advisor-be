@@ -48,7 +48,8 @@ object IngestionMapper {
                 requestsPerMinute = entity.rateLimit.requestsPerMinute,
                 burst = entity.rateLimit.burst
             ),
-            proxyEnabled = entity.proxyEnabled
+            proxyEnabled = entity.proxyEnabled,
+            proxyName = entity.proxyName,
         )
 
 

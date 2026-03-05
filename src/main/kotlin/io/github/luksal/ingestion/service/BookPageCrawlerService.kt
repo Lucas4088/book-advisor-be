@@ -4,7 +4,7 @@ import io.github.luksal.book.api.dto.BookSearchResponse
 import io.github.luksal.book.model.RatingSourceUpdate
 import io.github.luksal.book.model.RatingUpdate
 import io.github.luksal.config.CrawlerSpecification
-import io.github.luksal.config.ScrapingProxyProperties
+import io.github.luksal.config.ProxiesProperties
 import io.github.luksal.ingestion.crawler.jpa.PageCrawlerJpaRepository
 import io.github.luksal.ingestion.crawler.service.PageCrawler
 import io.github.luksal.ingestion.fetcher.PageFetcher
@@ -18,7 +18,7 @@ class BookPageCrawlerService(
     private val pageCrawlerRepository: PageCrawlerJpaRepository,
     private val pageFetcher: PageFetcher,
     private val pageCrawler: PageCrawler,
-    private val scrapingProxyProperties: ScrapingProxyProperties
+    private val proxiesProperties: ProxiesProperties
 ) {
 
     private val log = logger()
@@ -41,15 +41,31 @@ class BookPageCrawlerService(
     ): RatingUpdate? {
         val searchUrl = composeSearchBookUrl(book, crawlerSpec)
         log.info("Composed search url: $searchUrl")
-        val searchPageHtml = pageFetcher.fetch(searchUrl)
 
-        return pageCrawler.extractBookPageUrl(searchPageHtml, crawlerSpec)?.let {
-            //val pageUrl = composeBookPageUrl(it, crawlerSpec)
-            log.info("Composed page url: $it")
-            pageFetcher.fetch(it).takeIf { bookPage -> bookPage.isNotEmpty() }
-                ?.let { bookPage ->
-                    extractRating(bookPage, crawlerSpec, book)
-                }
+        return  fetch(searchUrl, crawlerSpec)?.let { searchPageHtml ->
+            return pageCrawler.extractBookPageUrl(searchPageHtml, crawlerSpec)?.let {
+                //val pageUrl = composeBookPageUrl(it, crawlerSpec)
+                log.info("Composed page url: $it")
+                fetch(it, crawlerSpec).takeIf { bookPage -> bookPage?.isNotEmpty() ?: false }
+                    ?.let { bookPage ->
+                        extractRating(bookPage, crawlerSpec, book)
+                    }
+            }
+        }
+    }
+
+    private fun fetch(url: String,  crawlerSpec: CrawlerSpecification): String? {
+        val proxy = proxiesProperties.proxies.firstOrNull { it.name == crawlerSpec.proxyName }
+            ?: throw IllegalStateException("Proxy ${crawlerSpec.proxyName} not found for crawler ${crawlerSpec.name}")
+        //TODO change logic for choosing proxy and invoking given fetch methods
+        return if(crawlerSpec.proxyEnabled) {
+            if (crawlerSpec.name == "amazon-books") {
+                pageFetcher.fetchLocalProxyWitSession(url, proxy)
+            } else {
+                pageFetcher.fetchLocalProxy(url, proxy)
+            }
+        } else {
+            pageFetcher.fetchNoProxy(url)
         }
     }
 
@@ -58,14 +74,6 @@ class BookPageCrawlerService(
             .let { URLEncoder.encode(it, Charsets.UTF_8) }
         val searchPath = crawlerSpec.path.search.replace(FORMATTED_TITLE_PLACEHOLDER, searchTitle)
         val searchUrl = "${crawlerSpec.baseUrl}$searchPath"
-        //val proxiedSearchUrl = "${scrapingProxyProperties.url}?url=${crawlerSpec.baseUrl}${searchPath}"
-        //val proxiedSearchUrl = scrapingProxyProperties.url
-        //TODO missing book page for amazon - eg Dracula
-        /*2026-02-19T15:50:48.472+01:00  INFO 24248 --- [nio-8090-exec-1] i.g.l.i.service.BookIngestionService     : Composed search url: http://localhost:8000/html?url=https://www.amazon.com/s?k=Dracula&i=stripbooks
-        2026-02-19T15:50:48.472+01:00  INFO 24248 --- [nio-8090-exec-1] i.g.l.i.fetcher.PageFetcher$Companion    : Fetching http://localhost:8000/html?url=https://www.amazon.com/s?k=Dracula&i=stripbooks
-        2026-02-19T15:50:58.259+01:00  INFO 24248 --- [nio-8090-exec-1] i.g.l.i.service.BookIngestionService     : Composed page url: http://localhost:8000/html?url=https://www.amazon.com#
-        2026-02-19T15:50:58.259+01:00  INFO 24248 --- [nio-8090-exec-1] i.g.l.i.fetcher.PageFetcher$Companion    : Fetching http://localhost:8000/html?url=https://www.amazon.com#
-        2026-02-19T15:51:08.177+01:00  INFO 24248 --- [nio-8090-exec-1] i.g.l.i.service.BookIngestionService     : Extracted rating for book Dracula from source amazon-books: RatingUpdate(id=null, score=0, count=0, source=RatingSourceUpdate(id=null, name=amazon-books, url=https://www.amazon.com))*/
         return searchUrl
     }
 
@@ -95,4 +103,5 @@ class BookPageCrawlerService(
             null
         }
     }
+
 }

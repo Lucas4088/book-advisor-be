@@ -41,7 +41,7 @@ app:
   scraping:
     proxy:
       #url: http://proxy.localhost/html
-      url: http://proxy.localhost/v1
+      url: http://localhost:8191/v1
       max-timeout: 100000
 
   crawlers:

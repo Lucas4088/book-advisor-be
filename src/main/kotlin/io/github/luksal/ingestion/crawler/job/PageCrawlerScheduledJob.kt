@@ -10,6 +10,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
 import org.springframework.stereotype.Component
 import java.time.Instant
+import kotlin.random.Random
 
 
 @Component
@@ -28,9 +29,11 @@ class PageCrawlerScheduledJob(
         jobRunPolicyService.isEnabled(JobName.CRAWL_BOOKS).takeIf { it }?.let {
             pageCrawlerCrudService.findAll().filter { it.enabled }.forEach {
                 crawlersTaskSchedulerMap[it.id]?.apply {
+                    val delaySeconds = Random.nextLong(1, 120) // 1–120
+                    val nextExecutionTime = Instant.ofEpochMilli(System.currentTimeMillis() + delaySeconds * 1000)
                     schedule(
                         { bookIngestionService.crawlForRating(it.id!!) },
-                        Instant.now()
+                        nextExecutionTime
                     )
                 }.also { ts ->
                     val scheduler = ts as ThreadPoolTaskScheduler

@@ -124,7 +124,6 @@ class BookDataPopulationService(
         if (!populateEventMap.isEmpty() && bookBasicInfo.content.isEmpty()) {
             populateEventMap.values.forEach {
                 it.meta.markAsSkipped()
-                log.warn("No basic info found for book with id='${it.bookId}'")
             }
             return
         }
