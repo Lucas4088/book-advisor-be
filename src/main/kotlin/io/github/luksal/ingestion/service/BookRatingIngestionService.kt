@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
-class BookIngestionService(
+class BookRatingIngestionService(
     private val crawlerEventRepository: ScheduledBookCrawlerEventRepository,
     private val bookService: BookService,
     private val bookPageCrawlerService: BookPageCrawlerService

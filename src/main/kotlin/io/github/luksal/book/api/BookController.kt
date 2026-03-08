@@ -2,18 +2,12 @@ package io.github.luksal.book.api
 
 import io.github.luksal.book.api.dto.BookSearchCriteriaRequest
 import io.github.luksal.book.api.dto.BookSearchResponse
-import io.github.luksal.book.service.BookDataPopulationService
 import io.github.luksal.book.service.BookService
 import io.github.luksal.book.service.SyncBookDataService
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
-import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.*
 
-@Controller
 @RestController
 @RequestMapping("/api/books")
 class BookController(

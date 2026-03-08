@@ -4,19 +4,19 @@ import io.github.luksal.ingestion.crawler.api.dto.Crawler
 import io.github.luksal.ingestion.crawler.api.dto.CrawlerSearchDetails
 import io.github.luksal.ingestion.crawler.mapper.CrawlerConfigMapper
 import io.github.luksal.ingestion.crawler.service.PageCrawlerCrudService
-import io.github.luksal.ingestion.service.BookIngestionService
+import io.github.luksal.ingestion.service.BookRatingIngestionService
 import org.springframework.web.bind.annotation.*
 
-@RequestMapping("/api/crawler")
 @RestController
+@RequestMapping("/api/crawler")
 class CrawlerController(
-    val bookIngestionService: BookIngestionService,
+    val bookRatingIngestionService: BookRatingIngestionService,
     val crawlerCrudService: PageCrawlerCrudService
 ) {
 
     @PostMapping("/crawl/{crawlerId}")
     fun crawl(@PathVariable("crawlerId") crawlerId: Long): String {
-        bookIngestionService.crawlForRating(crawlerId)
+        bookRatingIngestionService.crawlForRating(crawlerId)
         return "Crawling finished"
     }
 

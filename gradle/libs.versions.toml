@@ -1,5 +1,6 @@
 [versions]
 kotlin = "2.3.0"
+coroutines = "1.10.2"
 kotlin-spring = "2.2.20"
 kotlin-jpa = "2.3.10"
 
@@ -19,6 +20,7 @@ spring-boot-starter = { module = "org.springframework.boot:spring-boot-starter" 
 spring-boot-starter-web = { module = "org.springframework.boot:spring-boot-starter-web" }
 spring-boot-starter-security = { module = "org.springframework.boot:spring-boot-starter-security" }
 spring-boot-starter-data-jpa = { module = "org.springframework.boot:spring-boot-starter-data-jpa" }
+spring-boot-starter-data-redis = { module = "org.springframework.boot:spring-boot-starter-data-redis" }
 spring-boot-starter-data-mongodb = { module = "org.springframework.boot:spring-boot-starter-data-mongodb" }
 spring-boot-starter-flyway = { module = "org.springframework.boot:spring-boot-starter-flyway" }
 spring-boot-starter-mail = { module = "org.springframework.boot:spring-boot-starter-mail" }
@@ -31,9 +33,10 @@ flyway-core = { module = "org.flywaydb:flyway-core", version.ref = "flyway" }
 flyway-postgres = { module = "org.flywaydb:flyway-database-postgresql" }
 
 # Kotlin
-kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
-kotlin-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core" }
-kotlin-coroutines-reactor = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactor" }
+kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
+kotlin-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+kotlin-coroutines-reactor = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactor", version.ref = "coroutines" }
+kotlin-jackson = { module = "tools.jackson.module:jackson-module-kotlin" }
 
 # Spring Cloud
 spring-cloud-openfeign = { module = "org.springframework.cloud:spring-cloud-starter-openfeign" }
@@ -44,14 +47,18 @@ resilience4j-spring-boot = { module = "io.github.resilience4j:resilience4j-sprin
 # Jsoup
 jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 
+# Cache
+caffeine = { module = "com.github.ben-manes.caffeine:caffeine" }
+
 [bundles]
 spring-boot-starters = [
     "spring-boot-starter",
     "spring-boot-starter-web",
     "spring-boot-starter-security",
     "spring-boot-starter-data-jpa",
+    "spring-boot-starter-data-redis",
     "spring-boot-starter-data-mongodb",
     "spring-boot-starter-flyway",
     "spring-boot-starter-mail",
-    "spring-boot-starter-cache"
+    "spring-boot-starter-cache",
 ]

@@ -79,8 +79,21 @@ class BookService(
         bookDocumentRepository.update(bookUpdate)
 
     @Transactional
-    fun saveBookBasicInfo(bookBasicInfo: List<OpenLibraryDoc>, lang: String): Int {
-        return bookBasicInfo.map { it.toBasicInfoDocument(lang) }.let { bookBasicInfo ->
+    fun saveBookBasicInfo(bookBasicInfo: List<BookBasicInfoDocument>): Int =
+        bookBasicInfo.let { bookBasicInfo ->
+            if (bookBasicInfo.isEmpty()) {
+                log.info("No book basic info to save")
+                return@let 0
+            }
+            bookBasicInfo.forEach {
+                publisher.publishEvent(BookBasicInfoDocumentSavedEvent(bookId = it.publicId))
+            }
+            bulkSaveNoDuplicatesBasicBookInfo(bookBasicInfo)
+        }
+
+    @Transactional
+    fun saveBookBasicInfo(bookBasicInfo: List<OpenLibraryDoc>, lang: String): Int =
+        bookBasicInfo.map { it.toBasicInfoDocument(lang) }.let { bookBasicInfo ->
             if (bookBasicInfo.isEmpty()) {
                 log.info("No book basic info to save for lang=$lang")
                 return@let 0
@@ -90,7 +103,6 @@ class BookService(
             }
             bulkSaveNoDuplicatesBasicBookInfo(bookBasicInfo)
         }
-    }
 
     fun updateBookBasicInfo(bookBasicInfoDocument: List<BookBasicInfoDocument>) =
         bookBasicInfoDocumentRepository.saveAll(bookBasicInfoDocument)

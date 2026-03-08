@@ -22,6 +22,10 @@ class EventMeta(
     @Column
     var updatedAt: Instant? = null,
 ) {
+    fun markAsPending() {
+        status = EventStatus.PENDING
+        updatedAt = Instant.now()
+    }
 
     fun markAsInProgress() {
         status = EventStatus.IN_PROGRESS

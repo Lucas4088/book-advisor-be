@@ -24,6 +24,7 @@ dependencies {
     implementation(libs.kotlin.reflect)
     implementation(libs.kotlin.coroutines.core)
     implementation(libs.kotlin.coroutines.reactor)
+    implementation(libs.kotlin.jackson)
 
     implementation(platform("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.spring.cloud.get()}"))
     implementation(libs.spring.cloud.openfeign)
@@ -31,6 +32,7 @@ dependencies {
     implementation(libs.resilience4j.spring.boot)
 
     implementation(libs.jsoup)
+    implementation(libs.caffeine)
 
     testImplementation(libs.spring.boot.starter.test)
     testImplementation(kotlin("test"))

@@ -1,6 +1,5 @@
 package io.github.luksal.commons.dto
 
-import io.github.luksal.commons.dto.EventStatus
 import java.time.Instant
 
 data class EventMeta(

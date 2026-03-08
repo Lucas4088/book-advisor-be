@@ -6,10 +6,12 @@ import io.github.luksal.book.model.RatingUpdate
 import io.github.luksal.config.CrawlerSpecification
 import io.github.luksal.config.ProxiesProperties
 import io.github.luksal.ingestion.crawler.jpa.PageCrawlerJpaRepository
+import io.github.luksal.ingestion.crawler.jpa.entity.PageCrawlerConfigEntity
 import io.github.luksal.ingestion.crawler.service.PageCrawler
 import io.github.luksal.ingestion.fetcher.PageFetcher
 import io.github.luksal.ingestion.mappper.IngestionMapper
 import io.github.luksal.util.ext.logger
+import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Service
 import java.net.URLEncoder
 
@@ -18,7 +20,8 @@ class BookPageCrawlerService(
     private val pageCrawlerRepository: PageCrawlerJpaRepository,
     private val pageFetcher: PageFetcher,
     private val pageCrawler: PageCrawler,
-    private val proxiesProperties: ProxiesProperties
+    private val proxiesProperties: ProxiesProperties,
+    private val redisTemplate: RedisTemplate<Any, Any>
 ) {
 
     private val log = logger()
@@ -30,9 +33,17 @@ class BookPageCrawlerService(
     fun crawlBookPage(crawlerId: Long, book: BookSearchResponse): RatingUpdate? {
         return pageCrawlerRepository.findById(crawlerId).orElseThrow()
             .takeIf { it.enabled }
-            ?.let {
-                crawlAndExtractRating(book, IngestionMapper.map(it))
-            }
+            ?.let { crawler -> getRating(book, crawler) }
+    }
+
+    private fun getRating(book: BookSearchResponse, crawler: PageCrawlerConfigEntity): RatingUpdate? {
+        val cached = redisTemplate.opsForValue()["rating:${crawler.name}:${book.id}"] as? RatingUpdate
+
+        return cached?.also {
+            log.info("Rating for book ${book.title} from source ${crawler.name} found in cache: ${it.score}")
+        } ?: crawlAndExtractRating(book, IngestionMapper.map(crawler))?.also {
+            redisTemplate.opsForValue()["rating:${crawler.name}:${book.id}"] =  it
+        }
     }
 
     private fun crawlAndExtractRating(
@@ -42,7 +53,7 @@ class BookPageCrawlerService(
         val searchUrl = composeSearchBookUrl(book, crawlerSpec)
         log.info("Composed search url: $searchUrl")
 
-        return  fetch(searchUrl, crawlerSpec)?.let { searchPageHtml ->
+        return fetch(searchUrl, crawlerSpec)?.let { searchPageHtml ->
             return pageCrawler.extractBookPageUrl(searchPageHtml, crawlerSpec)?.let {
                 //val pageUrl = composeBookPageUrl(it, crawlerSpec)
                 log.info("Composed page url: $it")
@@ -54,11 +65,11 @@ class BookPageCrawlerService(
         }
     }
 
-    private fun fetch(url: String,  crawlerSpec: CrawlerSpecification): String? {
-        val proxy = proxiesProperties.proxies.firstOrNull { it.name == crawlerSpec.proxyName }
-            ?: throw IllegalStateException("Proxy ${crawlerSpec.proxyName} not found for crawler ${crawlerSpec.name}")
+    private fun fetch(url: String, crawlerSpec: CrawlerSpecification): String? {
         //TODO change logic for choosing proxy and invoking given fetch methods
-        return if(crawlerSpec.proxyEnabled) {
+        return if (crawlerSpec.proxyEnabled) {
+            val proxy = proxiesProperties.proxies.firstOrNull { it.name == crawlerSpec.proxyName }
+                ?: throw IllegalStateException("Proxy ${crawlerSpec.proxyName} not found for crawler ${crawlerSpec.name}")
             if (crawlerSpec.name == "amazon-books") {
                 pageFetcher.fetchLocalProxyWitSession(url, proxy)
             } else {
@@ -77,11 +88,6 @@ class BookPageCrawlerService(
         return searchUrl
     }
 
-/*    private fun composeBookPageUrl(pageUrl: String, crawlerSpec: CrawlerSpecification): String {
-        //val proxiedSearchUrl = "${scrapingProxyProperties.url}?url=${pageUrl}"
-        //return if (crawlerSpec.proxyEnabled) proxiedSearchUrl else pageUrl
-    }*/
-
     private fun extractRating(
         bookPage: String,
         crawlerSpec: CrawlerSpecification,
@@ -97,9 +103,9 @@ class BookPageCrawlerService(
                 source = RatingSourceUpdate(name = crawlerSpec.name, url = crawlerSpec.baseUrl)
             )
         }?.also {
-            log.info("Extracted rating for book ${book.title} from source ${crawlerSpec.name}: ${it.score}")
+            log.info("Extracted rating for book \"${book.title}\" from source ${crawlerSpec.name}: ${it.score}")
         } ?: run {
-            log.warn("Failed to extract rating score for book ${book.title} from source ${crawlerSpec.name}")
+            log.warn("Failed to extract rating score for book \"${book.title}\" from source ${crawlerSpec.name}")
             null
         }
     }

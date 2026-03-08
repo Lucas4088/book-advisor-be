@@ -15,37 +15,40 @@ data class OpenLibrarySearchResponse(
 
 data class OpenLibraryDoc(
     @JsonProperty("edition_count")
-    val editionCount: Int?,
+    val editionCount: Int? = null,
     val title: String,
     @JsonProperty("author_name")
-    val authorName: List<String>?,
+    val authorName: List<String>? = null,
     @JsonProperty("first_publish_year")
-    val firstPublishYear: Int?,
+    val firstPublishYear: Int? = null,
     val key: String,
     @JsonProperty("author_key")
-    val authorKey: List<String>?,
+    val authorKey: List<String>? = null,
     val language: List<String>,
-    val editions: Editions?
+    val editions: Editions? = null,
+
+    val openLibraryKey: String? = null,
+    val firstPublishDate: String? = null,
+    val subjects: List<String> = emptyList(),
+    val description: String?,
 ) {
-    fun editionTitle(): String? =
-        editions?.docs?.firstOrNull()?.title
 
     fun editionKey(): String? =
         editions?.docs?.firstOrNull()?.key
 
     @OptIn(ExperimentalUuidApi::class)
     fun toBasicInfoDocument(lang: String) = BookBasicInfoDocument(
-        id = (title + editionTitle()).normalizeWhiteChars().sha256(),
         title = title,
         publicId = Uuid.generateV7().toString(),
         openLibraryKey = key,
-        editionTitle = editionTitle(),
         openLibraryEditionKey = editionKey(),
         authors = authorName ?: emptyList(),
         firstPublishYear = firstPublishYear,
+        subjects = subjects,
+        description = description,
+        firstPublishDate = firstPublishDate,
         lang = lang
     )
-
 }
 
 data class Editions(

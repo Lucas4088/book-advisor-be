@@ -13,7 +13,7 @@ class PageCrawlerCrudService(
     val pageCrawlerJpaRepository: PageCrawlerJpaRepository
 ) {
 
-    @CacheEvict(cacheNames = ["crawlers"])
+    @CacheEvict(cacheNames = ["crawlers"], cacheManager = "caffeineCacheManager")
     fun create(request: Crawler) =
         pageCrawlerJpaRepository.save(CrawlerConfigMapper.map(domain = request))
 
@@ -21,15 +21,15 @@ class PageCrawlerCrudService(
         pageCrawlerJpaRepository.findByIdOrNull(id)
             ?.let { CrawlerConfigMapper.map(it) }
 
-    @Cacheable(cacheNames = ["crawlers"])
+    @Cacheable(cacheNames = ["crawlers"], cacheManager = "caffeineCacheManager")
     fun findAll(): List<Crawler> =
         pageCrawlerJpaRepository.findAll().map { CrawlerConfigMapper.map(it) }
 
-    @CacheEvict(cacheNames = ["crawlers"], key = "#id")
+    @CacheEvict(cacheNames = ["crawlers"], key = "#id", cacheManager = "caffeineCacheManager")
     fun delete(id: Long) =
         pageCrawlerJpaRepository.deleteById(id)
 
-    @CacheEvict(cacheNames = ["crawlers"], key = "#id")
+    @CacheEvict(cacheNames = ["crawlers"], key = "#id", cacheManager = "caffeineCacheManager")
     fun update(id: Long, request: Crawler) {
         pageCrawlerJpaRepository.findById(id)
             .orElseThrow()

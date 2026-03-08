@@ -1,18 +1,10 @@
 package io.github.luksal.ingestion.crawler.jpa.entity
 
+import io.github.luksal.commons.dto.RetryableEvent
 import io.github.luksal.commons.jpa.EventMeta
-import io.github.luksal.ingestion.crawler.api.dto.Crawler
-import jakarta.persistence.AttributeOverride
-import jakarta.persistence.AttributeOverrides
-import jakarta.persistence.Column
-import jakarta.persistence.Embedded
-import jakarta.persistence.Entity
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.ManyToOne
-import jakarta.persistence.Table
+import io.github.luksal.commons.jpa.RetryMeta
+import jakarta.persistence.*
+import java.time.Instant
 
 @Entity
 @Table(name = "scheduled_book_crawler_events")
@@ -36,4 +28,22 @@ class ScheduledBookCrawlerEventEntity(
         AttributeOverride(name = "updatedAt", column = Column(name = "updated_at", nullable = false)),
     )
     val meta: EventMeta = EventMeta(),
-)
+
+    @Embedded
+    @AttributeOverrides(
+        AttributeOverride(name = "retryCount", column = Column(name = "retry_count", nullable = false)),
+        AttributeOverride(name = "lastRetryAt", column = Column(name = "last_retry_at")),
+        AttributeOverride(name = "nextRetryAt", column = Column(name = "next_retry_at"))
+    )
+    val retry: RetryMeta = RetryMeta()
+) : RetryableEvent {
+    override fun getRetryCount(): Int = retry.count
+
+    override fun incrementRetryCount(): Int = retry.increment()
+
+    override fun resetStatus() = meta.markAsPending()
+
+    override fun setNextRetryAt(nextRetryAt: Instant) {
+        retry.nextRetryAt = nextRetryAt
+    }
+}

@@ -56,6 +56,30 @@ services:
     environment:
       MP_UI_AUTH: ${MAILPIT_LOGIN}:${MAILPIT_PASSWORD}
 
+  redis:
+    image: redis:7.4.8-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    container_name: redis
+    command: redis-server --save 20 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+
+  redis-admin:
+    image: redis/redisinsight:latest
+    container_name: redisinsight
+    environment:
+      RI_REDIS_HOST: redis
+      RI_REDIS_PORT: 6379
+      RI_REDIS_PASSWORD: ${REDIS_PASSWORD}
+    ports:
+      - "5540:5540"
+    depends_on:
+      - redis
+    volumes:
+      - redisinsight_data:/data
+
   #proxy-old:
   #  image:
   #    lukasz408/proxy:1.0
@@ -106,4 +130,6 @@ services:
 volumes:
   mongo_data:
   postgres_data:
+  redis_data:
+  redisinsight_data:
 

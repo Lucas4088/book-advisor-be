@@ -5,7 +5,7 @@ import org.springframework.data.mongodb.core.mapping.Document
 import java.math.BigDecimal
 
 @Document(collection = "books")
-class BookDocument(
+data class BookDocument(
     @Id
     val id: String,
     val title: String,

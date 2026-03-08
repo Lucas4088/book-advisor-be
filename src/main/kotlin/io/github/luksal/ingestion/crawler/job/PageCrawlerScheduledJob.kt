@@ -2,7 +2,7 @@ package io.github.luksal.ingestion.crawler.job
 
 import io.github.luksal.book.job.dto.JobName
 import io.github.luksal.ingestion.crawler.service.PageCrawlerCrudService
-import io.github.luksal.ingestion.service.BookIngestionService
+import io.github.luksal.ingestion.service.BookRatingIngestionService
 import io.github.luksal.ingestion.service.JobRunPolicyService
 import io.github.luksal.util.ext.logger
 import org.springframework.scheduling.TaskScheduler
@@ -15,7 +15,7 @@ import kotlin.random.Random
 
 @Component
 class PageCrawlerScheduledJob(
-    private val bookIngestionService: BookIngestionService,
+    private val bookRatingIngestionService: BookRatingIngestionService,
     private val pageCrawlerCrudService: PageCrawlerCrudService,
     private val crawlersTaskSchedulerMap: Map<Long, TaskScheduler>,
     private val jobRunPolicyService: JobRunPolicyService
@@ -32,7 +32,7 @@ class PageCrawlerScheduledJob(
                     val delaySeconds = Random.nextLong(1, 120) // 1–120
                     val nextExecutionTime = Instant.ofEpochMilli(System.currentTimeMillis() + delaySeconds * 1000)
                     schedule(
-                        { bookIngestionService.crawlForRating(it.id!!) },
+                        { bookRatingIngestionService.crawlForRating(it.id!!) },
                         nextExecutionTime
                     )
                 }.also { ts ->

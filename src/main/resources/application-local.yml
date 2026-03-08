@@ -31,6 +31,11 @@ spring:
         starttls:
           enable: false
         debug: true
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: redis
 
   cloud:
     openfeign:
@@ -124,6 +129,10 @@ app:
     google-books-api:
       auth:
         api-key: ${GOOGLE_BOOKS_API_KEY}
+  file-read:
+    path:
+      authors: /home/lukasz/Documents/openlibrary/ol_dump_authors_2026-02-28.txt
+      works: /home/lukasz/Documents/openlibrary/ol_dump_works_2026-02-28.txt
   proxies:
     - name: flaresolverr
       url: http://localhost:8191/v1

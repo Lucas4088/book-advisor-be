@@ -36,7 +36,7 @@ class PageFetcher(
 
         val response = Jsoup.connect(proxy.url)
             .header("Content-Type", "application/json")
-
+            .header("Authorization", "Basic VTAwMDAzNjQ3Nzc6UFdfMTkxOTc5ZjU1NjJkNDI3YTRhMjRiYjBlMTIzODRmNzlj")
             .header("Accept", "application/json")
             .method(Connection.Method.POST)
             .requestBody(body)
@@ -53,8 +53,6 @@ class PageFetcher(
                   val file = File("fetcher.html").apply {
                       writeText(t, Charsets.UTF_8)
                   }
-
-                  file.delete()
               }
           }
     }
@@ -95,6 +93,7 @@ class PageFetcher(
             .requestBody(requestBody)
             .timeout(100_000)
             .ignoreContentType(true)
+            .maxBodySize(0) //Jsoup can truncate huge response body, so we set it to 0 to disable truncation
             .execute()
             .body().also {
                 JsonMapper().readTree(it)
@@ -102,12 +101,10 @@ class PageFetcher(
                         val file = File("fetcher.html").apply {
                             writeText(t, Charsets.UTF_8)
                         }
-
-                        file.delete()
                     }
             }
 
-        return JsonMapper().readTree(requestJson).path("solution").path("response").toString()
+        return JsonMapper().readTree(requestJson).path("solution").path("response").asString()
     }
 
     private fun createSession(proxyUrl: String, maxTimeout: Int): String? {

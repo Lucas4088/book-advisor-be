@@ -190,26 +190,6 @@ object BookMapper {
     fun map(details: OpenLibraryBookDetails): BookUpdate = BookUpdate(
         id = details.key,
         description = details.description?.value,
-        /* publishingYear = details.created?.value?.let { value ->
-             try {
-                 java.time.Year.parse(value.take(4))
-             } catch (e: Exception) {
-                 null
-             }
-         },*/
-        //edition = details.title?.let { io.github.luksal.book.model.BookEdition(it, null) },
-        //thumbnailUrl = details.covers?.firstOrNull()?.let { "https://covers.openlibrary.org/b/id/$it-L.jpg" },
-        //smallThumbnailUrl = details.covers?.firstOrNull()?.let { "https://covers.openlibrary.org/b/id/$it-S.jpg" },
-        /* authors = details.authors?.mapNotNull { authorRole ->
-             authorRole.author?.key?.let { key ->
-                 io.github.luksal.book.model.Author(
-                     id = null,
-                     publicId = key,
-                     name = "",
-                     otherNames = null
-                 )
-             }
-         },*/
         genres = details.subjects?.map { subject ->
             GenreUpdate(
                 id = null,
