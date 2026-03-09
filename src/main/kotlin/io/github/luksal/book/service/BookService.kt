@@ -111,6 +111,16 @@ class BookService(
     fun getBookBasicInfo(bookIds: List<String>, page: Pageable): Page<BookBasicInfoDocument> =
         bookBasicInfoDocumentRepository.findAllByPublicIdIn(bookIds, page)
 
+    @Transactional
+    fun deleteAllBookDetails() {
+        bookJpaRepository.deleteAll()
+        bookDocumentRepository.deleteAll()
+    }
+
+    fun deleteAllBookBasicInfo() {
+        bookBasicInfoDocumentRepository.deleteAll()
+    }
+
     private fun bulkSaveNoDuplicatesBooks(books: List<Book>) =
         bookDocumentRepository.saveBulkWithDeduplication(books.map { BookMapper.map(it) })
 
