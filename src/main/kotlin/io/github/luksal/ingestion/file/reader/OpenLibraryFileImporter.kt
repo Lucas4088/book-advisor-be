@@ -8,10 +8,10 @@ import io.github.luksal.event.service.EventService
 import io.github.luksal.util.ext.logger
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 import tools.jackson.databind.JsonNode
 import tools.jackson.databind.json.JsonMapper
 import java.io.File
+import java.util.UUID
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -76,7 +76,6 @@ class OpenLibraryFileImporter(
         var readBytes = 0L
         val logStepBytes = 10L * 1024 * 1024 // 10 MB
         var nextLogThreshold = logStepBytes
-
         file.useLines { lines ->
             lines.forEach { line ->
                 readBytes += line.toByteArray().size + 1
@@ -105,7 +104,7 @@ class OpenLibraryFileImporter(
 
         val authors = authorsKeys?.let {
             authorService.getAuthors(it)
-        }?.map { it.name }  ?: emptyList()
+        }?.map { it.name } ?: emptyList()
         return title?.let {
             BookBasicInfoDocument(
                 openLibraryKey = key ?: "",

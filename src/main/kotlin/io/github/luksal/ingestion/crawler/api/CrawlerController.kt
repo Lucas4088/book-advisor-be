@@ -1,5 +1,6 @@
 package io.github.luksal.ingestion.crawler.api
 
+import io.github.luksal.commons.dto.EventStatus
 import io.github.luksal.ingestion.crawler.api.dto.Crawler
 import io.github.luksal.ingestion.crawler.api.dto.CrawlerSearchDetails
 import io.github.luksal.ingestion.crawler.mapper.CrawlerConfigMapper
@@ -16,7 +17,7 @@ class CrawlerController(
 
     @PostMapping("/crawl/{crawlerId}")
     fun crawl(@PathVariable("crawlerId") crawlerId: Long): String {
-        bookRatingIngestionService.crawlForRating(crawlerId)
+        bookRatingIngestionService.crawlForRating(EventStatus.PENDING, crawlerId)
         return "Crawling finished"
     }
 

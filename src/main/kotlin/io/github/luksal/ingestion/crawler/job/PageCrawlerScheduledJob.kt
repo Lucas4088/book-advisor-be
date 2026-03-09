@@ -1,6 +1,7 @@
 package io.github.luksal.ingestion.crawler.job
 
 import io.github.luksal.book.job.dto.JobName
+import io.github.luksal.commons.dto.EventStatus
 import io.github.luksal.ingestion.crawler.service.PageCrawlerCrudService
 import io.github.luksal.ingestion.service.BookRatingIngestionService
 import io.github.luksal.ingestion.service.JobRunPolicyService
@@ -25,21 +26,31 @@ class PageCrawlerScheduledJob(
     }
 
     @Scheduled(fixedDelay = 60_000, scheduler = "pageCrawlerScheduledJobScheduler")
-    fun run() =
+    fun processPending() =
+        process(EventStatus.PENDING)
+
+    @Scheduled(fixedDelay = 90_000, scheduler = "pageCrawlerFailedJobScheduler")
+    fun processFailed() =
+        process(EventStatus.ERROR)
+
+
+    private fun process(eventStatus: EventStatus) =
         jobRunPolicyService.isEnabled(JobName.CRAWL_BOOKS).takeIf { it }?.let {
             pageCrawlerCrudService.findAll().filter { it.enabled }.forEach {
                 crawlersTaskSchedulerMap[it.id]?.apply {
                     val delaySeconds = Random.nextLong(1, 120) // 1–120
                     val nextExecutionTime = Instant.ofEpochMilli(System.currentTimeMillis() + delaySeconds * 1000)
                     schedule(
-                        { bookRatingIngestionService.crawlForRating(it.id!!) },
+                        { bookRatingIngestionService.crawlForRating(eventStatus, it.id!!) },
                         nextExecutionTime
                     )
                 }.also { ts ->
                     val scheduler = ts as ThreadPoolTaskScheduler
                     val executor = scheduler.scheduledExecutor as java.util.concurrent.ScheduledThreadPoolExecutor
-                    log.info("Thread Scheduler info: ${scheduler.threadNamePrefix} : queueSize ${executor.queue.size} " +
-                            ": completed ${executor.completedTaskCount}: active ${scheduler.activeCount}")
+                    log.info(
+                        "Thread Scheduler info: ${scheduler.threadNamePrefix} : queueSize ${executor.queue.size} " +
+                                ": completed ${executor.completedTaskCount}: active ${scheduler.activeCount}"
+                    )
                 }
             }
         }

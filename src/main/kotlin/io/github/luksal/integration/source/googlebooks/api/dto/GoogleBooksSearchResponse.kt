@@ -1,13 +1,5 @@
 package io.github.luksal.integration.source.googlebooks.api.dto
 
-import io.github.luksal.book.model.Author
-import io.github.luksal.book.model.Book
-import io.github.luksal.book.model.BookEdition
-import io.github.luksal.book.model.Genre
-import java.time.Year
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
-
 data class GoogleBooksSearchResponse(
     val kind: String?,
     val totalItems: Int,

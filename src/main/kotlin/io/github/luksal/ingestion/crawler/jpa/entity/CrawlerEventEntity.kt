@@ -46,4 +46,11 @@ class ScheduledBookCrawlerEventEntity(
     override fun setNextRetryAt(nextRetryAt: Instant) {
         retry.nextRetryAt = nextRetryAt
     }
+
+    fun markAsFailed(errorMessage: String) =
+        if (getRetryCount() >= 4) {
+            meta.markAsUnprocessable()
+        } else {
+            meta.markAsFailed(errorMessage)
+        }
 }

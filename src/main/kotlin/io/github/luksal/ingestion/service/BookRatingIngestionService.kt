@@ -2,6 +2,7 @@ package io.github.luksal.ingestion.service
 
 import io.github.luksal.book.model.BookUpdate
 import io.github.luksal.book.service.BookService
+import io.github.luksal.commons.dto.EventStatus
 import io.github.luksal.ingestion.crawler.job.PageCrawlerScheduledJob.Companion.log
 import io.github.luksal.ingestion.crawler.jpa.ScheduledBookCrawlerEventRepository
 import io.github.luksal.ingestion.crawler.jpa.entity.ScheduledBookCrawlerEventEntity
@@ -16,8 +17,8 @@ class BookRatingIngestionService(
 ) {
 
     @Transactional
-    fun crawlForRating(crawlerId: Long) =
-        crawlerEventRepository.claimPending(5, crawlerId)?.forEach {
+    fun crawlForRating(eventStatus: EventStatus, crawlerId: Long) =
+        crawlerEventRepository.claimByStatus(eventStatus, 5, crawlerId)?.forEach {
             crawlAndSaveRating(it.crawlerId, it)
         }
 
@@ -29,7 +30,8 @@ class BookRatingIngestionService(
         crawlForRating(key, value.bookId)
     }.onFailure {
         log.error("Error crawling book with id ${value.bookId} using crawler ${value.crawlerId}", it)
-        value.meta.markAsFailed(it.message ?: "Unknown error")
+        value.markAsFailed(it.message ?: "Unknown error")
+        value.incrementRetryCount()
     }.onSuccess {
         value.meta.markAsSuccess()
     }.let {

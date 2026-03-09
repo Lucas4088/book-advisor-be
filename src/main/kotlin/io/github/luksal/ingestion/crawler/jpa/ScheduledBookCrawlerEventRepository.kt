@@ -1,5 +1,6 @@
 package io.github.luksal.ingestion.crawler.jpa
 
+import io.github.luksal.commons.dto.EventStatus
 import io.github.luksal.ingestion.crawler.jpa.entity.ScheduledBookCrawlerEventEntity
 import jakarta.persistence.LockModeType
 import org.springframework.data.jpa.repository.JpaRepository
@@ -28,11 +29,11 @@ interface ScheduledBookCrawlerEventRepository : JpaRepository<ScheduledBookCrawl
     @Lock(value = LockModeType.PESSIMISTIC_WRITE)
     @Query(
         """
-                 select e from ScheduledBookCrawlerEventEntity e where e.meta.status = 'PENDING'
+                 select e from ScheduledBookCrawlerEventEntity e where e.meta.status = :status
                  and e.crawlerId = :crawlerId
                  order by e.meta.createdAt
                  limit :limit
                  """
     )
-    fun claimPending(@Param("limit") limit: Int, @Param("crawlerId") crawlerId: Long): List<ScheduledBookCrawlerEventEntity>?
+    fun claimByStatus(@Param("status")status: EventStatus, @Param("limit") limit: Int, @Param("crawlerId") crawlerId: Long): List<ScheduledBookCrawlerEventEntity>?
 }

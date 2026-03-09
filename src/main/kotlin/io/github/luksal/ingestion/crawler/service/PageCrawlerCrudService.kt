@@ -13,7 +13,7 @@ class PageCrawlerCrudService(
     val pageCrawlerJpaRepository: PageCrawlerJpaRepository
 ) {
 
-    @CacheEvict(cacheNames = ["crawlers"], cacheManager = "caffeineCacheManager")
+    @CacheEvict(cacheNames = ["crawlers"], allEntries = true, cacheManager = "caffeineCacheManager")
     fun create(request: Crawler) =
         pageCrawlerJpaRepository.save(CrawlerConfigMapper.map(domain = request))
 
@@ -25,22 +25,16 @@ class PageCrawlerCrudService(
     fun findAll(): List<Crawler> =
         pageCrawlerJpaRepository.findAll().map { CrawlerConfigMapper.map(it) }
 
-    @CacheEvict(cacheNames = ["crawlers"], key = "#id", cacheManager = "caffeineCacheManager")
+    @CacheEvict(cacheNames = ["crawlers"], allEntries = true, cacheManager = "caffeineCacheManager")
     fun delete(id: Long) =
         pageCrawlerJpaRepository.deleteById(id)
 
-    @CacheEvict(cacheNames = ["crawlers"], key = "#id", cacheManager = "caffeineCacheManager")
+    @CacheEvict(cacheNames = ["crawlers"], allEntries = true, cacheManager = "caffeineCacheManager")
     fun update(id: Long, request: Crawler) {
         pageCrawlerJpaRepository.findById(id)
             .orElseThrow()
 
-        CrawlerConfigMapper.map(id,request)
+        CrawlerConfigMapper.map(id, request)
             .let { pageCrawlerJpaRepository.save(it) }
     }
-
-/*    fun findAllScheduledEventsByStatus(status: String) =
-        crawlerEventJpa.findAllByMeta_Status(status, org.springframework.data.domain.PageRequest.of(0, 100))
-            ?.content
-            ?.map { io.github.luksal.ingestion.crawler.mapper.CrawlerEventMapper.map(it) }
-             ?: emptyList()*/
 }

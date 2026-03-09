@@ -5,5 +5,6 @@ enum class EventStatus {
     IN_PROGRESS,
     SUCCESS,
     SKIPPED,
-    ERROR
+    ERROR,
+    UNPROCESSABLE
 }

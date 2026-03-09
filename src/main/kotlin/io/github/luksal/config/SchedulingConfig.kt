@@ -49,6 +49,14 @@ class SchedulingConfig(
             initialize()
         }
 
+    @Bean(name = ["pageCrawlerFailedJobScheduler"])
+    fun pageCrawlerFailedJobScheduler(): TaskScheduler =
+        ThreadPoolTaskScheduler().apply {
+            poolSize = 1
+            setThreadNamePrefix("pcfjScheduler-")
+            initialize()
+        }
+
     private fun scheduler(name: String): TaskScheduler =
         ThreadPoolTaskScheduler().apply {
             poolSize = 1
