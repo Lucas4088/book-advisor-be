@@ -2,8 +2,6 @@ package io.github.luksal.integration.source.openlibrary.api.dto
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.github.luksal.book.db.document.bookbasicinfo.BookBasicInfoDocument
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 data class OpenLibrarySearchResponse(
     val start: Int,
@@ -18,7 +16,7 @@ data class OpenLibraryDoc(
     @JsonProperty("author_name")
     val authorName: List<String>? = null,
     @JsonProperty("first_publish_year")
-    val firstPublishYear: Int? = null,
+    val firstPublishYear: Int,
     val key: String,
     @JsonProperty("author_key")
     val authorKey: List<String>? = null,
@@ -34,10 +32,9 @@ data class OpenLibraryDoc(
     fun editionKey(): String? =
         editions?.docs?.firstOrNull()?.key
 
-    @OptIn(ExperimentalUuidApi::class)
     fun toBasicInfoDocument(lang: String) = BookBasicInfoDocument(
         title = title,
-        publicId = Uuid.generateV7().toString(),
+        bookPublicId = BookBasicInfoDocument.generatePublicId(title, authorName ?: emptyList()),
         openLibraryKey = key,
         openLibraryEditionKey = editionKey(),
         authors = authorName ?: emptyList(),

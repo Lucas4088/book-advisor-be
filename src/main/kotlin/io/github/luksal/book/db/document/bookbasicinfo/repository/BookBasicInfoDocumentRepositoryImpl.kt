@@ -18,7 +18,7 @@ class BookBasicInfoDocumentRepositoryImpl(private val mongoOps: MongoOperations)
         val bulkOps = mongoOps.bulkOps(BulkOperations.BulkMode.UNORDERED, BookBasicInfoDocument::class.java)
         docs.forEach { info ->
             bulkOps.replaceOne(
-                Query.query(Criteria.where("_id").`is`(info.id)),
+                Query.query(Criteria.where("pbi").`is`(info.bookPublicId)),
                 info,
                 FindAndReplaceOptions.options().upsert()
             )

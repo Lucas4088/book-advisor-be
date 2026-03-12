@@ -128,7 +128,7 @@ class BookDataPopulationService(
             return
         }
         bookBasicInfo.content.mapNotNull { bookInfo ->
-            val populateEvent = populateEventMap[bookInfo.publicId]
+            val populateEvent = populateEventMap[bookInfo.bookPublicId]
             runCatching {
                 findBookDetails(bookInfo)
             }.onSuccess { book ->
@@ -183,6 +183,7 @@ class BookDataPopulationService(
             )
             return null
         }
+
         return BookMapper.map(
             openLibraryBookDetails,
             openLibraryDoc,

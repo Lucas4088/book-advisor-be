@@ -20,7 +20,7 @@ data class VolumeInfo(
     val subtitle: String? = null,
     val authors: List<String>?,
     val publisher: String? = null,
-    val publishedDate: String? = null,
+    val publishedDate: String,
     val description: String? = null,
     val industryIdentifiers: List<IndustryIdentifier>?,
     val readingModes: ReadingModes,

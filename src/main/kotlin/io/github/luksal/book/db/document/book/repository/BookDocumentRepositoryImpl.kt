@@ -72,9 +72,8 @@ class BookDocumentRepositoryImpl(
 
     override fun update(book: BookUpdate): String? {
         val update = Update().apply {
-            BookMapper.map(book).let { document ->
+            book.let { document ->
                 setIfNotEmpty("description", document.description)
-                setIfNotEmpty("title", document.title)
                 setIfNotEmpty("publishingYear", document.publishingYear)
                 setIfNotEmpty("pageCount", document.pageCount)
                 setIfNotEmpty("thumbnailUrl", document.thumbnailUrl)

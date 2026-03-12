@@ -51,6 +51,11 @@ spring:
             logger-level: basic
             url: https://archive.org/
 
+  kafka:
+    bootstrap-servers: localhost:29092
+    admin:
+      auto-create: true
+
 resilience4j:
   ratelimiter:
     instances:

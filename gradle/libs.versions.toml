@@ -14,6 +14,8 @@ flyway = "12.0.0"
 resilience4j = "2.2.0"
 jsoup = "1.22.1"
 
+guava = "33.5.0-jre"
+
 [libraries]
 # Spring Boot Starters
 spring-boot-starter = { module = "org.springframework.boot:spring-boot-starter" }
@@ -25,6 +27,7 @@ spring-boot-starter-data-mongodb = { module = "org.springframework.boot:spring-b
 spring-boot-starter-flyway = { module = "org.springframework.boot:spring-boot-starter-flyway" }
 spring-boot-starter-mail = { module = "org.springframework.boot:spring-boot-starter-mail" }
 spring-boot-starter-cache = { module = "org.springframework.boot:spring-boot-starter-cache" }
+spring-boot-starter-kafka = { module = "org.springframework.boot:spring-boot-starter-kafka" }
 spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
 
 # Database
@@ -38,6 +41,10 @@ kotlin-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-co
 kotlin-coroutines-reactor = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactor", version.ref = "coroutines" }
 kotlin-jackson = { module = "tools.jackson.module:jackson-module-kotlin" }
 
+# Kafka
+spring-kafka = { module = "org.springframework.kafka:spring-kafka" }
+kafka-streams = { module = "org.apache.kafka:kafka-streams" }
+
 # Spring Cloud
 spring-cloud-openfeign = { module = "org.springframework.cloud:spring-cloud-starter-openfeign" }
 
@@ -50,6 +57,8 @@ jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 # Cache
 caffeine = { module = "com.github.ben-manes.caffeine:caffeine" }
 
+guava = { module = "com.google.guava:guava", version.ref = "guava" }
+
 [bundles]
 spring-boot-starters = [
     "spring-boot-starter",
@@ -61,4 +70,5 @@ spring-boot-starters = [
     "spring-boot-starter-flyway",
     "spring-boot-starter-mail",
     "spring-boot-starter-cache",
+    "spring-boot-starter-kafka",
 ]

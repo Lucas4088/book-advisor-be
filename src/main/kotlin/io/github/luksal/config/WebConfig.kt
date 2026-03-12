@@ -15,13 +15,15 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 @EnableSpringDataWebSupport(pageSerializationMode = EnableSpringDataWebSupport.PageSerializationMode.VIA_DTO)
 class WebConfig {
 
-    @Bean
     fun corsConfigurationSource(): UrlBasedCorsConfigurationSource {
         val configuration = CorsConfiguration().apply {
-            allowedOrigins = listOf("http://localhost:3000")
+            allowedOriginPatterns = listOf(
+                "http://localhost:*",
+                "http://127.0.0.1:*"
+            )
             allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
             allowedHeaders = listOf("*")
-            allowCredentials = true
+            allowCredentials = false
         }
         return UrlBasedCorsConfigurationSource().apply {
             registerCorsConfiguration("/**", configuration)
@@ -29,9 +31,9 @@ class WebConfig {
     }
 
     @Bean
-    fun filterChain(http: HttpSecurity): SecurityFilterChain{
+    fun filterChain(http: HttpSecurity): SecurityFilterChain {
         return http
-            .cors {}
+            .cors { it.configurationSource(corsConfigurationSource()) }
             .csrf { it.disable() }
             .authorizeHttpRequests { it.anyRequest().permitAll() }
             .build()

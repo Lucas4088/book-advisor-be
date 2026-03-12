@@ -1,0 +1,6 @@
+ALTER TABLE books
+    ADD COLUMN version INTEGER;
+ALTER TABLE authors
+    ADD COLUMN version INTEGER;
+ALTER TABLE genres
+    ADD COLUMN version INTEGER;

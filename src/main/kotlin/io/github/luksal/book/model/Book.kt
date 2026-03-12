@@ -7,7 +7,7 @@ data class Book(
     val id: String,
     val title: String,
     val description: String?,
-    val publishingYear: Year?,
+    val publishingYear: Year,
     val pageCount: Int?,
     val edition: BookEdition? = null,
     val thumbnailUrl: String? = null,
@@ -24,7 +24,8 @@ data class BookEdition(
 
 data class Author(
     val id: Long? = null,
-    val publicId: String? = null,
+    val key: String,
+    val publicId: String,
     val name: String,
     val otherNames: List<String>? = emptyList()
 )

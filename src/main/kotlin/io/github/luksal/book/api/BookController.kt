@@ -2,6 +2,7 @@ package io.github.luksal.book.api
 
 import io.github.luksal.book.api.dto.BookSearchCriteriaRequest
 import io.github.luksal.book.api.dto.BookSearchResponse
+import io.github.luksal.book.service.BookDataPurgeService
 import io.github.luksal.book.service.BookService
 import io.github.luksal.book.service.SyncBookDataService
 import org.springframework.data.domain.Page
@@ -9,10 +10,11 @@ import org.springframework.data.domain.Pageable
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@RequestMapping("/api/books")
+@RequestMapping("/api/book")
 class BookController(
     private val bookService: BookService,
     private val syncBookDataService: SyncBookDataService,
+    private val bookDataPurgeService: BookDataPurgeService
 ) {
 
     @GetMapping(params = ["title", "genres", "publishedYearRange"])
@@ -30,4 +32,8 @@ class BookController(
     fun syncBooks() {
         return syncBookDataService.syncBookData()
     }
+
+    @DeleteMapping("/purge")
+    fun purgeBooks() =
+        bookDataPurgeService.purgeBooks()
 }

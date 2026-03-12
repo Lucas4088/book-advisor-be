@@ -33,6 +33,10 @@ dependencies {
 
     implementation(libs.jsoup)
     implementation(libs.caffeine)
+    implementation(libs.guava)
+
+    implementation(libs.spring.kafka)
+    implementation(libs.kafka.streams)
 
     testImplementation(libs.spring.boot.starter.test)
     testImplementation(kotlin("test"))

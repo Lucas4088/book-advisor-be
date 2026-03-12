@@ -2,15 +2,28 @@ services:
   mongodb:
     image: mongo:7
     container_name: mongodb
+    entrypoint: ["bash", "/mongo-entrypoint.sh"]
     ports:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+      - ./mongo-keyfile:/tmp/keyfile:ro
+      - ./docker/mongo/replica-set-script.sh:/mongo-entrypoint.sh:ro
     environment:
       MONGO_INITDB_DATABASE: book-advisor-db
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
     restart: unless-stopped
+
+  mongo-init:
+    image: mongo
+    depends_on:
+      - mongodb
+    restart: "no"
+    entrypoint: >
+      mongosh --host mongodb:27017 
+      -u mongo_user -p mongo_password --authenticationDatabase admin
+      --eval "rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'mongodb:27017' }] })"
 
   mongodb-express:
     image: mongo-express:1.0.2

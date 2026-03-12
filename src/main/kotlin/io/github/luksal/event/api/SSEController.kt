@@ -12,7 +12,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 class SSEController(private val eventService: EventService) {
 
     @GetMapping(produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
-    suspend fun events(): SseEmitter =
+    fun events(): SseEmitter =
         eventService.subscribe()
 
 }

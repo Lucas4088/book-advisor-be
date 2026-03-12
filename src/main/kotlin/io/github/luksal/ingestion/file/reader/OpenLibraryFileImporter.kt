@@ -2,18 +2,20 @@ package io.github.luksal.ingestion.file.reader
 
 import io.github.luksal.book.db.document.author.AuthorDocument
 import io.github.luksal.book.db.document.bookbasicinfo.BookBasicInfoDocument
+import io.github.luksal.book.db.document.bookbasicinfo.BookBasicInfoDocument.Companion.generatePublicId
 import io.github.luksal.book.service.AuthorService
 import io.github.luksal.book.service.BookService
 import io.github.luksal.event.service.EventService
+import io.github.luksal.ingestion.file.dto.FileImportState
 import io.github.luksal.util.ext.logger
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Component
 import tools.jackson.databind.JsonNode
+import tools.jackson.databind.ObjectMapper
 import tools.jackson.databind.json.JsonMapper
 import java.io.File
-import java.util.UUID
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
+import java.io.RandomAccessFile
 
 @Component
 class OpenLibraryFileImporter(
@@ -21,22 +23,31 @@ class OpenLibraryFileImporter(
     @Value($$"${app.file-read.path.works}") private val worksFilePath: String,
     private val authorService: AuthorService,
     private val bookService: BookService,
-    private val eventService: EventService
+    private val eventService: EventService,
+    private val redisTemplate: RedisTemplate<Any, Any>
 ) {
 
     companion object {
+        const val AUTHORS_IMPORT_EVENT_NAME = "authors-import"
+        const val BOOK_BASIC_INFO_EVENT_IMPORT_NAME = "book-basic-info-import"
         val log = logger()
     }
 
     fun readAndSaveAuthors() {
         val authors = mutableListOf<AuthorDocument>()
-        readFileWithProgress(authorsFilePath, "authors-import") { line: String ->
+        readFileWithOffsetAndProgress(authorsFilePath, AUTHORS_IMPORT_EVENT_NAME, loadProgressState(AUTHORS_IMPORT_EVENT_NAME).filePointer) { line: String ->
             val parts = line.split('\t', limit = 5)
             JsonMapper().readTree(parts[4]).let { jsonNode ->
                 val name = jsonNode.get("name")?.asString()
-                val id = jsonNode.get("key").asString()
+                val key = jsonNode.get("key").asString()
 
-                if (name != null) authors.add(AuthorDocument(id, name))
+                if (name != null) authors.add(
+                    AuthorDocument(
+                        publicId = AuthorDocument.generatePublicId(key, name),
+                        key = key,
+                        name = name
+                    )
+                )
 
                 if (authors.size >= 5000) {
                     authorService.saveAuthorDocuments(authors)
@@ -46,10 +57,9 @@ class OpenLibraryFileImporter(
         }
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     fun readAndSaveBookBasicInfo() {
         val bookBasicInfo = mutableListOf<BookBasicInfoDocument>()
-        readFileWithProgress(worksFilePath, "book-basic-info-import") { line: String ->
+        readFileWithOffsetAndProgress(worksFilePath, BOOK_BASIC_INFO_EVENT_IMPORT_NAME, loadProgressState(BOOK_BASIC_INFO_EVENT_IMPORT_NAME).filePointer) { line: String ->
             val parts = line.split('\t', limit = 5)
             JsonMapper().readTree(parts[4]).let { jsonNode ->
                 jsonNode?.let {
@@ -65,33 +75,53 @@ class OpenLibraryFileImporter(
         }
     }
 
-    private fun readFileWithProgress(
+    fun loadProgressState(eventName: String) : FileImportState {
+        val value = redisTemplate.opsForValue()[eventName]
+        return ObjectMapper().convertValue(value, FileImportState::class.java) ?: FileImportState()
+    }
+
+    fun saveProgressState(eventName: String, offset: Long, formattedProgress: String) {
+        redisTemplate.opsForValue()[eventName] = FileImportState(offset, formattedProgress)
+    }
+
+    private fun readFileWithOffsetAndProgress(
         filePath: String,
         eventName: String,
+        startOffset: Long = 0,
         processLine: (String) -> Unit
     ) {
         val file = File(filePath)
         val totalSizeBytes = file.length().toDouble()
 
-        var readBytes = 0L
+        var readBytes = startOffset
         val logStepBytes = 10L * 1024 * 1024 // 10 MB
-        var nextLogThreshold = logStepBytes
-        file.useLines { lines ->
-            lines.forEach { line ->
-                readBytes += line.toByteArray().size + 1
-                processLine(line)
+        var nextLogThreshold = ((startOffset / logStepBytes) + 1) * logStepBytes
+
+        var formattedProgress = ""
+        RandomAccessFile(file, "r").use { raf ->
+            raf.seek(startOffset)
+
+            var line: String?
+
+            while (raf.readLine().also { line = it } != null) {
+                processLine(line!!)
+
+                readBytes = raf.filePointer
+
+                val progress = readBytes.toDouble() / totalSizeBytes * 100
+                formattedProgress = "%.2f".format(progress)
                 if (readBytes >= nextLogThreshold) {
-                    val progress = readBytes.toDouble() / totalSizeBytes * 100
-                    val formattedProgress = "%.2f".format(progress)
                     eventService.sendEvent(eventName, formattedProgress)
                     log.info("File $filePath progress: $formattedProgress%")
+
                     nextLogThreshold += logStepBytes
                 }
+                saveProgressState(eventName, raf.filePointer, formattedProgress)
             }
+
         }
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     private fun createBookBasicInfoDocument(
         jsonNode: JsonNode,
     ): BookBasicInfoDocument? {
@@ -108,7 +138,7 @@ class OpenLibraryFileImporter(
         return title?.let {
             BookBasicInfoDocument(
                 openLibraryKey = key ?: "",
-                publicId = Uuid.generateV7().toString(),
+                bookPublicId = generatePublicId(title, authors),
                 title = title,
                 openLibraryEditionKey = key,
                 subjects = subjects ?: emptyList(),

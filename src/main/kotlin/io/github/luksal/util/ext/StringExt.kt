@@ -1,5 +1,6 @@
 package io.github.luksal.util.ext
 
+import com.google.common.hash.Hashing
 import org.apache.commons.text.similarity.LevenshteinDistance
 import java.security.MessageDigest
 
@@ -13,6 +14,11 @@ fun String.sha256(): String =
     MessageDigest.getInstance("SHA3-256")
         .digest(this.toByteArray(Charsets.UTF_8))
         .joinToString("") { "%02x".format(it) }
+
+fun String.murmurHash3(): String =
+    Hashing.murmur3_128()
+        .hashString(this, Charsets.UTF_8)
+        .toString()
 
 fun String.normalizeStandardChars(): String =
     this.lowercase()

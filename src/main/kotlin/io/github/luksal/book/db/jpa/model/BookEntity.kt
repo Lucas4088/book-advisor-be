@@ -1,14 +1,14 @@
 package io.github.luksal.book.db.jpa.model
 
 import jakarta.persistence.*
+import org.springframework.data.domain.Persistable
 
 @Entity
 @Table(name = "books")
 class BookEntity(
-
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: String? = null,
+    @Column(name = "id")
+    val bookId: String? = null,
 
     @Column(nullable = false)
     val title: String,
@@ -17,7 +17,7 @@ class BookEntity(
     val description: String?,
 
     @Column(nullable = false)
-    val publishingYear: Int?,
+    val publishingYear: Int,
 
     val pageCount: Int?,
 
@@ -41,5 +41,16 @@ class BookEntity(
     val genres: MutableSet<GenreEntity> = mutableSetOf(),
 
     @OneToMany(mappedBy = "book", cascade = [CascadeType.ALL], orphanRemoval = true)
-    var ratings: MutableList<RatingEntity> = mutableListOf()
-)
+    var ratings: MutableList<RatingEntity> = mutableListOf(),
+
+    @Version
+    var version: Int? = null
+) : Persistable<String> {
+    @Transient
+    private var isNew = true
+
+    override fun getId(): String? = bookId
+
+    override fun isNew(): Boolean = isNew
+
+}

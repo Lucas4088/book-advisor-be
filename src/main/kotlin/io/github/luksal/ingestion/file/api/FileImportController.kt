@@ -1,26 +1,27 @@
 package io.github.luksal.ingestion.file.api
 
-import io.github.luksal.ingestion.file.reader.OpenLibraryFileImporter
+import io.github.luksal.ingestion.file.service.FileService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/api/file-import/open-library")
 class FileImportController(
-    private val openLibraryFileImporter: OpenLibraryFileImporter
+    private val fileService: FileService
 ) {
+
+    @GetMapping("/{eventName}")
+    fun getFileImportInitState(@PathVariable("eventName") eventName: String): String? =
+        fileService.loadInitFileImportState(eventName)
 
     @PostMapping("/author")
     fun importAuthors(): ResponseEntity<Unit> {
         CoroutineScope(Dispatchers.IO).launch {
-            openLibraryFileImporter.readAndSaveAuthors()
+            fileService.importAuthors()
         }
         return ResponseEntity.ok().build()
     }
@@ -28,7 +29,7 @@ class FileImportController(
     @PostMapping("/book-basic-info", produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
     fun importBookBasicInfo(): ResponseEntity<Unit> {
         CoroutineScope(Dispatchers.IO).launch {
-            openLibraryFileImporter.readAndSaveBookBasicInfo()
+            fileService.importBookBasicInfo()
         }
         return ResponseEntity.ok().build()
     }

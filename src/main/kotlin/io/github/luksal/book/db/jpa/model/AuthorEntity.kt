@@ -3,12 +3,12 @@ package io.github.luksal.book.db.jpa.model
 import io.github.luksal.book.db.jpa.util.StringListToStringConverter
 import jakarta.persistence.Column
 import jakarta.persistence.Convert
-import jakarta.persistence.Converter
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import jakarta.persistence.Version
 
 @Entity
 @Table(name = "authors")
@@ -25,5 +25,8 @@ class AuthorEntity(
 
     @Column(nullable = false)
     @Convert(converter = StringListToStringConverter::class)
-    val otherNames: List<String>? = null
+    val otherNames: List<String>? = null,
+
+    @Version
+    var version: Int? = null
 )

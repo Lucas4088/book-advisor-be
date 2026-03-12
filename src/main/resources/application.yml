@@ -45,7 +45,10 @@ app:
       #url: http://proxy.localhost/html
       url: http://localhost:8191/v1
       max-timeout: 100000
-
+  kafka:
+    connect:
+      books-source-topic: book-advisor-db.books
+      books-sink-topic: postgres.books
   crawlers:
     - name: goodreads
       enabled: true

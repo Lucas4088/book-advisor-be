@@ -6,6 +6,7 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import jakarta.persistence.Version
 
 @Entity
 @Table(name = "genres")
@@ -15,5 +16,8 @@ class GenreEntity(
     val id: Long? = null,
 
     @Column(nullable = false)
-    val name: String
+    val name: String,
+
+    @Version
+    var version: Int? = null
 )
