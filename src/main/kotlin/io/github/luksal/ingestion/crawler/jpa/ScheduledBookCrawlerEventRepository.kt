@@ -1,6 +1,7 @@
 package io.github.luksal.ingestion.crawler.jpa
 
 import io.github.luksal.commons.dto.EventStatus
+import io.github.luksal.ingestion.crawler.dto.CrawlerEventCountByEventStatus
 import io.github.luksal.ingestion.crawler.jpa.entity.ScheduledBookCrawlerEventEntity
 import jakarta.persistence.LockModeType
 import org.springframework.data.jpa.repository.JpaRepository
@@ -12,18 +13,18 @@ import org.springframework.stereotype.Repository
 @Repository
 interface ScheduledBookCrawlerEventRepository : JpaRepository<ScheduledBookCrawlerEventEntity, Long> {
 
-/*    @Query(
-        """
-                 WITH cte AS (
-                 SELECT id FROM scheduled_book_crawler_events WHERE status = 'PENDING'
-                 ORDER BY created_at LIMIT :limit FOR UPDATE SKIP LOCKED )
-                 UPDATE scheduled_book_crawler_events e SET status = 'IN_PROGRESS',
-                 updated_at = NOW()
-                 FROM cte WHERE e.id = cte.id RETURNING e.*
-                 """,
-        nativeQuery = true
-    )
-    fun claimPending(@Param("limit") limit: Int): List<ScheduledBookCrawlerEventEntity>?*/
+    /*    @Query(
+            """
+                     WITH cte AS (
+                     SELECT id FROM scheduled_book_crawler_events WHERE status = 'PENDING'
+                     ORDER BY created_at LIMIT :limit FOR UPDATE SKIP LOCKED )
+                     UPDATE scheduled_book_crawler_events e SET status = 'IN_PROGRESS',
+                     updated_at = NOW()
+                     FROM cte WHERE e.id = cte.id RETURNING e.*
+                     """,
+            nativeQuery = true
+        )
+        fun claimPending(@Param("limit") limit: Int): List<ScheduledBookCrawlerEventEntity>?*/
 
 
     @Lock(value = LockModeType.PESSIMISTIC_WRITE)
@@ -35,5 +36,20 @@ interface ScheduledBookCrawlerEventRepository : JpaRepository<ScheduledBookCrawl
                  limit :limit
                  """
     )
-    fun claimByStatus(@Param("status")status: EventStatus, @Param("limit") limit: Int, @Param("crawlerId") crawlerId: Long): List<ScheduledBookCrawlerEventEntity>?
+    fun claimByStatus(
+        @Param("status") status: EventStatus,
+        @Param("limit") limit: Int,
+        @Param("crawlerId") crawlerId: Long
+    ): List<ScheduledBookCrawlerEventEntity>?
+
+
+    @Query(
+        """
+            select new io.github.luksal.ingestion.crawler.dto.CrawlerEventCountByEventStatus(e.meta.status, e.crawlerId, count(e))
+            from ScheduledBookCrawlerEventEntity e 
+            group by e.meta.status, e.crawlerId 
+        """
+    )
+    fun countByStatusAndCrawler(): List<CrawlerEventCountByEventStatus>
+
 }

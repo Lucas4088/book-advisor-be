@@ -1,5 +1,11 @@
 package io.github.luksal.book.mapper
 
+import io.github.luksal.book.api.dto.AuthorDetailsDto
+import io.github.luksal.book.api.dto.AuthorDto
+import io.github.luksal.book.api.dto.BookBasicInfoDetailsDto
+import io.github.luksal.book.api.dto.BookBasicInfoDto
+import io.github.luksal.book.api.dto.BookDetailsDto
+import io.github.luksal.book.api.dto.BookDto
 import io.github.luksal.book.api.dto.BookSearchResponse
 import io.github.luksal.book.db.document.author.AuthorDocument
 import io.github.luksal.book.db.document.book.*
@@ -173,12 +179,28 @@ object BookMapper {
                 )
             }.toSet()
         )
-
-
     fun map(book: BookEntity): BookSearchResponse = BookSearchResponse(
         id = book.bookId!!,
         title = book.title,
         smallThumbnailUrl = book.smallThumbnailUrl
+    )
+
+    fun BookEntity.toDetailsDto() = BookDetailsDto(
+        bookId = bookId,
+        title = title,
+        publishedYear = publishingYear,
+        description = description,
+        publishingYear = publishingYear,
+        pageCount = pageCount,
+        thumbnailUrl = thumbnailUrl,
+        smallThumbnailUrl = smallThumbnailUrl
+    )
+
+    fun BookEntity.toDto() = BookDto(
+        id = bookId,
+        bookId = bookId,
+        title = title,
+        publishedYear = publishingYear
     )
 
     fun map(book: BookDocument) = BookSearchResponse(
@@ -238,4 +260,44 @@ object BookMapper {
             ?: emptyList(),
         ratings = emptyList()
     )
+
+    fun map(bookBasicInfo: BookBasicInfoDocument) =
+        BookBasicInfoDto(
+            id = bookBasicInfo.id,
+            title = bookBasicInfo.title,
+            bookId = bookBasicInfo.bookPublicId,
+            firstPublishDate = bookBasicInfo.firstPublishDate
+        )
+
+    fun mapDetails(bookBasicInfo: BookBasicInfoDocument) =
+        BookBasicInfoDetailsDto(
+            id = bookBasicInfo.id,
+            bookId = bookBasicInfo.bookPublicId,
+            title = bookBasicInfo.title,
+            openLibraryKey = bookBasicInfo.openLibraryKey,
+            openLibraryEditionKey = bookBasicInfo.openLibraryEditionKey,
+            editionTitle = bookBasicInfo.editionTitle,
+            firstPublishYear = bookBasicInfo.firstPublishYear,
+            firstPublishDate = bookBasicInfo.firstPublishDate,
+            authors = bookBasicInfo.authors,
+            authorsKeys = bookBasicInfo.authorsKeys,
+            lang = bookBasicInfo.lang,
+            subjects = bookBasicInfo.subjects,
+            description = bookBasicInfo.description
+        )
+
+
+    fun map(authorEntity: AuthorEntity): AuthorDto =
+        AuthorDto(
+            id = authorEntity.id,
+            publicId = authorEntity.publicId,
+            name = authorEntity.name
+        )
+
+    fun mapDetails(authorEntity: AuthorEntity) : AuthorDetailsDto =
+        AuthorDetailsDto(
+            id = authorEntity.id,
+            publicId = authorEntity.publicId,
+            name = authorEntity.name
+        )
 }

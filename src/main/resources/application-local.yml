@@ -133,7 +133,8 @@ app:
   service:
     google-books-api:
       auth:
-        api-key: ${GOOGLE_BOOKS_API_KEY}
+        api-keys: GOOGLE_BOOKS_API_KEYS
+
   file-read:
     path:
       authors: /home/lukasz/Documents/openlibrary/ol_dump_authors_2026-02-28.txt
@@ -151,5 +152,3 @@ app:
       headers:
         "Content-Type": "application/json"
         "Accept": "application/json"
-
-

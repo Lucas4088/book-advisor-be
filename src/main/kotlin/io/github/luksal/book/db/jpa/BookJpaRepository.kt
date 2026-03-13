@@ -10,13 +10,40 @@ import org.springframework.stereotype.Repository
 @Repository
 interface BookJpaRepository : JpaRepository<BookEntity, String> {
 
-    @Query("""
+    @Query(
+        """
         select b from BookEntity b 
         where (b.title is null or b.title like %:title%) 
            and (:startYear is null or b.publishingYear >= :startYear)
            and (:endYear is null or b.publishingYear <= :endYear)
            and (:genres is null or :genres member of b.genres)
-    """)
-    fun searchAll(title: String?, startYear: Int, endYear: Int, genres: List<String>?, pageable: Pageable): Page<BookEntity>
+    """
+    )
+    fun searchAll(
+        title: String?,
+        startYear: Int,
+        endYear: Int,
+        genres: List<String>?,
+        pageable: Pageable
+    ): Page<BookEntity>
 
+    @Query(
+        """
+        select distinct b from BookEntity b 
+        left join b.genres g where 
+        (:bookId is null or b.bookId like %:bookId%) and
+        (:title is null or b.title like %:title%) and
+        (:startYear is null or b.publishingYear >= :startYear) and
+        (:endYear is null or b.publishingYear <= :endYear) and
+        (:genres is null or g.name in :genres)
+    """
+    )
+    fun search(
+        bookId: String? = null,
+        title: String? = null,
+        startYear: Int? = null,
+        endYear: Int? = null,
+        genres: List<String>? = null,
+        pageable: Pageable
+    ): Page<BookEntity>
 }

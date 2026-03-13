@@ -1,21 +1,19 @@
 package io.github.luksal.config
 
-import feign.FeignException
-import feign.RequestInterceptor
-import feign.Response
-import feign.RetryableException
-import feign.Retryer
+import feign.*
 import feign.codec.ErrorDecoder
+import io.github.cdimascio.dotenv.dotenv
 import io.github.luksal.exception.DailyQuotaExceededException
 import io.github.luksal.integration.source.archivebooks.api.ArchiveBooksClient
-import io.github.luksal.util.ext.logger
 import io.github.luksal.integration.source.googlebooks.api.GoogleBooksClient
 import io.github.luksal.integration.source.openlibrary.api.OpenLibraryClient
-import org.springframework.beans.factory.annotation.Value
+import io.github.luksal.util.ext.logger
+import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.cloud.openfeign.EnableFeignClients
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import java.io.IOException
+import java.util.concurrent.atomic.AtomicInteger
 
 @Configuration
 @EnableFeignClients(clients = [OpenLibraryClient::class, GoogleBooksClient::class, ArchiveBooksClient::class])
@@ -30,12 +28,27 @@ class FeignClientConfig {
         Retryer.NEVER_RETRY
 }
 
+@ConfigurationProperties(prefix = "app.service.google-books-api.auth")
+data class GoogleBooksAuthProperties(
+    val apiKeys: String?
+) {
+
+    fun resolvedApiKeys(): List<String> =
+        dotenv()[apiKeys]?.replace("\n", "")?.split(",").orEmpty()
+}
+
 class FeignGoogleBooksConfig {
+    val counter = AtomicInteger()
+
     @Bean
-    fun feignAuthInterceptor(@Value($$"${app.service.google-books-api.auth.api-key}") apiKey: String): RequestInterceptor =
-        RequestInterceptor { template ->
-            template.query("key", apiKey)
+    fun feignAuthInterceptor(props: GoogleBooksAuthProperties): RequestInterceptor {
+        val apiKeys = props.resolvedApiKeys()
+        return RequestInterceptor { template ->
+            val index = counter.incrementAndGet() % apiKeys.size
+            template.query("key", apiKeys[index])
         }
+    }
+
 }
 
 class FeignErrorDecoder : ErrorDecoder {
@@ -63,6 +76,7 @@ class FeignErrorDecoder : ErrorDecoder {
                     1,
                     response.request()
                 )
+
             404 ->
                 FeignException.NotFound(
                     "Not found",

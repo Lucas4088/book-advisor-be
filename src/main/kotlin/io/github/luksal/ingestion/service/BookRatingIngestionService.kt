@@ -39,7 +39,7 @@ class BookRatingIngestionService(
     }
 
     private fun crawlForRating(crawlerId: Long, bookId: String) =
-        bookService.getBookById(bookId).let { book ->
+        bookService.getBookByIdForCrawling(bookId).let { book ->
             bookPageCrawlerService.crawlBookPage(crawlerId, book)?.let {
                 bookService.updateBook(BookUpdate(id = book.id, ratings = listOf(it)))
             }

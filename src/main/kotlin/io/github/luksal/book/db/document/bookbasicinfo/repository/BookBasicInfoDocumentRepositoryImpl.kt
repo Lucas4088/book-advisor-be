@@ -3,18 +3,24 @@ package io.github.luksal.book.db.document.bookbasicinfo.repository
 import com.mongodb.bulk.BulkWriteUpsert
 import io.github.luksal.book.db.document.DocumentCustomRepository
 import io.github.luksal.book.db.document.bookbasicinfo.BookBasicInfoDocument
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.Pageable
 import org.springframework.data.mongodb.core.BulkOperations
 import org.springframework.data.mongodb.core.FindAndReplaceOptions
 import org.springframework.data.mongodb.core.MongoOperations
+import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.stereotype.Repository
 
 @Repository
-class BookBasicInfoDocumentRepositoryImpl(private val mongoOps: MongoOperations) :
-    DocumentCustomRepository<BookBasicInfoDocument> {
+class BookBasicInfoDocumentRepositoryImpl(
+    private val mongoOps: MongoOperations,
+    private val mongoTemplate: MongoTemplate
+) : DocumentCustomRepository<BookBasicInfoDocument>, BookBasicInfoDocumentCustomRepository<BookBasicInfoDocument> {
 
-    override fun saveBulkWithDeduplication(docs: List<BookBasicInfoDocument>): List<BulkWriteUpsert>{
+    override fun saveBulkWithDeduplication(docs: List<BookBasicInfoDocument>): List<BulkWriteUpsert> {
         val bulkOps = mongoOps.bulkOps(BulkOperations.BulkMode.UNORDERED, BookBasicInfoDocument::class.java)
         docs.forEach { info ->
             bulkOps.replaceOne(
@@ -24,5 +30,41 @@ class BookBasicInfoDocumentRepositoryImpl(private val mongoOps: MongoOperations)
             )
         }
         return bulkOps.execute().upserts
+    }
+
+    override fun search(
+        id: Long?,
+        bookId: String?,
+        title: String?,
+        startYear: String?,
+        endYear: String?,
+        pageable: Pageable
+    ): Page<BookBasicInfoDocument> {
+        val criteria = mutableListOf<Criteria>()
+
+        id?.let { criteria += Criteria.where("id").`is`(it) }
+
+        bookId?.let { criteria += Criteria.where("bookPublicId").regex(it, "i") }
+
+        title?.takeIf { it.isNotBlank() }?.let {
+            criteria += Criteria.where("title").regex(it, "i")
+        }
+  /*      startYear.let {
+            criteria += Criteria.where("firstPublishDate").gte(it)
+        }
+        endYear.let {
+            criteria += Criteria.where("firstPublishDate").lte(it)
+        }*/
+
+        val query = Query().apply {
+            if (criteria.isNotEmpty()) {
+                addCriteria(Criteria().andOperator(*criteria.toTypedArray()))
+            }
+            with(pageable)
+        }
+
+        val books = mongoTemplate.find(query, BookBasicInfoDocument::class.java)
+        val count = mongoTemplate.count(query, BookBasicInfoDocument::class.java)
+        return PageImpl(books, pageable, count)
     }
 }

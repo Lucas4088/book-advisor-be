@@ -40,7 +40,7 @@ class BookDocumentRepositoryImpl(
     }
 
     override fun search(
-        title: String?, startYear: Int, endYear: Int,
+        title: String?, startYear: Int?, endYear: Int?,
         genres: List<String>?, pageable: Pageable
     ): Page<BookDocument> {
         val criteria = mutableListOf<Criteria>()
@@ -48,10 +48,10 @@ class BookDocumentRepositoryImpl(
         title?.takeIf { it.isNotBlank() }?.let {
             criteria += Criteria.where("title").regex(it, "i")
         }
-        startYear.let {
+        startYear?.let {
             criteria += Criteria.where("publishingYear").gte(it)
         }
-        endYear.let {
+        endYear?.let {
             criteria += Criteria.where("publishingYear").lte(it)
         }
         genres?.takeIf { it.isNotEmpty() }?.let {

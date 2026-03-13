@@ -1,5 +1,10 @@
 package io.github.luksal.book.service
 
+import io.github.luksal.book.api.dto.BookBasicInfoDetailsDto
+import io.github.luksal.book.api.dto.BookBasicInfoDto
+import io.github.luksal.book.api.dto.BookBasicInfoSearchCriteria
+import io.github.luksal.book.api.dto.BookDetailsDto
+import io.github.luksal.book.api.dto.BookDto
 import io.github.luksal.book.api.dto.BookSearchResponse
 import io.github.luksal.book.db.document.author.AuthorDocument
 import io.github.luksal.book.db.document.book.BookDocument
@@ -12,6 +17,8 @@ import io.github.luksal.book.db.jpa.GenreJpaRepository
 import io.github.luksal.book.db.jpa.model.BookEntity
 import io.github.luksal.book.db.jpa.model.GenreEntity
 import io.github.luksal.book.mapper.BookMapper
+import io.github.luksal.book.mapper.BookMapper.toDetailsDto
+import io.github.luksal.book.mapper.BookMapper.toDto
 import io.github.luksal.book.model.*
 import io.github.luksal.book.service.dto.BookSearchCriteriaDto
 import io.github.luksal.integration.source.openlibrary.api.dto.OpenLibraryDoc
@@ -21,7 +28,6 @@ import org.springframework.context.ApplicationEventPublisher
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
-import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Service
 
 
@@ -40,9 +46,20 @@ class BookService(
     fun searchBookDocuments(criteria: BookSearchCriteriaDto, pageable: Pageable): Page<BookSearchResponse> {
         return bookDocumentRepository.search(
             title = criteria.title,
-            startYear = criteria.publishedYearRange.first,
-            endYear = criteria.publishedYearRange.last,
+            startYear = criteria.startYear,
+            endYear = criteria.endYear,
             genres = criteria.genres?.map { it.name },
+            pageable = pageable
+        ).map { BookMapper.map(it) }
+    }
+
+    fun searchBookBasicInfo(criteria: BookBasicInfoSearchCriteria, pageable: Pageable): Page<BookBasicInfoDto> {
+        return bookBasicInfoDocumentRepository.search(
+            id = criteria.id,
+            bookId = criteria.bookId,
+            title = criteria.title,
+            startYear = criteria.startYear,
+            endYear = criteria.endYear,
             pageable = pageable
         ).map { BookMapper.map(it) }
     }
@@ -51,14 +68,34 @@ class BookService(
         bookJpaRepository.findAllById(bookPublicIds).map { BookMapper.map(it) }
 
     //TODO think more of this failover strategy
-    fun getBookById(id: String): BookSearchResponse =
+    fun getBookByIdForCrawling(id: String): BookSearchResponse =
         bookJpaRepository.findById(id)
             .orElse(bookDocumentRepository.findById(id).map { BookMapper.mapToEntity(it) }.orElseThrow())
             .let { BookMapper.map(it) }
 
 
+    fun getBookById(id: String): BookDetailsDto =
+        bookJpaRepository.findById(id)
+            .orElseThrow()
+            .toDetailsDto()
+
+    fun searchBooks(criteria: BookSearchCriteriaDto, pageable: Pageable): Page<BookDto> {
+        return bookJpaRepository.search(
+            title = criteria.title,
+            startYear = criteria.startYear,
+            endYear = criteria.endYear,
+            genres =  criteria.genres?.takeIf { it.isNotEmpty() }?.map { it.name },
+            pageable = pageable
+        ).map { it.toDto() }
+    }
+
     fun getBookDocumentByIds(ids: List<String>): List<BookDocument> =
         bookDocumentRepository.findAllById(ids)
+
+    fun getBookBasicInfoById(bookId: String): BookBasicInfoDetailsDto? =
+        bookBasicInfoDocumentRepository.findById(bookId).map {
+            BookMapper.mapDetails(it)
+        }.orElse(null)
 
     @Transactional
     fun saveBookDocuments(books: List<Book>) {
@@ -130,7 +167,11 @@ class BookService(
             }?.toMutableSet() ?: mutableSetOf()
 
             val bookEntity = BookMapper.mapToEntity(document, authors, genres)
-            bookJpaRepository.saveAndFlush(bookEntity)
+            try {
+                bookJpaRepository.saveAndFlush(bookEntity)
+            } catch (ex: DataIntegrityViolationException) {
+                log.warn("Book document already preset ${document.title} ")
+            }
         } catch (e: DataIntegrityViolationException) {
             log.warn("Failed to sync book ${document.id}", e)
         }

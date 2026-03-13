@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository
 
 @Repository
 interface BookBasicInfoDocumentRepository : MongoRepository<BookBasicInfoDocument, String>,
-    DocumentCustomRepository<BookBasicInfoDocument> {
-
+    BookBasicInfoDocumentCustomRepository<BookBasicInfoDocument>, DocumentCustomRepository<BookBasicInfoDocument> {
     fun findAllByBookPublicIdIn(bookIds: List<String>, page: Pageable): Page<BookBasicInfoDocument>
+
 }
