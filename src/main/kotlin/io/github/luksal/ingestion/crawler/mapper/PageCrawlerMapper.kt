@@ -8,45 +8,46 @@ import io.github.luksal.ingestion.crawler.jpa.entity.CrawlerPath
 import io.github.luksal.ingestion.crawler.jpa.entity.PageCrawlerConfigEntity
 
 object CrawlerConfigMapper {
-    fun map(entity: PageCrawlerConfigEntity): Crawler =
+    fun PageCrawlerConfigEntity.map(): Crawler =
         Crawler(
-            id = entity.id,
-            name = entity.name,
-            enabled = entity.enabled,
-            baseUrl = entity.baseUrl,
+            id = id,
+            name = name,
+            enabled = enabled,
+            baseUrl = baseUrl,
             rateLimit = RateLimit(
-                requestsPerMinute = entity.rateLimit.requestsPerMinute,
-                burst = entity.rateLimit.burst
+                requestsPerMinute = rateLimit.requestsPerMinute,
+                burst = rateLimit.burst
             ),
             path = Path(
-                bookResultSelector = entity.path.bookResultSelector,
-                bookRatingCountSelector = entity.path.bookRatingCountSelector,
-                bookRatingScoreSelector = entity.path.bookRatingScoreSelector,
-                search = entity.path.search,
-                titleSpaceSeparator = entity.path.titleSpaceSeparator
+                bookResultSelector = path.bookResultSelector,
+                bookRatingCountSelector = path.bookRatingCountSelector,
+                bookRatingScoreSelector = path.bookRatingScoreSelector,
+                search = path.search,
+                titleSpaceSeparator = path.titleSpaceSeparator
             ),
-            proxyEnabled = entity.proxyEnabled
+            proxyEnabled = proxyEnabled,
+            proxyName = proxyName
         )
 
-    fun map(id: Long? = null, domain: Crawler): PageCrawlerConfigEntity =
+    fun Crawler.map(id: Long? = null): PageCrawlerConfigEntity =
         PageCrawlerConfigEntity(
-            id = id ?: domain.id,
-            name = domain.name,
-            enabled = domain.enabled,
-            baseUrl = domain.baseUrl,
+            id = id ?: id,
+            name = name,
+            enabled = enabled,
+            baseUrl = baseUrl,
             rateLimit = io.github.luksal.ingestion.crawler.jpa.entity.RateLimit(
-                requestsPerMinute = domain.rateLimit.requestsPerMinute,
-                burst = domain.rateLimit.burst
+                requestsPerMinute = rateLimit.requestsPerMinute,
+                burst = rateLimit.burst
             ),
             path = CrawlerPath(
-                bookResultSelector = domain.path.bookResultSelector,
-                bookRatingCountSelector = domain.path.bookRatingCountSelector,
-                bookRatingScoreSelector = domain.path.bookRatingScoreSelector,
-                search = domain.path.search,
-                titleSpaceSeparator = domain.path.titleSpaceSeparator
+                bookResultSelector = path.bookResultSelector,
+                bookRatingCountSelector = path.bookRatingCountSelector,
+                bookRatingScoreSelector = path.bookRatingScoreSelector,
+                search = path.search,
+                titleSpaceSeparator = path.titleSpaceSeparator
             ),
-            proxyEnabled = domain.proxyEnabled,
-            proxyName = domain.proxyName
+            proxyEnabled = proxyEnabled,
+            proxyName = proxyName
         )
 
     fun mapToSearchResponse(entity: Crawler): CrawlerSearchDetails =

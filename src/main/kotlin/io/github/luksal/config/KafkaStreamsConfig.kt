@@ -1,7 +1,6 @@
 package io.github.luksal.config
 
 import io.github.luksal.util.ext.logger
-import org.apache.kafka.common.serialization.Serdes
 import org.apache.kafka.streams.StreamsConfig
 import org.apache.kafka.streams.errors.StreamsUncaughtExceptionHandler
 import org.springframework.beans.factory.annotation.Autowired
@@ -11,7 +10,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.kafka.annotation.EnableKafka
 import org.springframework.kafka.annotation.EnableKafkaStreams
-import org.springframework.kafka.annotation.KafkaStreamsDefaultConfiguration
 import org.springframework.kafka.config.KafkaStreamsConfiguration
 import org.springframework.kafka.config.KafkaStreamsCustomizer
 
@@ -27,17 +25,6 @@ class KafkaStreamsConfig {
 
     @Value($$"${spring.kafka.bootstrap-servers}")
     private val bootstrapAddress: String? = null
-
-/*    @Bean(name = [KafkaStreamsDefaultConfiguration.DEFAULT_STREAMS_CONFIG_BEAN_NAME])
-    fun kafkaStreamsConfig(): KafkaStreamsConfiguration =
-            KafkaStreamsConfiguration(
-                mapOf(
-                    StreamsConfig.APPLICATION_ID_CONFIG to "streams-app",
-                    StreamsConfig.BOOTSTRAP_SERVERS_CONFIG to bootstrapAddress as Any,
-                    StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG to Serdes.String().javaClass.getName(),
-                    StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG to Serdes.String().javaClass.getName()
-                )
-            )*/
 
     @Bean
     fun kafkaStreamsCustomizer(): KafkaStreamsCustomizer {

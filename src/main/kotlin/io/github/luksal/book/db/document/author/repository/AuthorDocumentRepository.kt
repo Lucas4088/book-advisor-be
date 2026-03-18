@@ -1,9 +1,10 @@
 package io.github.luksal.book.db.document.author.repository
 
 import io.github.luksal.book.db.document.author.AuthorDocument
+import io.github.luksal.commons.jpa.MongoCustomRepository
 import org.springframework.data.mongodb.repository.MongoRepository
 import org.springframework.stereotype.Repository
 
 @Repository
-interface AuthorDocumentRepository : MongoRepository<AuthorDocument, String> {
+interface AuthorDocumentRepository : MongoRepository<AuthorDocument, String>, MongoCustomRepository<AuthorDocument>{
 }

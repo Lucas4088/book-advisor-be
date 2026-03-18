@@ -86,25 +86,32 @@ class PageFetcher(
                 maxTimeout = maxTimeout
             )
         )
-        val requestJson = Jsoup.connect(proxyUrl)
-            .header("Content-Type", "application/json")
-            .timeout(maxTimeout)
-            .method(Connection.Method.POST)
-            .requestBody(requestBody)
-            .timeout(100_000)
-            .ignoreContentType(true)
-            .maxBodySize(0) //Jsoup can truncate huge response body, so we set it to 0 to disable truncation
-            .execute()
-            .body().also {
-                JsonMapper().readTree(it)
-                    .get("solution")?.get("response")?.asString()?.let { t ->
-                        val file = File("fetcher.html").apply {
-                            writeText(t, Charsets.UTF_8)
+        return runCatching {
+            val requestJson = Jsoup.connect(proxyUrl)
+                .header("Content-Type", "application/json")
+                .timeout(maxTimeout)
+                .method(Connection.Method.POST)
+                .requestBody(requestBody)
+                .timeout(100_000)
+                .ignoreContentType(true)
+                .maxBodySize(0) //Jsoup can truncate huge response body, so we set it to 0 to disable truncation
+                .execute()
+                .body().also {
+                    JsonMapper().readTree(it)
+                        .get("solution")?.get("response")?.asString()?.let { t ->
+                            val file = File("fetcher.html").apply {
+                                writeText(t, Charsets.UTF_8)
+                            }
                         }
-                    }
-            }
+                }
+            JsonMapper().readTree(requestJson)
+                .path("solution")
+                .path("response")
+                .asString()
+        }.onFailure {
+            log.error("Error while calling proxy", it)
+        }.getOrThrow()
 
-        return JsonMapper().readTree(requestJson).path("solution").path("response").asString()
     }
 
     private fun createSession(proxyUrl: String, maxTimeout: Int): String? {

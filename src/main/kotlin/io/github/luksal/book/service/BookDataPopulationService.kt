@@ -8,9 +8,11 @@ import io.github.luksal.book.mapper.BookMapper
 import io.github.luksal.book.model.Book
 import io.github.luksal.commons.dto.EventStatus
 import io.github.luksal.commons.jpa.EventMeta
+import io.github.luksal.event.service.EventService
 import io.github.luksal.ingestion.api.dto.ScheduledBookBasicInfoPopulationEvent
 import io.github.luksal.ingestion.api.dto.ScheduledBookBasicInfoSearchRequest
 import io.github.luksal.ingestion.mappper.IngestionMapper
+import io.github.luksal.integration.event.listener.BookDetailsFetchedEvent
 import io.github.luksal.integration.source.archivebooks.ArchiveBooksService
 import io.github.luksal.integration.source.archivebooks.api.dto.ArchiveSearchDoc
 import io.github.luksal.integration.source.googlebooks.GoogleBooksService
@@ -39,7 +41,9 @@ class BookDataPopulationService(
     private val openLibraryService: OpenLibraryService,
     private val googleBooksService: GoogleBooksService,
     private val archiveBooksService: ArchiveBooksService,
-    private val emailService: EmailService
+    private val emailService: EmailService,
+   /* ,*/
+    private val eventService: EventService
 ) {
 
     private val log = logger()
@@ -109,7 +113,8 @@ class BookDataPopulationService(
         log.info("Starting book details collection initialization")
         val pageNumber = 0
         val pageSize = 20
-        val populateEventMap = populateBookDetailsEventJpaRepository.findAllPending(PageRequest.of(pageNumber, pageSize)).content
+        val populateEventMap =
+            populateBookDetailsEventJpaRepository.findAllPending(PageRequest.of(pageNumber, pageSize)).content
                 .associateBy { it.bookId }
         if (populateEventMap.isEmpty()) {
             log.info("No pending events found for book details collection initialization, exiting")
@@ -164,6 +169,7 @@ class BookDataPopulationService(
     private fun findBookDetails(bookInfo: BookBasicInfoDocument): Book? =
         (googleBooksService.findBookDetails(bookInfo.title, bookInfo.authors)?.items
             ?.firstOrNull()
+            .also { publishEvent("GOOGLE_BOOKS", it) }
             ?.let { BookMapper.map(it, bookInfo) }
             ?: fetchFallbackBookDetails(bookInfo))
 
@@ -199,9 +205,10 @@ class BookDataPopulationService(
             title,
             authors.firstOrNull() ?: ""
         ).docs.firstOrNull()
+
         val details = openLibraryKey?.let {
             openLibraryService.getBookDetails(it)
-        }
+        }.also { publishEvent("OPEN_LIBRARY", it) }
         return Pair(search, details)
     }
 
@@ -218,6 +225,7 @@ class BookDataPopulationService(
                 }
                 .thenByDescending { response -> response.collection?.size ?: 0 }
         )?.also { log.info(ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(it)) }
+            .also { publishEvent("ARCHIVE_BOOKS", it) }
     }
 
     private fun sendBasicBookInfoSuccessNotificationEmail(fromYear: Int, toYear: Int, lang: String, savedCount: Int) =
@@ -247,5 +255,10 @@ class BookDataPopulationService(
                     Error message: $errorMessage
                     """.trimIndent()
         )
+    }
+
+    private fun publishEvent(sourceName: String, response: Any?) {
+        val status = if (response == null) EventStatus.ERROR else EventStatus.SUCCESS
+        eventService.publishAndEmit(sourceName, BookDetailsFetchedEvent(sourceName, status))
     }
 }

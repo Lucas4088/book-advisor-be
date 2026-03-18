@@ -111,7 +111,7 @@ class OpenLibraryFileImporter(
                 val progress = readBytes.toDouble() / totalSizeBytes * 100
                 formattedProgress = "%.2f".format(progress)
                 if (readBytes >= nextLogThreshold) {
-                    eventService.sendEvent(eventName, formattedProgress)
+                    eventService.emit(eventName, formattedProgress)
                     log.info("File $filePath progress: $formattedProgress%")
 
                     nextLogThreshold += logStepBytes

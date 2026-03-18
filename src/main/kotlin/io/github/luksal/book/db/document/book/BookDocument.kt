@@ -1,10 +1,15 @@
 package io.github.luksal.book.db.document.book
 
+import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.github.luksal.book.db.util.MongoBigDecimalDeserializer
+import io.github.luksal.book.db.util.MongoDateDeserializer
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
 import org.springframework.data.mongodb.core.mapping.Field
+import tools.jackson.databind.annotation.JsonDeserialize
 import java.math.BigDecimal
+import java.time.LocalDateTime
 
 @Document(collection = "books")
 data class BookDocument(
@@ -43,7 +48,12 @@ data class BookDocument(
     val genres: List<GenreEmbedded>? = emptyList(),
     @Field("ra")
     @JsonProperty("ra")
-    val ratings: Set<RatingEmbedded>? = emptySet()
+    val ratings: Set<RatingEmbedded>? = emptySet(),
+    @Field("co")
+    @JsonProperty("co")
+    @JsonDeserialize(using = MongoDateDeserializer::class)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    val createdOn: LocalDateTime
 )
 
 data class EditionEmbedded(
@@ -73,10 +83,15 @@ data class GenreEmbedded(
     val name: String
 )
 
+@Document(collection = "ratings")
 data class RatingEmbedded(
-    @Field("ra")
-    @JsonProperty("ra")
-    val rating: BigDecimal,
+    @Id
+    @JsonProperty("_id")
+    val id: String? = null,
+    @Field("sc")
+    @JsonDeserialize(using = MongoBigDecimalDeserializer::class)
+    @JsonProperty("sc")
+    val score: BigDecimal,
     @Field("co")
     @JsonProperty("co")
     val count: Int,
@@ -92,6 +107,25 @@ data class RatingEmbedded(
 
     override fun hashCode(): Int = source.name.hashCode()
 }
+
+@Document(collection = "ratings")
+data class RatingDocument(
+    @Id
+    @JsonProperty("_id")
+    val id: String? = null,
+    @Field("bi")
+    @JsonProperty("bi")
+    val bookId: String,
+    @Field("ra")
+    @JsonProperty("sc")
+    val score: BigDecimal,
+    @Field("co")
+    @JsonProperty("co")
+    val count: Int,
+    @Field("so")
+    @JsonProperty("so")
+    val source: RatingSourceEmbedded
+)
 
 data class RatingSourceEmbedded(
     @Field("na")

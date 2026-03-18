@@ -11,7 +11,7 @@
   "value.converter": "org.apache.kafka.connect.storage.StringConverter"
 }
 
-
+/*
 curl -X POST http://localhost:8084/connectors -H "Content-Type: application/json" -d '{
 "name": "mongodb-source",
 "config": {
@@ -27,4 +27,4 @@ curl -X POST http://localhost:8084/connectors -H "Content-Type: application/json
 "value.converter": "org.apache.kafka.connect.storage.StringConverter"
 }
 
-}'
+}'*/

@@ -1,11 +1,15 @@
 package io.github.luksal.event.service
 
+import io.github.luksal.event.Event
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Service
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 import java.util.concurrent.CopyOnWriteArrayList
 
 @Service
-class EventService {
+class EventService(
+    private val publisher: ApplicationEventPublisher
+) {
 
     private val emitters = CopyOnWriteArrayList<SseEmitter>()
 
@@ -21,7 +25,16 @@ class EventService {
         return emitter
     }
 
-    fun sendEvent(eventName: String, data: Any) {
+    fun <T : Event> publish(event: T) {
+        publisher.publishEvent(event)
+    }
+
+    fun <T : Event> publishAndEmit(eventName: String, event: T) {
+        publish(event)
+        emit(eventName, event)
+    }
+
+    fun emit(eventName: String, data: Any) {
         val deadEmitters = mutableListOf<SseEmitter>()
 
         emitters.forEach { emitter ->

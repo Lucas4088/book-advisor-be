@@ -1,10 +1,10 @@
 package io.github.luksal.book.db.document.book.repository
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.mongodb.bulk.BulkWriteUpsert
 import io.github.luksal.book.db.document.DocumentCustomRepository
 import io.github.luksal.book.db.document.book.BookDocument
-import io.github.luksal.book.db.document.book.RatingEmbedded
-import io.github.luksal.book.mapper.BookMapper
+import io.github.luksal.book.mapper.BookMapper.toRatingEmbedded
 import io.github.luksal.book.model.BookUpdate
 import io.github.luksal.util.ext.pushIfNotEmpty
 import io.github.luksal.util.ext.setIfNotEmpty
@@ -19,6 +19,9 @@ import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.core.query.Update
 import org.springframework.stereotype.Repository
+import kotlin.reflect.KClass
+import kotlin.reflect.full.findAnnotation
+import kotlin.reflect.full.primaryConstructor
 
 @Repository
 class BookDocumentRepositoryImpl(
@@ -73,15 +76,15 @@ class BookDocumentRepositoryImpl(
     override fun update(book: BookUpdate): String? {
         val update = Update().apply {
             book.let { document ->
-                setIfNotEmpty("description", document.description)
-                setIfNotEmpty("publishingYear", document.publishingYear)
-                setIfNotEmpty("pageCount", document.pageCount)
-                setIfNotEmpty("thumbnailUrl", document.thumbnailUrl)
-                setIfNotEmpty("smallThumbnailUrl", document.smallThumbnailUrl)
-                setIfNotEmpty("edition", document.edition)
-                pushIfNotEmpty("authors", document.authors)
-                pushIfNotEmpty("genres", document.genres)
-                pushIfNotEmpty("ratings", document.ratings)
+                setIfNotEmpty(getJsonPropertyName(BookDocument::class, "description"), document.description)
+                setIfNotEmpty(getJsonPropertyName(BookDocument::class, "publishingYear"), document.publishingYear)
+                setIfNotEmpty(getJsonPropertyName(BookDocument::class, "pageCount"), document.pageCount)
+                setIfNotEmpty(getJsonPropertyName(BookDocument::class, "thumbnailUrl"), document.thumbnailUrl)
+                setIfNotEmpty(getJsonPropertyName(BookDocument::class, "smallThumbnailUrl"), document.smallThumbnailUrl)
+                setIfNotEmpty(getJsonPropertyName(BookDocument::class, "edition"), document.edition)
+                pushIfNotEmpty(getJsonPropertyName(BookDocument::class, "authors"), document.authors)
+                pushIfNotEmpty(getJsonPropertyName(BookDocument::class, "genres"), document.genres)
+                pushIfNotEmpty(getJsonPropertyName(BookDocument::class, "ratings"), document.ratings?.map { it.toRatingEmbedded() })
             }
         }
         return mongoTemplate.updateFirst(
@@ -90,4 +93,14 @@ class BookDocumentRepositoryImpl(
             BookDocument::class.java
         ).upsertedId?.toString()
     }
+
+    fun getJsonPropertyName(clazz: KClass<*>, fieldName: String): String? {
+        return clazz.primaryConstructor
+            ?.parameters
+            ?.find { it.name == fieldName }
+            ?.findAnnotation<JsonProperty>()
+            ?.value
+            ?.takeIf { it.isNotEmpty() }
+    }
+
 }

@@ -3,6 +3,7 @@ package io.github.luksal.book.db.document.bookbasicinfo.repository
 import com.mongodb.bulk.BulkWriteUpsert
 import io.github.luksal.book.db.document.DocumentCustomRepository
 import io.github.luksal.book.db.document.bookbasicinfo.BookBasicInfoDocument
+import io.github.luksal.commons.jpa.MongoCustomRepository
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
@@ -18,7 +19,8 @@ import org.springframework.stereotype.Repository
 class BookBasicInfoDocumentRepositoryImpl(
     private val mongoOps: MongoOperations,
     private val mongoTemplate: MongoTemplate
-) : DocumentCustomRepository<BookBasicInfoDocument>, BookBasicInfoDocumentCustomRepository<BookBasicInfoDocument> {
+) : DocumentCustomRepository<BookBasicInfoDocument>, BookBasicInfoDocumentCustomRepository<BookBasicInfoDocument>,
+    MongoCustomRepository<BookBasicInfoDocument> {
 
     override fun saveBulkWithDeduplication(docs: List<BookBasicInfoDocument>): List<BulkWriteUpsert> {
         val bulkOps = mongoOps.bulkOps(BulkOperations.BulkMode.UNORDERED, BookBasicInfoDocument::class.java)
@@ -67,4 +69,6 @@ class BookBasicInfoDocumentRepositoryImpl(
         val count = mongoTemplate.count(query, BookBasicInfoDocument::class.java)
         return PageImpl(books, pageable, count)
     }
+
+    override fun countApprox(): Long = mongoTemplate.estimatedCount(BookBasicInfoDocument::class.java)
 }

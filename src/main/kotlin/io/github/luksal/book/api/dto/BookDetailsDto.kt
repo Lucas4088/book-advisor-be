@@ -19,21 +19,10 @@ data class BookSearchCriteria(
     )
 }
 
-data class PublishedYearRange(
-    val from: Int = 0,
-    val to: Int = Int.MAX_VALUE
-) {
-    init {
-        require(from <= to) { "PublishedYearRange must be <= from=$from, to=$to" }
-    }
-
-    fun toIntRange(): IntRange = from..to
-}
-
 data class BookDto(
     val id: String? = null,
-    val bookId: String? = null,
     val title: String? = null,
+    val smallThumbnailUrl: String? = null,
     val publishedYear: Int,
 )
 

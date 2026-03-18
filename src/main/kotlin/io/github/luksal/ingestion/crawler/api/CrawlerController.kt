@@ -32,7 +32,7 @@ class CrawlerController(
 
     @GetMapping
     fun findAll(): List<CrawlerSearchDetails> =
-        crawlerCrudService.findAll().map { CrawlerConfigMapper.mapToSearchResponse(it) }
+        crawlerCrudService.findAll().map { CrawlerConfigMapper.mapToSearchResponse(it) }.sortedBy { it.id }
 
     @DeleteMapping("/{id}")
     fun delete(@PathVariable id: Long) =

@@ -1,12 +1,6 @@
 package io.github.luksal.book.mapper
 
-import io.github.luksal.book.api.dto.AuthorDetailsDto
-import io.github.luksal.book.api.dto.AuthorDto
-import io.github.luksal.book.api.dto.BookBasicInfoDetailsDto
-import io.github.luksal.book.api.dto.BookBasicInfoDto
-import io.github.luksal.book.api.dto.BookDetailsDto
-import io.github.luksal.book.api.dto.BookDto
-import io.github.luksal.book.api.dto.BookSearchResponse
+import io.github.luksal.book.api.dto.*
 import io.github.luksal.book.db.document.author.AuthorDocument
 import io.github.luksal.book.db.document.book.*
 import io.github.luksal.book.db.document.bookbasicinfo.BookBasicInfoDocument
@@ -16,6 +10,7 @@ import io.github.luksal.integration.source.archivebooks.api.dto.ArchiveSearchDoc
 import io.github.luksal.integration.source.googlebooks.api.dto.BookItem
 import io.github.luksal.integration.source.openlibrary.api.dto.OpenLibraryBookDetails
 import io.github.luksal.integration.source.openlibrary.api.dto.OpenLibraryDoc
+import java.time.LocalDateTime
 import java.time.Year
 import kotlin.uuid.ExperimentalUuidApi
 
@@ -29,18 +24,6 @@ object BookMapper {
     fun mapGenres(genres: List<GenreUpdate>?): List<GenreEmbedded> =
         genres?.map { GenreEmbedded(name = it.name) } ?: emptyList()
 
-    fun mapRatings(ratings: List<RatingUpdate>?): Set<RatingEmbedded> =
-        ratings?.map {
-            RatingEmbedded(
-                rating = it.score,
-                count = it.count,
-                source = RatingSourceEmbedded(
-                    name = it.source.name,
-                    url = it.source.url
-                )
-            )
-        }?.toSet() ?: emptySet()
-
     fun mapToEntity(book: BookDocument): BookEntity =
         BookEntity(
             bookId = book.id,
@@ -51,24 +34,38 @@ object BookMapper {
             thumbnailUrl = book.thumbnailUrl,
             smallThumbnailUrl = book.smallThumbnailUrl,
             authors = book.authors?.takeIf { it.isNotEmpty() }?.map {
-               mapAuthorToEntity(it)
+                mapAuthorToEntity(it)
             }?.toMutableSet() ?: mutableSetOf(),
             genres = book.genres?.takeIf { it.isNotEmpty() }?.map {
                 mapGenreToEntity(it)
             }?.toMutableSet() ?: mutableSetOf()
         )
 
-    fun mapToEntity(book: BookDocument, authors: Set<AuthorEntity>, genres: Set<GenreEntity>): BookEntity =
+    fun BookDocument.mapToEntity(authors: Set<AuthorEntity>, genres: Set<GenreEntity>): BookEntity =
         BookEntity(
-            bookId = book.id,
-            title = book.title,
-            description = book.description,
-            publishingYear = book.publishingYear,
-            pageCount = book.pageCount,
-            thumbnailUrl = book.thumbnailUrl,
-            smallThumbnailUrl = book.smallThumbnailUrl,
+            bookId = id,
+            title = title,
+            description = description,
+            publishingYear = publishingYear,
+            pageCount = pageCount,
+            thumbnailUrl = thumbnailUrl,
+            smallThumbnailUrl = smallThumbnailUrl,
             authors = authors.toMutableSet(),
             genres = genres.toMutableSet(),
+        )
+
+    fun RatingEmbedded.mapToEntity(book: BookEntity, sourceEntity: RatingSourceEntity): RatingEntity =
+        RatingEntity(
+            book = book,
+            score = score,
+            count = count,
+            source = sourceEntity
+        )
+
+    fun RatingSourceEmbedded.mapToEntity(): RatingSourceEntity =
+        RatingSourceEntity(
+            name = name,
+            url = url
         )
 
     fun mapAuthorToEntity(author: AuthorEmbedded) =
@@ -83,10 +80,19 @@ object BookMapper {
             name = genre.name,
         )
 
+    fun map(bookEntity: BookEntity, sourceEntity: RatingSourceEntity, rating: RatingDocument): RatingEntity =
+        RatingEntity(
+            id = null,
+            score = rating.score,
+            count = rating.count,
+            book = bookEntity,
+            source = sourceEntity
+        )
+
     fun map(bookEntity: BookEntity, sourceEntity: RatingSourceEntity, rating: RatingEmbedded): RatingEntity =
         RatingEntity(
             id = null,
-            score = rating.rating,
+            score = rating.score,
             count = rating.count,
             book = bookEntity,
             source = sourceEntity
@@ -98,6 +104,18 @@ object BookMapper {
             name = ratingSource.name,
             url = ratingSource.url
         )
+
+    fun RatingUpdate.toRatingEmbedded() = RatingEmbedded(
+        id = this.id,
+        count = this.count,
+        score = this.score,
+        source = this.source.toRatingSourceEmbedded()
+    )
+
+    fun RatingSourceUpdate.toRatingSourceEmbedded() = RatingSourceEmbedded(
+        name = this.name,
+        url = this.url
+    )
 
     @OptIn(ExperimentalUuidApi::class)
     fun mapToEntity(book: Book): BookEntity {
@@ -168,9 +186,10 @@ object BookMapper {
                     name = it.name
                 )
             },
+            createdOn = LocalDateTime.now(),
             ratings = book.ratings.map {
                 RatingEmbedded(
-                    rating = it.score,
+                    score = it.score,
                     count = it.count,
                     source = RatingSourceEmbedded(
                         name = it.source.name,
@@ -179,6 +198,7 @@ object BookMapper {
                 )
             }.toSet()
         )
+
     fun map(book: BookEntity): BookSearchResponse = BookSearchResponse(
         id = book.bookId!!,
         title = book.title,
@@ -198,8 +218,8 @@ object BookMapper {
 
     fun BookEntity.toDto() = BookDto(
         id = bookId,
-        bookId = bookId,
         title = title,
+        smallThumbnailUrl = smallThumbnailUrl,
         publishedYear = publishingYear
     )
 
@@ -227,13 +247,14 @@ object BookMapper {
         id = basicInfo.bookPublicId,
         title = basicInfo.title,
         description = openDetails?.description?.value ?: archiveDetails?.description?.firstOrNull(),
-        publishingYear = (openDoc?.firstPublishYear?.let { Year.of(it) } ?: archiveDetails?.year?.let { Year.of(it) })!!,
+        publishingYear = (openDoc?.firstPublishYear?.let { Year.of(it) }
+            ?: archiveDetails?.year?.let { Year.of(it) })!!,
         pageCount = openDetails?.numberOfPages,
         edition = BookEdition(basicInfo.editionTitle, basicInfo.lang),
         //TODO fix for publicID together witth key
         authors = openDoc?.authorName?.map { name -> Author(name = name, key = "", publicId = "", otherNames = null) }
             ?.takeIf { it.isNotEmpty() }
-            ?: archiveDetails?.creator?.map { name -> Author(name = name, key= "", publicId = "", otherNames = null) }
+            ?: archiveDetails?.creator?.map { name -> Author(name = name, key = "", publicId = "", otherNames = null) }
             ?: emptyList(),
         genres = openDetails?.subjects?.map { Genre(name = it) } ?: emptyList(),
         ratings = emptyList()
@@ -294,7 +315,7 @@ object BookMapper {
             name = authorEntity.name
         )
 
-    fun mapDetails(authorEntity: AuthorEntity) : AuthorDetailsDto =
+    fun mapDetails(authorEntity: AuthorEntity): AuthorDetailsDto =
         AuthorDetailsDto(
             id = authorEntity.id,
             publicId = authorEntity.publicId,

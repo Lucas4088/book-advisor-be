@@ -142,7 +142,7 @@ app:
   proxies:
     - name: flaresolverr
       url: http://localhost:8191/v1
-      max-timeout: 100000
+      max-timeout: 1000000
       headers:
         "Content-Type" : "application/json"
         "Accept" : "application/json"

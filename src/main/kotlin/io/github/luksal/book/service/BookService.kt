@@ -14,9 +14,11 @@ import io.github.luksal.book.db.document.bookbasicinfo.repository.BookBasicInfoD
 import io.github.luksal.book.db.jpa.AuthorJpaRepository
 import io.github.luksal.book.db.jpa.BookJpaRepository
 import io.github.luksal.book.db.jpa.GenreJpaRepository
+import io.github.luksal.book.db.jpa.RatingSourceJpaRepository
 import io.github.luksal.book.db.jpa.model.BookEntity
 import io.github.luksal.book.db.jpa.model.GenreEntity
 import io.github.luksal.book.mapper.BookMapper
+import io.github.luksal.book.mapper.BookMapper.mapToEntity
 import io.github.luksal.book.mapper.BookMapper.toDetailsDto
 import io.github.luksal.book.mapper.BookMapper.toDto
 import io.github.luksal.book.model.*
@@ -36,6 +38,7 @@ class BookService(
     private val bookJpaRepository: BookJpaRepository,
     private val authorJpaRepository: AuthorJpaRepository,
     private val genreJpaRepository: GenreJpaRepository,
+    private val ratingSourceJpaRepository: RatingSourceJpaRepository,
     private val bookBasicInfoDocumentRepository: BookBasicInfoDocumentRepository,
     private val bookDocumentRepository: BookDocumentRepository,
     private val publisher: ApplicationEventPublisher
@@ -69,8 +72,7 @@ class BookService(
 
     //TODO think more of this failover strategy
     fun getBookByIdForCrawling(id: String): BookSearchResponse =
-        bookJpaRepository.findById(id)
-            .orElse(bookDocumentRepository.findById(id).map { BookMapper.mapToEntity(it) }.orElseThrow())
+            bookDocumentRepository.findById(id).orElseThrow()
             .let { BookMapper.map(it) }
 
 
@@ -166,11 +168,19 @@ class BookService(
                     ?: genreJpaRepository.saveAndFlush(GenreEntity(name = genre.name))
             }?.toMutableSet() ?: mutableSetOf()
 
-            val bookEntity = BookMapper.mapToEntity(document, authors, genres)
+            val bookEntity : BookEntity = bookJpaRepository.findById(document.id)
+                .orElse(document.mapToEntity(authors, genres))!!
+
+            bookEntity.ratings.clear()
+            bookEntity.ratings.addAll(document.ratings?.map {
+                val source = ratingSourceJpaRepository.findByName(it.source.name)
+                    ?: ratingSourceJpaRepository.save(it.source.mapToEntity())
+                it.mapToEntity(bookEntity, source)
+            }?.toMutableList() ?: mutableListOf())
             try {
                 bookJpaRepository.saveAndFlush(bookEntity)
             } catch (ex: DataIntegrityViolationException) {
-                log.warn("Book document already preset ${document.title} ")
+                log.warn("Book document already present ${document.title} ")
             }
         } catch (e: DataIntegrityViolationException) {
             log.warn("Failed to sync book ${document.id}", e)
