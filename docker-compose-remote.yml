@@ -1,0 +1,158 @@
+services:
+  mongodb:
+    image: mongo:7
+    container_name: mongodb
+    entrypoint: ["bash", "/mongo-entrypoint.sh"]
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+      - ./mongo-keyfile:/tmp/keyfile:ro
+      - ./docker/mongo/replica-set-script.sh:/mongo-entrypoint.sh:ro
+    environment:
+      MONGO_INITDB_DATABASE: book-advisor-db
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+    restart: unless-stopped
+
+  mongo-init:
+    image: mongo
+    depends_on:
+      - mongodb
+    restart: "no"
+    entrypoint: >
+      mongosh --host mongodb:27017 
+      -u mongo_user -p mongo_password --authenticationDatabase admin
+      --eval "rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'mongodb:27017' }] })"
+
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    ports:
+      - "5435:5432"
+    environment:
+      POSTGRES_DB: book-advisor-db
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  redis:
+    image: redis:7.4.8-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    container_name: redis
+    command: redis-server --save 20 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+
+  proxy:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=debug
+      - LOG_FILE=${LOG_FILE:-none}
+      - LOG_HTML=${LOG_HTML:-false}
+      - CAPTCHA_SOLVER=${CAPTCHA_SOLVER:-none}
+      - TZ=Europe/London
+    ports:
+      - "${PORT:-8191}:8191"
+    volumes:
+      - /var/lib/flaresolver:/config
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.proxy.rule=Host(`proxy.localhost`)"
+      - "traefik.http.routers.proxy.entrypoints=web"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.8.0
+    container_name: kafka
+    hostname: kafka
+
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: "broker,controller"
+
+      KAFKA_LISTENERS: "PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093"
+
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092"
+
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT"
+
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093"
+
+      KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+
+      KAFKA_LOG_DIRS: "/tmp/kraft-combined-logs"
+
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
+
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+
+  kafka-connect:
+    build:
+      context: ./docker/kafka-connect
+      dockerfile: Dockerfile
+    container_name: kafka-connect
+    depends_on:
+      - kafka
+    ports:
+      - "8084:8083"
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: kafka:9092
+      CONNECT_REST_PORT: 8083
+      CONNECT_REST_ADVERTISED_HOST_NAME: kafka-connect
+      CONNECT_GROUP_ID: connect-cluster
+      CONNECT_CONFIG_STORAGE_TOPIC: connect-configs
+      CONNECT_OFFSET_STORAGE_TOPIC: connect-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: connect-status
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.storage.StringConverter
+      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_PLUGIN_PATH: /usr/share/java,/usr/share/confluent-hub-components,/usr/share/custom-plugins
+
+    volumes:
+      - ./connect-plugins:/usr/share/custom-plugins
+
+  kafka-connect-init:
+    image: curlimages/curl:latest
+    depends_on:
+      kafka-connect:
+        condition: service_healthy
+    restart: "no"
+    command: >
+      command: >
+        sh -c "
+        sleep 5 &&
+        curl -X PUT http://kafka-connect:8083/connectors/jdbc-sink/config
+        -H 'Content-Type: application/json'
+        -d @/docker/kafka-connect/jdbc_connector.json ;
+        curl -X PUT http://kafka-connect:8083/connectors/mongodb-source/config
+        -H 'Content-Type: application/json'
+        -d @/docker/kafka-connect/mongo_connector.json
+        "
+    volumes:
+      - ./docker/kafka-connect:/docker/kafka-connect
+
+
+volumes:
+  mongo_data:
+  postgres_data:
+  redis_data:
+  kafka_data:
