@@ -2,28 +2,33 @@ services:
   mongodb:
     image: mongo:7
     container_name: mongodb
-    entrypoint: ["bash", "/mongo-entrypoint.sh"]
     ports:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
-      - ./mongo-keyfile:/tmp/keyfile:ro
-      - ./docker/mongo/replica-set-script.sh:/mongo-entrypoint.sh:ro
+    command: >
+      mongod --replSet rs0 --bind_ip_all
     environment:
-      MONGO_INITDB_DATABASE: book-advisor-db
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
     restart: unless-stopped
 
   mongo-init:
-    image: mongo
+    image: mongo:7
     depends_on:
       - mongodb
     restart: "no"
     entrypoint: >
-      mongosh --host mongodb:27017 
-      -u mongo_user -p mongo_password --authenticationDatabase admin
-      --eval "rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'mongodb:27017' }] })"
+      bash -c "
+        sleep 5 &&
+        mongosh --host mongodb:27017
+        -u ${MONGO_ROOT_USER} -p ${MONGO_ROOT_PASSWORD}
+        --authenticationDatabase admin
+        --eval 'rs.initiate({
+          _id: \"rs0\",
+          members: [{ _id: 0, host: \"mongodb:27017\" }]
+        })'
+      "
 
   postgres:
     image: postgres:16
