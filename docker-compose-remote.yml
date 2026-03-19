@@ -6,8 +6,9 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
-    command: >
-      mongod --replSet rs0 --bind_ip_all
+      - ./mongo-keyfile:/tmp/keyfile:ro
+      - ./mongo-entrypoint.sh:/mongo-entrypoint.sh:ro
+    entrypoint: ["bash", "/mongo-entrypoint.sh"]
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
