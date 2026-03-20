@@ -9,7 +9,7 @@ import io.github.luksal.ingestion.crawler.jpa.PageCrawlerJpaRepository
 import io.github.luksal.ingestion.crawler.jpa.entity.PageCrawlerConfigEntity
 import io.github.luksal.ingestion.crawler.service.PageCrawler
 import io.github.luksal.ingestion.fetcher.PageFetcher
-import io.github.luksal.ingestion.mappper.IngestionMapper
+import io.github.luksal.ingestion.mapper.IngestionMapper
 import io.github.luksal.util.ext.intersectPercentage
 import io.github.luksal.util.ext.logger
 import io.github.luksal.util.ext.normalizeStandardChars

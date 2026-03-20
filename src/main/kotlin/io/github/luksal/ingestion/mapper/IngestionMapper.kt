@@ -1,4 +1,4 @@
-package io.github.luksal.ingestion.mappper
+package io.github.luksal.ingestion.mapper
 
 import io.github.luksal.book.db.jpa.model.event.ScheduledBookBasicInfoPopulationEventEntity
 import io.github.luksal.commons.dto.EventMeta

@@ -5,6 +5,7 @@ import io.github.luksal.integration.source.archivebooks.api.dto.ArchiveBookDetai
 import io.github.luksal.integration.source.archivebooks.api.dto.ArchiveSearchDoc
 import io.github.luksal.util.ext.logger
 import io.github.luksal.util.ext.normalizeStandardChars
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker
 import org.springframework.stereotype.Service
 
 @Service
@@ -19,6 +20,7 @@ class ArchiveBooksService(private val archiveBooksClient: ArchiveBooksClient) {
         private const val MEDIATYPE_QUERY_PARAM = "mediatype"
     }
 
+    @CircuitBreaker(name = "search-archiveBooksCircuitBreaker", fallbackMethod = "findBookDetailsFallback")
     fun search(title: String, author: String?): List<ArchiveSearchDoc> {
         val authorQueryPart = author?.let { "AND $CREATOR_QUERY_PARAM:(\"${author.normalizeStandardChars()}\")" } ?: ""
         val langPart = "AND ($LANG_QUERY_PARAM:eng OR $LANG_QUERY_PARAM:English)"
@@ -30,5 +32,10 @@ class ArchiveBooksService(private val archiveBooksClient: ArchiveBooksClient) {
 
     fun findById(id: String): ArchiveBookDetailsResponse? {
         return archiveBooksClient.findById(id)
+    }
+
+    private fun findBookDetailsFallback(title: String, author: String?, ex: Throwable): List<ArchiveSearchDoc> {
+        log.warn("Archive books service is unavailable. Falling back to null response. Error: ${ex.message}")
+        return emptyList()
     }
 }

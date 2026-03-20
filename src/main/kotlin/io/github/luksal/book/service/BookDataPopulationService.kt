@@ -11,7 +11,7 @@ import io.github.luksal.commons.jpa.EventMeta
 import io.github.luksal.event.service.EventService
 import io.github.luksal.ingestion.api.dto.ScheduledBookBasicInfoPopulationEvent
 import io.github.luksal.ingestion.api.dto.ScheduledBookBasicInfoSearchRequest
-import io.github.luksal.ingestion.mappper.IngestionMapper
+import io.github.luksal.ingestion.mapper.IngestionMapper
 import io.github.luksal.integration.event.listener.BookDetailsFetchedEvent
 import io.github.luksal.integration.source.archivebooks.ArchiveBooksService
 import io.github.luksal.integration.source.archivebooks.api.dto.ArchiveSearchDoc
@@ -209,7 +209,7 @@ class BookDataPopulationService(
         val search = openLibraryService.searchBy(
             title,
             authors.firstOrNull() ?: ""
-        ).docs.firstOrNull()
+        )?.docs?.firstOrNull()
 
         val details = openLibraryKey
             ?.let { openLibraryService.getBookDetails(it) }

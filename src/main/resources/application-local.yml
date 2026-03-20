@@ -97,7 +97,23 @@ resilience4j:
         permittedNumberOfCallsInHalfOpenState: 3
         automaticTransitionFromOpenToHalfOpenEnabled: true
         record-exceptions:
-          - io.github.luksal.exception.DailyQuotaExceededException
+          - feign.FeignException.ServiceUnavailable
+          - feign.FeignException.GatewayTimeout
+          - feign.FeignException.InternalServerError
+      search-archiveBooksCircuitBreaker:
+        registerHealthIndicator: true
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 24h
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        record-exceptions:
+          - feign.FeignException.ServiceUnavailable
+          - feign.FeignException.GatewayTimeout
+          - feign.FeignException.InternalServerError
+
   retry:
     instances:
       search-openLibraryRetry:

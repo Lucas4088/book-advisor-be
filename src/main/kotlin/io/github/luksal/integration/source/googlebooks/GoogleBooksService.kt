@@ -11,7 +11,9 @@ import org.springframework.stereotype.Service
 @Service
 class GoogleBooksService(private val googleBooksClient: GoogleBooksClient) {
 
-    private val log = logger()
+    companion object {
+        private val log = logger()
+    }
 
     @CircuitBreaker(name = "search-googleBooksCircuitBreaker", fallbackMethod = "findBookDetailsFallback")
     @RateLimiter(name = "search-googleBooksRateLimiter")
