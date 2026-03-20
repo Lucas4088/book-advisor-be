@@ -59,7 +59,9 @@ object BookMapper {
             book = book,
             score = score,
             count = count,
-            source = sourceEntity
+            source = sourceEntity,
+            titleConfidenceIndicator = titleConfidenceIndicator,
+            authorsConfidenceIndicator = authorsConfidenceIndicator,
         )
 
     fun RatingSourceEmbedded.mapToEntity(): RatingSourceEntity =
@@ -86,7 +88,9 @@ object BookMapper {
             score = rating.score,
             count = rating.count,
             book = bookEntity,
-            source = sourceEntity
+            source = sourceEntity,
+            titleConfidenceIndicator = rating.titleConfidenceIndicator,
+            authorsConfidenceIndicator = rating.authorsConfidenceIndicator,
         )
 
     fun map(bookEntity: BookEntity, sourceEntity: RatingSourceEntity, rating: RatingEmbedded): RatingEntity =
@@ -95,7 +99,9 @@ object BookMapper {
             score = rating.score,
             count = rating.count,
             book = bookEntity,
-            source = sourceEntity
+            source = sourceEntity,
+            titleConfidenceIndicator = rating.titleConfidenceIndicator,
+            authorsConfidenceIndicator = rating.authorsConfidenceIndicator,
         )
 
     fun map(ratingSource: RatingSourceEmbedded) =
@@ -106,10 +112,12 @@ object BookMapper {
         )
 
     fun RatingUpdate.toRatingEmbedded() = RatingEmbedded(
-        id = this.id,
-        count = this.count,
-        score = this.score,
-        source = this.source.toRatingSourceEmbedded()
+        id = id,
+        count = count,
+        score = score,
+        source = source.toRatingSourceEmbedded(),
+        titleConfidenceIndicator = titleConfidenceIndicator,
+        authorsConfidenceIndicator = authorsConfidenceIndicator,
     )
 
     fun RatingSourceUpdate.toRatingSourceEmbedded() = RatingSourceEmbedded(
@@ -149,7 +157,9 @@ object BookMapper {
             score = rating.score,
             count = rating.count,
             book = bookEntity,
-            source = sourceEntity
+            source = sourceEntity,
+            titleConfidenceIndicator = rating.titleConfidenceIndicator,
+            authorsConfidenceIndicator = rating.authorsConfidenceIndicator,
         )
 
     fun map(ratingSource: RatingSource) =
@@ -194,15 +204,18 @@ object BookMapper {
                     source = RatingSourceEmbedded(
                         name = it.source.name,
                         url = it.source.url
-                    )
+                    ),
+                    titleConfidenceIndicator = it.titleConfidenceIndicator,
+                    authorsConfidenceIndicator = it.authorsConfidenceIndicator,
                 )
             }.toSet()
         )
 
-    fun map(book: BookEntity): BookSearchResponse = BookSearchResponse(
-        id = book.bookId!!,
-        title = book.title,
-        smallThumbnailUrl = book.smallThumbnailUrl
+    fun BookEntity.mapToSearchResponse() = BookSearchResponse(
+        id = bookId!!,
+        title = title,
+        authors = authors.map { it.name },
+        smallThumbnailUrl = smallThumbnailUrl
     )
 
     fun BookEntity.toDetailsDto() = BookDetailsDto(
@@ -223,10 +236,11 @@ object BookMapper {
         publishedYear = publishingYear
     )
 
-    fun map(book: BookDocument) = BookSearchResponse(
-        id = book.id,
-        title = book.title,
-        smallThumbnailUrl = book.smallThumbnailUrl
+    fun BookDocument.mapToSearchResponse() = BookSearchResponse(
+        id = id,
+        title = title,
+        authors = authors?.map { it.name }.orEmpty(),
+        smallThumbnailUrl = smallThumbnailUrl
     )
 
     fun map(details: OpenLibraryBookDetails): BookUpdate = BookUpdate(
@@ -260,16 +274,16 @@ object BookMapper {
         ratings = emptyList()
     )
 
-    fun map(item: BookItem, basicInfo: BookBasicInfoDocument): Book = Book(
+    fun BookItem.map(basicInfo: BookBasicInfoDocument) = Book(
         id = basicInfo.bookPublicId,
-        title = item.volumeInfo.title,
-        description = item.volumeInfo.description ?: "",
-        publishingYear = item.volumeInfo.publishedDate.take(4).toInt().let { Year.of(it) },
-        pageCount = item.volumeInfo.pageCount ?: 0,
+        title = volumeInfo.title,
+        description = volumeInfo.description ?: "",
+        publishingYear = volumeInfo.publishedDate.take(4).toInt().let { Year.of(it) },
+        pageCount = volumeInfo.pageCount ?: 0,
         edition = BookEdition(basicInfo.editionTitle, basicInfo.lang),
-        thumbnailUrl = item.volumeInfo.imageLinks?.thumbnail ?: "",
-        smallThumbnailUrl = item.volumeInfo.imageLinks?.smallThumbnail ?: "",
-        authors = item.volumeInfo.authors?.map { name ->
+        thumbnailUrl = volumeInfo.imageLinks?.thumbnail ?: "",
+        smallThumbnailUrl = volumeInfo.imageLinks?.smallThumbnail ?: "",
+        authors = volumeInfo.authors?.map { name ->
             Author(
                 name = name,
                 //TODO fix for publicID together witth key
@@ -277,7 +291,7 @@ object BookMapper {
                 key = ""
             )
         } ?: emptyList(),
-        genres = item.volumeInfo.categories?.map { name -> Genre(name = name) }
+        genres = volumeInfo.categories?.map { name -> Genre(name = name) }
             ?: emptyList(),
         ratings = emptyList()
     )

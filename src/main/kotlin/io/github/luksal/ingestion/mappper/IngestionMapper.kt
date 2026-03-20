@@ -1,9 +1,6 @@
 package io.github.luksal.ingestion.mappper
 
 import io.github.luksal.book.db.jpa.model.event.ScheduledBookBasicInfoPopulationEventEntity
-import io.github.luksal.book.model.Rating
-import io.github.luksal.book.model.RatingSourceUpdate
-import io.github.luksal.book.model.RatingUpdate
 import io.github.luksal.commons.dto.EventMeta
 import io.github.luksal.config.CrawlerSpecification
 import io.github.luksal.config.Path
@@ -42,7 +39,9 @@ object IngestionMapper {
                 bookRatingScoreSelector = entity.path.bookRatingScoreSelector,
                 bookRatingCountSelector = entity.path.bookRatingCountSelector,
                 search = entity.path.search,
-                titleSpaceSeparator = entity.path.titleSpaceSeparator
+                titleSpaceSeparator = entity.path.titleSpaceSeparator,
+                bookTitleSelector = entity.path.bookTitleSelector,
+                bookAuthorsSelector = entity.path.bookAuthorsSelector,
             ),
             rateLimit = RateLimit(
                 requestsPerMinute = entity.rateLimit.requestsPerMinute,

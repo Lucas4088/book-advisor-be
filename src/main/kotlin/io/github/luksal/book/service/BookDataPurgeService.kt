@@ -5,6 +5,7 @@ import io.github.luksal.book.db.jpa.event.PopulateBookDetailsEventJpaRepository
 import io.github.luksal.book.db.jpa.event.SyncBookEventJpaRepository
 import io.github.luksal.ingestion.crawler.jpa.ScheduledBookCrawlerEventRepository
 import io.github.luksal.ingestion.file.service.FileService
+import io.github.luksal.integration.db.BookDetailsFetchedEventRepository
 import io.github.luksal.util.ext.logger
 import jakarta.transaction.Transactional
 import org.apache.kafka.clients.admin.AdminClient
@@ -19,6 +20,7 @@ class BookDataPurgeService(
     private val bookBasicDataPopulationJpaRepository: PopulateBookBasicDataJpaRepository,
     private val bookDetailsEventJpaRepository: PopulateBookDetailsEventJpaRepository,
     private val scheduledBookCrawlerEventRepository: ScheduledBookCrawlerEventRepository,
+    private val bookDetailsFetchedEventRepository: BookDetailsFetchedEventRepository,
     private val syncBookEventJpaRepository: SyncBookEventJpaRepository,
     @Value($$"${app.kafka.connect.books-source-topic}")
     private val sourceTopic: String? = null,
@@ -51,6 +53,8 @@ class BookDataPurgeService(
             bookDetailsEventJpaRepository.deleteAllInBatch()
             log.info("Resetting file import starting pointer")
             fileService.resetInitBookBasicFileImportState()
+            log.info("Deleting all book details Fetched events")
+            bookDetailsFetchedEventRepository.deleteAllInBatch()
         } catch (e: Exception) {
             log.error("Error while purging book basic info", e)
             throw e

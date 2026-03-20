@@ -39,7 +39,9 @@ data class Rating(
     val id: Long? = null,
     val score: BigDecimal,
     val count: Int,
-    val source: RatingSource
+    val source: RatingSource,
+    val titleConfidenceIndicator: BigDecimal,
+    val authorsConfidenceIndicator: BigDecimal
 )
 
 data class RatingSource(

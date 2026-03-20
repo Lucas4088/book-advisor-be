@@ -5,6 +5,7 @@ import jakarta.persistence.Column
 import jakarta.persistence.Embeddable
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
+import org.apache.commons.lang3.StringUtils
 import java.time.Instant
 
 @Embeddable
@@ -45,7 +46,7 @@ class EventMeta(
 
     fun markAsFailed(errorMessage: String) {
         status = EventStatus.ERROR
-        this.errorMessage = errorMessage
+        this.errorMessage = StringUtils.abbreviate(errorMessage, 445)
         updatedAt = Instant.now()
     }
 

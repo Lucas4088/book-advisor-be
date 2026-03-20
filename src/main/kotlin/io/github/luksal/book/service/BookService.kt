@@ -19,6 +19,7 @@ import io.github.luksal.book.db.jpa.model.BookEntity
 import io.github.luksal.book.db.jpa.model.GenreEntity
 import io.github.luksal.book.mapper.BookMapper
 import io.github.luksal.book.mapper.BookMapper.mapToEntity
+import io.github.luksal.book.mapper.BookMapper.mapToSearchResponse
 import io.github.luksal.book.mapper.BookMapper.toDetailsDto
 import io.github.luksal.book.mapper.BookMapper.toDto
 import io.github.luksal.book.model.*
@@ -53,7 +54,7 @@ class BookService(
             endYear = criteria.endYear,
             genres = criteria.genres?.map { it.name },
             pageable = pageable
-        ).map { BookMapper.map(it) }
+        ).map { it.mapToSearchResponse() }
     }
 
     fun searchBookBasicInfo(criteria: BookBasicInfoSearchCriteria, pageable: Pageable): Page<BookBasicInfoDto> {
@@ -68,12 +69,11 @@ class BookService(
     }
 
     fun getBooksByIds(bookPublicIds: List<String>): List<BookSearchResponse> =
-        bookJpaRepository.findAllById(bookPublicIds).map { BookMapper.map(it) }
+        bookJpaRepository.findAllById(bookPublicIds).map { it.mapToSearchResponse() }
 
     //TODO think more of this failover strategy
     fun getBookByIdForCrawling(id: String): BookSearchResponse =
-            bookDocumentRepository.findById(id).orElseThrow()
-            .let { BookMapper.map(it) }
+        bookDocumentRepository.findById(id).orElseThrow().mapToSearchResponse()
 
 
     fun getBookById(id: String): BookDetailsDto =

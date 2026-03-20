@@ -23,7 +23,9 @@ object CrawlerConfigMapper {
                 bookRatingCountSelector = path.bookRatingCountSelector,
                 bookRatingScoreSelector = path.bookRatingScoreSelector,
                 search = path.search,
-                titleSpaceSeparator = path.titleSpaceSeparator
+                titleSpaceSeparator = path.titleSpaceSeparator,
+                bookTitleSelector = path.bookTitleSelector,
+                bookAuthorsSelector = path.bookAuthorsSelector,
             ),
             proxyEnabled = proxyEnabled,
             proxyName = proxyName
@@ -44,7 +46,9 @@ object CrawlerConfigMapper {
                 bookRatingCountSelector = path.bookRatingCountSelector,
                 bookRatingScoreSelector = path.bookRatingScoreSelector,
                 search = path.search,
-                titleSpaceSeparator = path.titleSpaceSeparator
+                titleSpaceSeparator = path.titleSpaceSeparator,
+                bookTitleSelector = path.bookTitleSelector,
+                bookAuthorsSelector = path.bookAuthorsSelector,
             ),
             proxyEnabled = proxyEnabled,
             proxyName = proxyName

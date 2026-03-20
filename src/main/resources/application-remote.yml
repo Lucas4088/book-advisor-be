@@ -1,0 +1,155 @@
+spring:
+  mongodb:
+    uri: mongodb://mongo_user:mongo_password@192.168.1.52:27017/admin?directConnection=true
+    database: book-advisor-db
+  datasource:
+    url: jdbc:postgresql://192.168.1.52:5435/book-advisor-db
+    username: postgres
+    password: password
+    hikari:
+      pool-name: BookAdvisorHikariCP
+      maximum-pool-size: 5
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  jpa:
+    properties:
+      hibernate:
+        default_schema: public
+  flyway:
+    schemas: public
+  mail:
+    host: localhost
+    port: 1025
+    username: admin
+    password: admin
+    properties:
+      mail:
+        smtp:
+        auth: false
+        starttls:
+          enable: false
+        debug: true
+  data:
+    redis:
+      host: 192.168.1.52
+      port: 6379
+      password: redis
+
+  cloud:
+    openfeign:
+      client:
+        config:
+          openLibraryClient:
+            logger-level: basic
+            url: https://openlibrary.org/
+          googleBooksClient:
+            logger-level: basic
+            url: https://www.googleapis.com/
+          archiveBooksClient:
+            logger-level: basic
+            url: https://archive.org/
+
+  kafka:
+    bootstrap-servers: 192.168.1.52:29092
+    admin:
+      auto-create: true
+
+resilience4j:
+  ratelimiter:
+    instances:
+      search-openLibraryRateLimiter:
+        limitForPeriod: 20
+        limitRefreshPeriod: 6s
+        timeoutDuration: 1s
+      get-openLibraryRateLimiter:
+        limitForPeriod: 55
+        limitRefreshPeriod: 60s
+        timeoutDuration: 20s
+      search-googleBooksRateLimiter:
+        limitForPeriod: 5
+        limitRefreshPeriod: 3s
+        timeoutDuration: 1s
+      page-fetcherRateLimiter:
+        limitForPeriod: 20
+        limitRefreshPeriod: 1s
+        timeoutDuration: 0
+
+  circuitbreaker:
+    instances:
+      search-openLibraryCircuitBreaker:
+        registerHealthIndicator: true
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 3m
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+      search-googleBooksCircuitBreaker:
+        registerHealthIndicator: true
+        slidingWindowType: COUNT_BASED
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 24h
+        permittedNumberOfCallsInHalfOpenState: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        record-exceptions:
+          - io.github.luksal.exception.DailyQuotaExceededException
+  retry:
+    instances:
+      search-openLibraryRetry:
+        max-attempts: 4
+        wait-duration: 500ms
+        exponential-backoff-multiplier: 2
+        exponential-max-wait-duration: 40s
+        retry-exceptions:
+          - feign.RetryableException
+      get-openLibraryRetry:
+        max-attempts: 4
+        wait-duration: 500ms
+        exponential-backoff-multiplier: 2
+        exponential-max-wait-duration: 40s
+        retry-exceptions:
+          - feign.RetryableException
+      page-fetcherRetry:
+        max-attempts: 4
+        wait-duration: 500ms
+        exponential-backoff-multiplier: 2
+        exponential-max-wait-duration: 40s
+
+logging:
+  level:
+    io.github.luksal.integration.source.openlibrary: DEBUG
+    io.github.luksal.integration.source.googlebooks: DEBUG
+    io.github.luksal.integration.source.archivebooks: DEBUG
+
+app:
+  mail:
+    from: noreply-book-advisor@gmail.com
+    to: lukasz4088@gmail.com
+  service:
+    google-books-api:
+      auth:
+        api-keys: GOOGLE_BOOKS_API_KEYS
+
+  file-read:
+    path:
+      authors: /home/lukasz/Documents/openlibrary/ol_dump_authors_2026-02-28.txt
+      works: /home/lukasz/Documents/openlibrary/ol_dump_works_2026-02-28.txt
+  proxies:
+    - name: flaresolverr
+      url: http://localhost:8191/v1
+      max-timeout: 1000000
+      headers:
+        "Content-Type" : "application/json"
+        "Accept" : "application/json"
+    - name: decodo
+      url: http://proxy.localhost/html
+      max-timeout: 100000
+      headers:
+        "Content-Type": "application/json"
+        "Accept": "application/json"
+        "Authorization": "Basic VTAwMDAzNjQ3Nzc6UFdfMTkxOTc5ZjU1NjJkNDI3YTRhMjRiYjBlMTIzODRmNzlj"

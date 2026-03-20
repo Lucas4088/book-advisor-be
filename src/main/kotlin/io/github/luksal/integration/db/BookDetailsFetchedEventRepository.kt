@@ -15,9 +15,9 @@ interface BookDetailsFetchedEventRepository : JpaRepository<BookDetailsFetchedEv
                     e.status status,
                     count(e.id)
                 FROM generate_series(
-                    now() - interval '5 minutes',
+                    now() - interval '30 minutes',
                     now(),
-                    interval '1 minute'
+                    interval '6 minute'
                 ) AS t(bucket)
                 LEFT JOIN book_details_fetched_events e
                     ON e.created_at <= bucket AND e.created_at >= date_trunc('day', now())

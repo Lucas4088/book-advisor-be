@@ -8,6 +8,7 @@ import io.github.luksal.ingestion.crawler.jpa.ScheduledBookCrawlerEventRepositor
 import io.github.luksal.ingestion.crawler.service.PageCrawlerCrudService
 import io.github.luksal.integration.db.BookDetailsFetchedEventRepository
 import io.github.luksal.statistics.api.dto.*
+import io.github.luksal.util.ext.logger
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -26,6 +27,10 @@ class StatisticsService(
     private val crawlerCrudService: PageCrawlerCrudService,
     private val bookDetailsFetchedEventRepository: BookDetailsFetchedEventRepository,
 ) {
+
+    companion object {
+        private val log = logger()
+    }
 
 
     fun calculateBookStatistics(): BookStatisticsDto {
@@ -107,7 +112,7 @@ class StatisticsService(
         val result = func.get()
         val end = Instant.now()
         val duration = Duration.between(start, end)
-        print("$name : ${duration.get(ChronoUnit.NANOS)}\n")
+        log.info("$name : ${duration.get(ChronoUnit.NANOS)}\n")
         return result
     }
 }

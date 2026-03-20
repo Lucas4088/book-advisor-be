@@ -4,7 +4,7 @@ import io.github.luksal.book.db.document.bookbasicinfo.BookBasicInfoDocument
 import io.github.luksal.book.db.jpa.event.PopulateBookBasicDataJpaRepository
 import io.github.luksal.book.db.jpa.event.PopulateBookDetailsEventJpaRepository
 import io.github.luksal.book.db.jpa.model.event.ScheduledBookBasicInfoPopulationEventEntity
-import io.github.luksal.book.mapper.BookMapper
+import io.github.luksal.book.mapper.BookMapper.map
 import io.github.luksal.book.model.Book
 import io.github.luksal.commons.dto.EventStatus
 import io.github.luksal.commons.jpa.EventMeta
@@ -16,6 +16,7 @@ import io.github.luksal.integration.event.listener.BookDetailsFetchedEvent
 import io.github.luksal.integration.source.archivebooks.ArchiveBooksService
 import io.github.luksal.integration.source.archivebooks.api.dto.ArchiveSearchDoc
 import io.github.luksal.integration.source.googlebooks.GoogleBooksService
+import io.github.luksal.integration.source.googlebooks.api.dto.BookItem
 import io.github.luksal.integration.source.openlibrary.OpenLibraryService
 import io.github.luksal.integration.source.openlibrary.api.dto.OpenLibraryBookDetails
 import io.github.luksal.integration.source.openlibrary.api.dto.OpenLibraryDoc
@@ -30,6 +31,7 @@ import kotlinx.coroutines.launch
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
+import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Service
 import tools.jackson.databind.ObjectMapper
 
@@ -41,8 +43,8 @@ class BookDataPopulationService(
     private val openLibraryService: OpenLibraryService,
     private val googleBooksService: GoogleBooksService,
     private val archiveBooksService: ArchiveBooksService,
+    private val redisTemplate: RedisTemplate<Any, Any>,
     private val emailService: EmailService,
-   /* ,*/
     private val eventService: EventService
 ) {
 
@@ -52,11 +54,10 @@ class BookDataPopulationService(
     fun searchBasicBookInfoSchedule(
         request: ScheduledBookBasicInfoSearchRequest,
         page: Pageable
-    ): Page<ScheduledBookBasicInfoPopulationEvent> {
-        return bookBasicDataPopulationJpaRepository.searchAll(
+    ): Page<ScheduledBookBasicInfoPopulationEvent> =
+        bookBasicDataPopulationJpaRepository.searchAll(
             request.fromYear, request.toYear, request.lang, request.status, page
         ).map { IngestionMapper.map(it) }
-    }
 
     fun scheduleBasicBookInfoCollection(fromYear: Int, toYear: Int, lang: String) {
         (fromYear..toYear).filter {
@@ -69,6 +70,7 @@ class BookDataPopulationService(
             )
         }.let { bookBasicDataPopulationJpaRepository.saveAll(it) }
     }
+
 
     @Transactional
     fun populateBasicBookInfoCollection() {
@@ -87,9 +89,7 @@ class BookDataPopulationService(
             )
             savedCount = response.docs.size
             bookService.saveBookBasicInfo(response.docs, scheduled.lang)
-            scheduled.apply {
-                meta.markAsSuccess()
-            }
+            scheduled.apply { meta.markAsSuccess() }
         }.onFailure { e ->
             log.error("Error during initialization: ${e.message}", e)
             scheduled.apply {
@@ -166,12 +166,17 @@ class BookDataPopulationService(
         log.info("Book details collection initialization completed")
     }
 
-    private fun findBookDetails(bookInfo: BookBasicInfoDocument): Book? =
-        (googleBooksService.findBookDetails(bookInfo.title, bookInfo.authors)?.items
-            ?.firstOrNull()
-            .also { publishEvent("GOOGLE_BOOKS", it) }
-            ?.let { BookMapper.map(it, bookInfo) }
-            ?: fetchFallbackBookDetails(bookInfo))
+    private fun findBookDetails(bookInfo: BookBasicInfoDocument): Book? {
+        val response = redisTemplate.opsForValue()["google-books:${bookInfo.id}"] as BookItem?
+            ?: googleBooksService.findBookDetails(bookInfo.title, bookInfo.authors)?.items
+                    ?.firstOrNull()
+                    ?.also { redisTemplate.opsForValue()["google-books:${bookInfo.id}"] = it }
+
+        return response
+            ?.also { publishEvent("GOOGLE_BOOKS", it) }
+            ?.map(bookInfo)
+            ?: fetchFallbackBookDetails(bookInfo)
+    }
 
     private fun fetchFallbackBookDetails(unprocessed: BookBasicInfoDocument): Book? {
         val archiveBookDetailsResponse = resolveArchiveBookDetails(unprocessed.title, unprocessed.authors)
@@ -190,7 +195,7 @@ class BookDataPopulationService(
             return null
         }
 
-        return BookMapper.map(
+        return map(
             openLibraryBookDetails,
             openLibraryDoc,
             archiveBookDetailsResponse,
@@ -206,9 +211,9 @@ class BookDataPopulationService(
             authors.firstOrNull() ?: ""
         ).docs.firstOrNull()
 
-        val details = openLibraryKey?.let {
-            openLibraryService.getBookDetails(it)
-        }.also { publishEvent("OPEN_LIBRARY", it) }
+        val details = openLibraryKey
+            ?.let { openLibraryService.getBookDetails(it) }
+            .also { publishEvent("OPEN_LIBRARY", it) }
         return Pair(search, details)
     }
 

@@ -54,7 +54,9 @@ class BookRatingIngestionService(
                         source = RatingSourceEmbedded(
                             name = it.source.name,
                             url = it.source.url
-                        )
+                        ),
+                        titleConfidenceIndicator = it.titleConfidenceIndicator,
+                        authorsConfidenceIndicator = it.authorsConfidenceIndicator,
                     )
                 )
                 bookService.updateBook(BookUpdate(id = book.id, ratings = listOf(it)))

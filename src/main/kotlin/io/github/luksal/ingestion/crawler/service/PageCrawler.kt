@@ -20,6 +20,16 @@ class PageCrawler {
             ?.text()
             ?.toBigDecimalOrNull()
 
+    fun extractTitle(html: String, crawlerSpecification: CrawlerSpecification) =
+        Jsoup.parse(html)
+            .selectFirst(crawlerSpecification.path.bookTitleSelector)
+            ?.text()
+            .orEmpty()
+
+    fun extractAuthors(html: String, crawlerSpecification: CrawlerSpecification): List<String> =
+        Jsoup.parse(html)
+            .select(crawlerSpecification.path.bookAuthorsSelector)
+            .map { it.text() }
 
     fun extractRatingCount(html: String, crawlerSpecification: CrawlerSpecification): Int? {
         val doc = Jsoup.parse(html)

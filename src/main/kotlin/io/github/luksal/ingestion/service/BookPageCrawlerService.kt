@@ -10,9 +10,13 @@ import io.github.luksal.ingestion.crawler.jpa.entity.PageCrawlerConfigEntity
 import io.github.luksal.ingestion.crawler.service.PageCrawler
 import io.github.luksal.ingestion.fetcher.PageFetcher
 import io.github.luksal.ingestion.mappper.IngestionMapper
+import io.github.luksal.util.ext.intersectPercentage
 import io.github.luksal.util.ext.logger
+import io.github.luksal.util.ext.normalizeStandardChars
+import io.github.luksal.util.ext.percentageLevenshteinDistance
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Service
+import java.math.BigDecimal
 import java.net.URLEncoder
 
 @Service
@@ -42,7 +46,7 @@ class BookPageCrawlerService(
         return cached?.also {
             log.info("Rating for book ${book.title} from source ${crawler.name} found in cache: ${it.score}")
         } ?: crawlAndExtractRating(book, IngestionMapper.map(crawler))?.also {
-            redisTemplate.opsForValue()["rating:${crawler.name}:${book.id}"] =  it
+            redisTemplate.opsForValue()["rating:${crawler.name}:${book.id}"] = it
         }
     }
 
@@ -95,14 +99,28 @@ class BookPageCrawlerService(
     ): RatingUpdate? {
         val ratingScore = pageCrawler.extractRatingScore(bookPage, crawlerSpec)
         val ratingCount = pageCrawler.extractRatingCount(bookPage, crawlerSpec)
+        val title = pageCrawler.extractTitle(bookPage, crawlerSpec)
+        val authors = pageCrawler.extractAuthors(bookPage, crawlerSpec)
+            .map { it.normalizeStandardChars() }.toSet()
 
+        val bookAuthors = book.authors.map { it.normalizeStandardChars() }.toSet()
         return ratingScore?.let {
             RatingUpdate(
                 score = it,
                 count = ratingCount ?: 0,
-                source = RatingSourceUpdate(name = crawlerSpec.name, url = crawlerSpec.baseUrl)
+                source = RatingSourceUpdate(name = crawlerSpec.name, url = crawlerSpec.baseUrl),
+                titleConfidenceIndicator = book.title.percentageLevenshteinDistance(title),
+                authorsConfidenceIndicator = authors.intersectPercentage(bookAuthors)
             )
         }?.also {
+            redisTemplate.opsForValue()["confidence-indicator:${book.id}"] = ConfidenceIndicatorCheck(
+                title = book.title,
+                extractedTitle = title,
+                authors = book.authors.toSet(),
+                extractedAuthors = authors,
+                titleConfidenceIndicator = it.titleConfidenceIndicator,
+                authorsConfidenceIndicator = it.authorsConfidenceIndicator
+            )
             log.info("Extracted rating for book \"${book.title}\" from source ${crawlerSpec.name}: ${it.score}")
         } ?: run {
             log.warn("Failed to extract rating score for book \"${book.title}\" from source ${crawlerSpec.name}")
@@ -110,4 +128,12 @@ class BookPageCrawlerService(
         }
     }
 
+    data class ConfidenceIndicatorCheck(
+        val title: String,
+        val extractedTitle: String,
+        val authors: Set<String>,
+        val extractedAuthors: Set<String>,
+        val titleConfidenceIndicator: BigDecimal,
+        val authorsConfidenceIndicator: BigDecimal,
+    )
 }

@@ -97,7 +97,15 @@ data class RatingEmbedded(
     val count: Int,
     @Field("so")
     @JsonProperty("so")
-    val source: RatingSourceEmbedded
+    val source: RatingSourceEmbedded,
+    @Field("tci")
+    @JsonDeserialize(using = MongoBigDecimalDeserializer::class)
+    @JsonProperty("tci")
+    val titleConfidenceIndicator: BigDecimal,
+    @Field("aci")
+    @JsonDeserialize(using = MongoBigDecimalDeserializer::class)
+    @JsonProperty("aci")
+    val authorsConfidenceIndicator: BigDecimal,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -124,7 +132,13 @@ data class RatingDocument(
     val count: Int,
     @Field("so")
     @JsonProperty("so")
-    val source: RatingSourceEmbedded
+    val source: RatingSourceEmbedded,
+    @Field("tci")
+    @JsonProperty("tci")
+    val titleConfidenceIndicator: BigDecimal,
+    @Field("aci")
+    @JsonProperty("aci")
+    val authorsConfidenceIndicator: BigDecimal,
 )
 
 data class RatingSourceEmbedded(

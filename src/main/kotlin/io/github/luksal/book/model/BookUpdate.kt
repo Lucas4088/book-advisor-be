@@ -2,6 +2,7 @@ package io.github.luksal.book.model
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import org.springframework.data.annotation.Id
+import org.springframework.data.mongodb.core.mapping.Field
 import java.math.BigDecimal
 import java.time.Year
 
@@ -48,7 +49,11 @@ data class RatingUpdate(
     @JsonProperty("co")
     val count: Int,
     @JsonProperty("so")
-    val source: RatingSourceUpdate
+    val source: RatingSourceUpdate,
+    @JsonProperty("tci")
+    val titleConfidenceIndicator: BigDecimal,
+    @JsonProperty("aci")
+    val authorsConfidenceIndicator: BigDecimal,
 )
 
 data class RatingSourceUpdate(
