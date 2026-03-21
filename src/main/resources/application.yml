@@ -62,7 +62,8 @@ app:
         book-rating-score-selector: "div.RatingStatistics__rating"
         book-title-selector: "[data-testid=bookTitle]"
         book-authors-selector: "a.ContributorLink [data-testid=name]"
-        search: /search?q={formattedTitle}
+        search: /search?q={formattedSearchParams}
+        includeAuthorsForSearch: true
         title-space-separator: +
       proxy-enabled: false
     - name: amazon-books
@@ -77,7 +78,8 @@ app:
         book-rating-score-selector: "#averageCustomerReviews span.a-size-small.a-color-base"
         book-title-selector: "#productTitle"
         book-authors-selector: ".author a.a-link-normal"
-        search: /s?k={formattedTitle}&i=stripbooks
+        search: /s?k={formattedSearchParams}&i=stripbooks
+        includeAuthorsForSearch: true
         title-space-separator: +
       proxy-enabled: true
     - name: the-story-graph
@@ -92,7 +94,8 @@ app:
         book-rating-score-selector: "span.average-star-rating"
         book-title-selector: ".book-title-author-and-series h3"
         book-authors-selector: ".book-title-author-and-series p a"
-        search: /browse?search_term={formattedTitle}
+        search: /browse?search_term={formattedSearchParams}
+        includeAuthorsForSearch: false
         title-space-separator: +
       proxy-enabled: true
       proxy-name: flaresolverr

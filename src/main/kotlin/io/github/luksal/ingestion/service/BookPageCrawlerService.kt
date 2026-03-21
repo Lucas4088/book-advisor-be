@@ -31,7 +31,7 @@ class BookPageCrawlerService(
     private val log = logger()
 
     companion object {
-        private const val FORMATTED_TITLE_PLACEHOLDER = "{formattedTitle}"
+        private const val FORMATTED_SEARCH_PARAMS_PLACEHOLDER = "{formattedSearchParams}"
     }
 
     fun crawlBookPage(crawlerId: Long, book: BookSearchResponse): RatingUpdate? {
@@ -59,7 +59,6 @@ class BookPageCrawlerService(
 
         return fetch(searchUrl, crawlerSpec)?.let { searchPageHtml ->
             return pageCrawler.extractBookPageUrl(searchPageHtml, crawlerSpec)?.let {
-                //val pageUrl = composeBookPageUrl(it, crawlerSpec)
                 log.info("Composed page url: $it")
                 fetch(it, crawlerSpec).takeIf { bookPage -> bookPage?.isNotEmpty() ?: false }
                     ?.let { bookPage ->
@@ -85,9 +84,18 @@ class BookPageCrawlerService(
     }
 
     private fun composeSearchBookUrl(book: BookSearchResponse, crawlerSpec: CrawlerSpecification): String {
+        var searchParams = ""
         val searchTitle = book.title
             .let { URLEncoder.encode(it, Charsets.UTF_8) }
-        val searchPath = crawlerSpec.path.search.replace(FORMATTED_TITLE_PLACEHOLDER, searchTitle)
+        searchParams+=searchTitle
+        if (crawlerSpec.path.includeAuthorsForSearch) {
+            val searchAuthor = book.authors.firstOrNull()
+                ?.normalizeStandardChars()
+                ?.let { URLEncoder.encode(it, Charsets.UTF_8) }
+                .orEmpty()
+            searchParams+="+$searchAuthor"
+        }
+        val searchPath = crawlerSpec.path.search.replace(FORMATTED_SEARCH_PARAMS_PLACEHOLDER, searchParams)
         val searchUrl = "${crawlerSpec.baseUrl}$searchPath"
         return searchUrl
     }

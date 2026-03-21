@@ -39,6 +39,7 @@ object IngestionMapper {
                 bookRatingScoreSelector = entity.path.bookRatingScoreSelector,
                 bookRatingCountSelector = entity.path.bookRatingCountSelector,
                 search = entity.path.search,
+                includeAuthorsForSearch = entity.path.includeAuthorsForSearch,
                 titleSpaceSeparator = entity.path.titleSpaceSeparator,
                 bookTitleSelector = entity.path.bookTitleSelector,
                 bookAuthorsSelector = entity.path.bookAuthorsSelector,

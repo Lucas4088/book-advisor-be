@@ -21,6 +21,7 @@ data class Path(
     val bookRatingCountSelector: String,
     val bookRatingScoreSelector: String,
     val search: String,
+    val includeAuthorsForSearch: Boolean,
     val titleSpaceSeparator: String,
     val bookTitleSelector: String,
     val bookAuthorsSelector: String,

@@ -63,6 +63,9 @@ data class CrawlerPath(
     val search: String,
 
     @Column(nullable = false)
+    val includeAuthorsForSearch: Boolean,
+
+    @Column(nullable = false)
     val titleSpaceSeparator: String,
 
     @Column(nullable = false)

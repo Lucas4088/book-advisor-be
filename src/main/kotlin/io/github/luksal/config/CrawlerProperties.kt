@@ -30,6 +30,7 @@ data class Path(
     val bookTitleSelector: String,
     val bookAuthorsSelector: String,
     val search: String,
+    val includeAuthorsForSearch: Boolean,
     val titleSpaceSeparator: String
 )
 
