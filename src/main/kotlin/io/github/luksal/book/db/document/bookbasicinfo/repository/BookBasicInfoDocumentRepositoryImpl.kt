@@ -49,7 +49,7 @@ class BookBasicInfoDocumentRepositoryImpl(
         bookId?.let { criteria += Criteria.where("bookPublicId").regex(it, "i") }
 
         title?.takeIf { it.isNotBlank() }?.let {
-            criteria += Criteria.where("title").regex(it, "i")
+            criteria += Criteria.where($$"$text").`is`(mapOf($$"$search" to it))
         }
   /*      startYear.let {
             criteria += Criteria.where("firstPublishDate").gte(it)
@@ -62,11 +62,18 @@ class BookBasicInfoDocumentRepositoryImpl(
             if (criteria.isNotEmpty()) {
                 addCriteria(Criteria().andOperator(*criteria.toTypedArray()))
             }
-            with(pageable)
         }
 
+        val countQuery = Query().apply {
+            if (criteria.isNotEmpty()) {
+                addCriteria(Criteria().andOperator(*criteria.toTypedArray()))
+            }
+        }
+
+        query.with(pageable)
+        mongoTemplate.useEstimatedCount(true)
+        val count = mongoTemplate.count(countQuery, BookBasicInfoDocument::class.java)
         val books = mongoTemplate.find(query, BookBasicInfoDocument::class.java)
-        val count = mongoTemplate.count(query, BookBasicInfoDocument::class.java)
         return PageImpl(books, pageable, count)
     }
 

@@ -296,12 +296,12 @@ object BookMapper {
         ratings = emptyList()
     )
 
-    fun map(bookBasicInfo: BookBasicInfoDocument) =
+    fun BookBasicInfoDocument.toDto() =
         BookBasicInfoDto(
-            id = bookBasicInfo.id,
-            title = bookBasicInfo.title,
-            bookId = bookBasicInfo.bookPublicId,
-            firstPublishDate = bookBasicInfo.firstPublishDate
+            id = id,
+            title = title,
+            bookId = bookPublicId,
+            firstPublishDate = firstPublishDate
         )
 
     fun mapDetails(bookBasicInfo: BookBasicInfoDocument) =

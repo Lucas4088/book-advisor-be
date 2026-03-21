@@ -65,7 +65,7 @@ class BookService(
             startYear = criteria.startYear,
             endYear = criteria.endYear,
             pageable = pageable
-        ).map { BookMapper.map(it) }
+        ).map { it.toDto() }
     }
 
     fun getBooksByIds(bookPublicIds: List<String>): List<BookSearchResponse> =

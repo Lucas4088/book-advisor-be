@@ -4,6 +4,7 @@ import io.github.luksal.util.ext.murmurHash3
 import io.github.luksal.util.ext.normalizeWhiteChars
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.index.Indexed
+import org.springframework.data.mongodb.core.index.TextIndexed
 import org.springframework.data.mongodb.core.mapping.Document
 import org.springframework.data.mongodb.core.mapping.Field
 
@@ -14,6 +15,7 @@ class BookBasicInfoDocument(
     @Indexed(unique = true)
     @Field(name = "pbi")
     val bookPublicId: String,
+    @TextIndexed
     @Field(name = "tt")
     val title: String,
     @Field(name = "olk")
