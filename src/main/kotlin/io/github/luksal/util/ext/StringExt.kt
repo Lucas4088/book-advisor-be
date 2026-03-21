@@ -26,6 +26,7 @@ fun String.murmurHash3(): String =
 fun String.normalizeStandardChars(): String =
     this.lowercase()
         .replace(Regex("[^\\p{L}\\p{Nd} ]"), "")
+        .replace(Regex("\\p{Mn}"), "")
         .replace(Regex("\\s+"), " ")
         .trim()
 

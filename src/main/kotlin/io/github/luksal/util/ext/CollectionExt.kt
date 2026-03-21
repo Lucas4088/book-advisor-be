@@ -5,6 +5,6 @@ import java.math.RoundingMode
 
 
 fun Set<String>.intersectPercentage(otherSet: Set<String>): BigDecimal =
-    (this intersect otherSet).size.toBigDecimal()
+    (this.map { it.normalizeStandardChars() } intersect otherSet.map { it.normalizeStandardChars() }.toSet()).size.toBigDecimal()
         .divide(this.size.coerceAtLeast(otherSet.size).toBigDecimal(), 2, RoundingMode.HALF_UP)
         .setScale(2)
