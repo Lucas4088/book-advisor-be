@@ -159,6 +159,8 @@ app:
     - name: flaresolverr
       url: http://localhost:8191/v1
       max-timeout: 1000000
+      forwarding-proxies-urls:
+        - http://172.17.0.1:8888
       headers:
         "Content-Type" : "application/json"
         "Accept" : "application/json"

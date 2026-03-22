@@ -1,9 +1,9 @@
 package io.github.luksal.ingestion.crawler.api
 
 import io.github.luksal.commons.dto.EventStatus
-import io.github.luksal.ingestion.crawler.api.dto.Crawler
-import io.github.luksal.ingestion.crawler.api.dto.CrawlerSearchDetails
-import io.github.luksal.ingestion.crawler.mapper.CrawlerConfigMapper
+import io.github.luksal.ingestion.crawler.dto.CrawlerConfig
+import io.github.luksal.ingestion.crawler.dto.CrawlerSearchDetails
+import io.github.luksal.ingestion.crawler.mapper.CrawlerConfigMapper.toSearchResponse
 import io.github.luksal.ingestion.crawler.service.PageCrawlerCrudService
 import io.github.luksal.ingestion.service.BookRatingIngestionService
 import org.springframework.web.bind.annotation.*
@@ -23,23 +23,23 @@ class CrawlerController(
 
     @PostMapping
     //TODO validation + sanitize input
-    fun create(@RequestBody request: Crawler) =
+    fun create(@RequestBody request: CrawlerConfig) =
         crawlerCrudService.create(request)
 
     @GetMapping("/{id}")
-    fun getById(@PathVariable id: Long): Crawler? =
+    fun getById(@PathVariable id: Long): CrawlerConfig? =
         crawlerCrudService.getById(id)
 
     @GetMapping
     fun findAll(): List<CrawlerSearchDetails> =
-        crawlerCrudService.findAll().map { CrawlerConfigMapper.mapToSearchResponse(it) }.sortedBy { it.id }
+        crawlerCrudService.findAll().map { it.toSearchResponse() }.sortedBy { it.id }
 
     @DeleteMapping("/{id}")
     fun delete(@PathVariable id: Long) =
         crawlerCrudService.delete(id)
 
     @PutMapping("/{id}")
-    fun update(@PathVariable id: Long, @RequestBody request: Crawler) =
+    fun update(@PathVariable id: Long, @RequestBody request: CrawlerConfig) =
         crawlerCrudService.update(id, request)
 
 }

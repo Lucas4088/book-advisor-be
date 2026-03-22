@@ -3,19 +3,20 @@ package io.github.luksal.ingestion.service
 import io.github.luksal.book.api.dto.BookSearchResponse
 import io.github.luksal.book.model.RatingSourceUpdate
 import io.github.luksal.book.model.RatingUpdate
-import io.github.luksal.config.CrawlerSpecification
 import io.github.luksal.config.ProxiesProperties
+import io.github.luksal.ingestion.crawler.dto.CrawlerConfig
 import io.github.luksal.ingestion.crawler.jpa.PageCrawlerJpaRepository
 import io.github.luksal.ingestion.crawler.jpa.entity.PageCrawlerConfigEntity
 import io.github.luksal.ingestion.crawler.service.PageCrawler
 import io.github.luksal.ingestion.fetcher.PageFetcher
-import io.github.luksal.ingestion.mapper.IngestionMapper
+import io.github.luksal.ingestion.mapper.IngestionMapper.map
 import io.github.luksal.util.ext.intersectPercentage
 import io.github.luksal.util.ext.logger
 import io.github.luksal.util.ext.normalizeStandardChars
 import io.github.luksal.util.ext.percentageLevenshteinDistance
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Service
+import java.io.File
 import java.math.BigDecimal
 import java.net.URLEncoder
 
@@ -45,19 +46,22 @@ class BookPageCrawlerService(
 
         return cached?.also {
             log.info("Rating for book ${book.title} from source ${crawler.name} found in cache: ${it.score}")
-        } ?: crawlAndExtractRating(book, IngestionMapper.map(crawler))?.also {
+        } ?: crawlAndExtractRating(book, crawler.map())?.also {
             redisTemplate.opsForValue()["rating:${crawler.name}:${book.id}"] = it
         }
     }
 
     private fun crawlAndExtractRating(
         book: BookSearchResponse,
-        crawlerSpec: CrawlerSpecification
+        crawlerSpec: CrawlerConfig
     ): RatingUpdate? {
         val searchUrl = composeSearchBookUrl(book, crawlerSpec)
         log.info("Composed search url: $searchUrl")
 
         return fetch(searchUrl, crawlerSpec)?.let { searchPageHtml ->
+            if (crawlerSpec.path.isRatingAvailableOnSearch) {
+                return extractRating(searchPageHtml, crawlerSpec, book)
+            }
             return pageCrawler.extractBookPageUrl(searchPageHtml, crawlerSpec)?.let {
                 log.info("Composed page url: $it")
                 fetch(it, crawlerSpec).takeIf { bookPage -> bookPage?.isNotEmpty() ?: false }
@@ -68,13 +72,12 @@ class BookPageCrawlerService(
         }
     }
 
-    private fun fetch(url: String, crawlerSpec: CrawlerSpecification): String? {
-        //TODO change logic for choosing proxy and invoking given fetch methods
+    private fun fetch(url: String, crawlerSpec: CrawlerConfig): String? {
         return if (crawlerSpec.proxyEnabled) {
             val proxy = proxiesProperties.proxies.firstOrNull { it.name == crawlerSpec.proxyName }
                 ?: throw IllegalStateException("Proxy ${crawlerSpec.proxyName} not found for crawler ${crawlerSpec.name}")
-            if (crawlerSpec.name == "amazon-books") {
-                pageFetcher.fetchLocalProxyWitSession(url, proxy)
+            if (crawlerSpec.proxySessionEnabled) {
+                pageFetcher.fetchLocalProxyWitSession(url, crawlerSpec.forwardingProxyEnabled, proxy)
             } else {
                 pageFetcher.fetchLocalProxy(url, proxy)
             }
@@ -83,18 +86,18 @@ class BookPageCrawlerService(
         }
     }
 
-    private fun composeSearchBookUrl(book: BookSearchResponse, crawlerSpec: CrawlerSpecification): String {
+    private fun composeSearchBookUrl(book: BookSearchResponse, crawlerSpec: CrawlerConfig): String {
         var searchParams = ""
-        val searchTitle = book.title
-            .let { URLEncoder.encode(it, Charsets.UTF_8) }
-        searchParams+=searchTitle
         if (crawlerSpec.path.includeAuthorsForSearch) {
             val searchAuthor = book.authors.firstOrNull()
                 ?.normalizeStandardChars()
                 ?.let { URLEncoder.encode(it, Charsets.UTF_8) }
                 .orEmpty()
-            searchParams+="+$searchAuthor"
+            searchParams += searchAuthor
         }
+        val searchTitle = book.title
+            .let { URLEncoder.encode(it, Charsets.UTF_8) }
+        searchParams += "+$searchTitle"
         val searchPath = crawlerSpec.path.search.replace(FORMATTED_SEARCH_PARAMS_PLACEHOLDER, searchParams)
         val searchUrl = "${crawlerSpec.baseUrl}$searchPath"
         return searchUrl
@@ -102,7 +105,7 @@ class BookPageCrawlerService(
 
     private fun extractRating(
         bookPage: String,
-        crawlerSpec: CrawlerSpecification,
+        crawlerSpec: CrawlerConfig,
         book: BookSearchResponse
     ): RatingUpdate? {
         val ratingScore = pageCrawler.extractRatingScore(bookPage, crawlerSpec)

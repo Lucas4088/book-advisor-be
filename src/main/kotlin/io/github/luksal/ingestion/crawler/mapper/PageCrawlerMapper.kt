@@ -1,15 +1,15 @@
 package io.github.luksal.ingestion.crawler.mapper
 
-import io.github.luksal.ingestion.crawler.api.dto.Crawler
-import io.github.luksal.ingestion.crawler.api.dto.CrawlerSearchDetails
-import io.github.luksal.ingestion.crawler.api.dto.Path
-import io.github.luksal.ingestion.crawler.api.dto.RateLimit
+import io.github.luksal.ingestion.crawler.dto.CrawlerConfig
+import io.github.luksal.ingestion.crawler.dto.CrawlerSearchDetails
+import io.github.luksal.ingestion.crawler.dto.Path
+import io.github.luksal.ingestion.crawler.dto.RateLimit
 import io.github.luksal.ingestion.crawler.jpa.entity.CrawlerPath
 import io.github.luksal.ingestion.crawler.jpa.entity.PageCrawlerConfigEntity
 
 object CrawlerConfigMapper {
-    fun PageCrawlerConfigEntity.map(): Crawler =
-        Crawler(
+    fun PageCrawlerConfigEntity.toEntity(): CrawlerConfig =
+        CrawlerConfig(
             id = id,
             name = name,
             enabled = enabled,
@@ -27,12 +27,20 @@ object CrawlerConfigMapper {
                 titleSpaceSeparator = path.titleSpaceSeparator,
                 bookTitleSelector = path.bookTitleSelector,
                 bookAuthorsSelector = path.bookAuthorsSelector,
+                isRatingAvailableOnSearch = path.isRatingAvailableOnSearch,
+                bookFirstElementSearchSelector = path.bookFirstElementSearchSelector,
+                bookRatingScoreSearchSelector = path.bookRatingScoreSearchSelector,
+                bookRatingCountSearchSelector = path.bookRatingCountSearchSelector,
+                bookTitleSearchSelector = path.bookTitleSearchSelector,
+                bookAuthorsSearchSelector = path.bookAuthorsSearchSelector,
             ),
             proxyEnabled = proxyEnabled,
-            proxyName = proxyName
+            proxyName = proxyName,
+            proxySessionEnabled = proxySessionEnabled,
+            forwardingProxyEnabled = forwardingProxyEnabled
         )
 
-    fun Crawler.map(id: Long? = null): PageCrawlerConfigEntity =
+    fun CrawlerConfig.toEntity(id: Long? = null): PageCrawlerConfigEntity =
         PageCrawlerConfigEntity(
             id = id ?: id,
             name = name,
@@ -51,16 +59,24 @@ object CrawlerConfigMapper {
                 titleSpaceSeparator = path.titleSpaceSeparator,
                 bookTitleSelector = path.bookTitleSelector,
                 bookAuthorsSelector = path.bookAuthorsSelector,
+                isRatingAvailableOnSearch = path.isRatingAvailableOnSearch,
+                bookFirstElementSearchSelector = path.bookFirstElementSearchSelector,
+                bookRatingScoreSearchSelector = path.bookRatingScoreSearchSelector,
+                bookRatingCountSearchSelector = path.bookRatingCountSearchSelector,
+                bookTitleSearchSelector = path.bookTitleSearchSelector,
+                bookAuthorsSearchSelector = path.bookAuthorsSearchSelector,
             ),
             proxyEnabled = proxyEnabled,
-            proxyName = proxyName
+            proxyName = proxyName,
+            proxySessionEnabled = proxySessionEnabled,
+            forwardingProxyEnabled = forwardingProxyEnabled,
         )
 
-    fun mapToSearchResponse(entity: Crawler): CrawlerSearchDetails =
+    fun CrawlerConfig.toSearchResponse(): CrawlerSearchDetails =
         CrawlerSearchDetails(
-            id = entity.id!!,
-            name = entity.name,
-            enabled = entity.enabled,
-            baseUrl = entity.baseUrl
+            id = id!!,
+            name = name,
+            enabled = enabled,
+            baseUrl = baseUrl
         )
 }

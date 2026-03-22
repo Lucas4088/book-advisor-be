@@ -12,6 +12,8 @@ import org.springframework.web.client.RestTemplate
 import tools.jackson.databind.ObjectMapper
 import tools.jackson.databind.json.JsonMapper
 import java.io.File
+import java.util.concurrent.atomic.AtomicLong
+import kotlin.random.Random
 
 @Component
 class PageFetcher(
@@ -21,6 +23,7 @@ class PageFetcher(
 
     companion object {
         val log = logger()
+        val sessionCounter = AtomicLong(0)
     }
 
     @Retry(name = "page-fetcherRetry")
@@ -44,17 +47,17 @@ class PageFetcher(
             .ignoreContentType(true)
             .execute()
 
-          return response.body().let {
-              JsonMapper().readTree(it)
-                  .get("results")?.get(0)
-                  ?.get("content")?.asString()
-          }.also {
-              it?.let { t->
-                  val file = File("fetcher.html").apply {
-                      writeText(t, Charsets.UTF_8)
-                  }
-              }
-          }
+        return response.body().let {
+            JsonMapper().readTree(it)
+                .get("results")?.get(0)
+                ?.get("content")?.asString()
+        }.also {
+            it?.let { t ->
+                val file = File("fetcher.html").apply {
+                    writeText(t, Charsets.UTF_8)
+                }
+            }
+        }
     }
 
 
@@ -68,12 +71,20 @@ class PageFetcher(
         return fetchLocalProxy(proxy.url, url, proxy.maxTimeout.toInt(), null)
     }
 
-     fun fetchLocalProxyWitSession(url: String, proxy: ScrapingProxyProperties): String {
+    fun fetchLocalProxyWitSession(url: String, proxyForwardingEnabled: Boolean, proxy: ScrapingProxyProperties): String {
+        var forwardingProxyUrl: String? = null
+        if (proxyForwardingEnabled) {
+            forwardingProxyUrl = proxy.forwardingProxiesUrls[Random.nextInt(0, proxy.forwardingProxiesUrls.size)]
+        }
         if (session == null) {
-            session = createSession(proxy.url, proxy.maxTimeout.toInt())
+            session = createSession(proxy.url, proxy.maxTimeout.toInt(), forwardingProxyUrl)
                 ?: throw RuntimeException("Failed to create session for proxy ${proxy.url}")
         }
 
+        if (sessionCounter.get() % 3 == 0L) {
+            refreshSession(proxy.url)
+        }
+        log.info("Forwarding proxy ${forwardingProxyUrl?.take(15)}")
         return fetchLocalProxy(proxy.url, url, proxy.maxTimeout.toInt(), session)
     }
 
@@ -86,6 +97,7 @@ class PageFetcher(
                 maxTimeout = maxTimeout
             )
         )
+        sessionCounter.incrementAndGet()
         return runCatching {
             val requestJson = Jsoup.connect(proxyUrl)
                 .header("Content-Type", "application/json")
@@ -96,14 +108,8 @@ class PageFetcher(
                 .ignoreContentType(true)
                 .maxBodySize(0) //Jsoup can truncate huge response body, so we set it to 0 to disable truncation
                 .execute()
-                .body().also {
-                    JsonMapper().readTree(it)
-                        .get("solution")?.get("response")?.asString()?.let { t ->
-                            val file = File("fetcher.html").apply {
-                                writeText(t, Charsets.UTF_8)
-                            }
-                        }
-                }
+                .body()
+
             JsonMapper().readTree(requestJson)
                 .path("solution")
                 .path("response")
@@ -114,13 +120,19 @@ class PageFetcher(
 
     }
 
-    private fun createSession(proxyUrl: String, maxTimeout: Int): String? {
+    private fun createSession(proxyUrl: String, maxTimeout: Int, forwardingProxyUrl: String?): String? {
         return restTemplate.postForObject(
-            proxyUrl, ProxyLocalRequestData(cmd = "sessions.create", maxTimeout = maxTimeout),
+            proxyUrl, ProxyLocalRequestData(cmd = "sessions.create", maxTimeout = maxTimeout, proxy = forwardingProxyUrl?.let { Proxy(it) }),
             FlareSolverrSessionResponse::class.java
         )?.session
     }
 
+    private fun refreshSession(proxyUrl: String) {
+        restTemplate.postForObject(
+            proxyUrl, ProxyLocalRequestData(cmd = "sessions.destroy", session = session), Any::class.java
+        )
+        session = null
+    }
 
     data class RemoteProxyRequestData(
         val url: String? = null,
@@ -131,7 +143,8 @@ class PageFetcher(
         val cmd: String,
         val session: String? = null,
         val url: String? = null,
-        val maxTimeout: Int
+        val maxTimeout: Int? = 0,
+        val proxy: Proxy? = null,
     )
 
     data class FlareSolverrSessionResponse(

@@ -2,9 +2,9 @@ package io.github.luksal.ingestion.mapper
 
 import io.github.luksal.book.db.jpa.model.event.ScheduledBookBasicInfoPopulationEventEntity
 import io.github.luksal.commons.dto.EventMeta
-import io.github.luksal.config.CrawlerSpecification
-import io.github.luksal.config.Path
-import io.github.luksal.config.RateLimit
+import io.github.luksal.ingestion.crawler.dto.CrawlerConfig
+import io.github.luksal.ingestion.crawler.dto.Path
+import io.github.luksal.ingestion.crawler.dto.RateLimit
 import io.github.luksal.ingestion.api.dto.ScheduledBookBasicInfoPopulationEvent
 import io.github.luksal.ingestion.crawler.jpa.entity.PageCrawlerConfigEntity
 
@@ -29,27 +29,36 @@ object IngestionMapper {
         )
     }
 
-    fun map(entity: PageCrawlerConfigEntity): CrawlerSpecification =
-        CrawlerSpecification(
-            name = entity.name,
-            baseUrl = entity.baseUrl,
-            enabled = true,
+    fun PageCrawlerConfigEntity.map(): CrawlerConfig =
+        CrawlerConfig(
+            id = id,
+            name = name,
+            baseUrl = baseUrl,
+            enabled = enabled,
             path = Path(
-                bookResultSelector = entity.path.bookResultSelector,
-                bookRatingScoreSelector = entity.path.bookRatingScoreSelector,
-                bookRatingCountSelector = entity.path.bookRatingCountSelector,
-                search = entity.path.search,
-                includeAuthorsForSearch = entity.path.includeAuthorsForSearch,
-                titleSpaceSeparator = entity.path.titleSpaceSeparator,
-                bookTitleSelector = entity.path.bookTitleSelector,
-                bookAuthorsSelector = entity.path.bookAuthorsSelector,
+                bookResultSelector = path.bookResultSelector,
+                bookRatingScoreSelector = path.bookRatingScoreSelector,
+                bookRatingCountSelector = path.bookRatingCountSelector,
+                search = path.search,
+                includeAuthorsForSearch = path.includeAuthorsForSearch,
+                titleSpaceSeparator = path.titleSpaceSeparator,
+                bookTitleSelector = path.bookTitleSelector,
+                bookAuthorsSelector = path.bookAuthorsSelector,
+                isRatingAvailableOnSearch = path.isRatingAvailableOnSearch,
+                bookFirstElementSearchSelector = path.bookFirstElementSearchSelector,
+                bookRatingScoreSearchSelector = path.bookRatingScoreSearchSelector,
+                bookRatingCountSearchSelector = path.bookRatingCountSearchSelector,
+                bookTitleSearchSelector = path.bookTitleSearchSelector,
+                bookAuthorsSearchSelector = path.bookAuthorsSearchSelector,
             ),
             rateLimit = RateLimit(
-                requestsPerMinute = entity.rateLimit.requestsPerMinute,
-                burst = entity.rateLimit.burst
+                requestsPerMinute = rateLimit.requestsPerMinute,
+                burst = rateLimit.burst
             ),
-            proxyEnabled = entity.proxyEnabled,
-            proxyName = entity.proxyName,
+            proxyEnabled = proxyEnabled,
+            proxyName = proxyName,
+            proxySessionEnabled = proxySessionEnabled,
+            forwardingProxyEnabled = forwardingProxyEnabled
         )
 
 

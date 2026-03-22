@@ -37,6 +37,12 @@ data class PageCrawlerConfigEntity(
 
     @Column
     val proxyName: String?,
+
+    @Column(nullable = false)
+    val proxySessionEnabled: Boolean,
+
+    @Column(nullable = false)
+    val forwardingProxyEnabled: Boolean
 )
 
 @Embeddable
@@ -64,6 +70,24 @@ data class CrawlerPath(
 
     @Column(nullable = false)
     val includeAuthorsForSearch: Boolean,
+
+    @Column(nullable = false)
+    val isRatingAvailableOnSearch: Boolean,
+
+    @Column
+    val bookFirstElementSearchSelector: String?,
+
+    @Column
+    val bookRatingCountSearchSelector: String?,
+
+    @Column
+    val bookRatingScoreSearchSelector: String?,
+
+    @Column
+    val bookAuthorsSearchSelector: String?,
+
+    @Column
+    val bookTitleSearchSelector: String?,
 
     @Column(nullable = false)
     val titleSpaceSeparator: String,
