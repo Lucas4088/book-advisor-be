@@ -9,6 +9,7 @@ data class Book(
     val description: String?,
     val publishingYear: Year,
     val pageCount: Int?,
+    val language: String,
     val edition: BookEdition? = null,
     val thumbnailUrl: String? = null,
     val smallThumbnailUrl: String? = null,

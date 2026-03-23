@@ -16,6 +16,9 @@ class BookEntity(
     @Column(columnDefinition = "TEXT")
     val description: String?,
 
+    @Column
+    val language: String?,
+
     @Column(nullable = false)
     val publishingYear: Int,
 

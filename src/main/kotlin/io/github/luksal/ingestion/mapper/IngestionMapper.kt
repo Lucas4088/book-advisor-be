@@ -29,37 +29,4 @@ object IngestionMapper {
         )
     }
 
-    fun PageCrawlerConfigEntity.map(): CrawlerConfig =
-        CrawlerConfig(
-            id = id,
-            name = name,
-            baseUrl = baseUrl,
-            enabled = enabled,
-            path = Path(
-                bookResultSelector = path.bookResultSelector,
-                bookRatingScoreSelector = path.bookRatingScoreSelector,
-                bookRatingCountSelector = path.bookRatingCountSelector,
-                search = path.search,
-                includeAuthorsForSearch = path.includeAuthorsForSearch,
-                titleSpaceSeparator = path.titleSpaceSeparator,
-                bookTitleSelector = path.bookTitleSelector,
-                bookAuthorsSelector = path.bookAuthorsSelector,
-                isRatingAvailableOnSearch = path.isRatingAvailableOnSearch,
-                bookFirstElementSearchSelector = path.bookFirstElementSearchSelector,
-                bookRatingScoreSearchSelector = path.bookRatingScoreSearchSelector,
-                bookRatingCountSearchSelector = path.bookRatingCountSearchSelector,
-                bookTitleSearchSelector = path.bookTitleSearchSelector,
-                bookAuthorsSearchSelector = path.bookAuthorsSearchSelector,
-            ),
-            rateLimit = RateLimit(
-                requestsPerMinute = rateLimit.requestsPerMinute,
-                burst = rateLimit.burst
-            ),
-            proxyEnabled = proxyEnabled,
-            proxyName = proxyName,
-            proxySessionEnabled = proxySessionEnabled,
-            forwardingProxyEnabled = forwardingProxyEnabled
-        )
-
-
 }

@@ -12,7 +12,6 @@ import org.springframework.web.client.RestTemplate
 import tools.jackson.databind.ObjectMapper
 import tools.jackson.databind.json.JsonMapper
 import java.io.File
-import java.util.concurrent.atomic.AtomicLong
 import kotlin.random.Random
 
 @Component
@@ -23,7 +22,6 @@ class PageFetcher(
 
     companion object {
         val log = logger()
-        val sessionCounter = AtomicLong(0)
     }
 
     @Retry(name = "page-fetcherRetry")
@@ -60,7 +58,6 @@ class PageFetcher(
         }
     }
 
-
     fun fetchNoProxy(url: String): String =
         Jsoup.connect(url)
             .timeout(10_000)
@@ -76,30 +73,29 @@ class PageFetcher(
         if (proxyForwardingEnabled) {
             forwardingProxyUrl = proxy.forwardingProxiesUrls[Random.nextInt(0, proxy.forwardingProxiesUrls.size)]
         }
-        if (session == null) {
+/*        if (session == null) {
             session = createSession(proxy.url, proxy.maxTimeout.toInt(), forwardingProxyUrl)
                 ?: throw RuntimeException("Failed to create session for proxy ${proxy.url}")
-        }
+        }*/
 
-        if (sessionCounter.get() % 3 == 0L) {
-            refreshSession(proxy.url)
-        }
         log.info("Forwarding proxy ${forwardingProxyUrl?.take(15)}")
-        return fetchLocalProxy(proxy.url, url, proxy.maxTimeout.toInt(), session)
+        return fetchLocalProxy(proxy.url, url, proxy.maxTimeout.toInt(), session, forwardingProxyUrl)
     }
 
-    private fun fetchLocalProxy(proxyUrl: String, targetUrl: String, maxTimeout: Int, session: String?): String {
+    private fun fetchLocalProxy(proxyUrl: String, targetUrl: String, maxTimeout: Int, session: String? = null, forwardingProxyUrl: String? = null): String {
         val requestBody = ObjectMapper().writeValueAsString(
             ProxyLocalRequestData(
                 session = session,
                 cmd = "request.get",
                 url = targetUrl,
-                maxTimeout = maxTimeout
+                disableMedia = true,
+                sessionTttlMinutes = 30,
+                maxTimeout = maxTimeout,
+                proxy = forwardingProxyUrl?.let { Proxy(it) }
             )
         )
-        sessionCounter.incrementAndGet()
         return runCatching {
-            val requestJson = Jsoup.connect(proxyUrl)
+            val resJson = Jsoup.connect(proxyUrl)
                 .header("Content-Type", "application/json")
                 .timeout(maxTimeout)
                 .method(Connection.Method.POST)
@@ -108,9 +104,13 @@ class PageFetcher(
                 .ignoreContentType(true)
                 .maxBodySize(0) //Jsoup can truncate huge response body, so we set it to 0 to disable truncation
                 .execute()
-                .body()
+                .body().also {
+                    File("Search_page.html").apply {
+                        writeText(it)
+                    }
+                }
 
-            JsonMapper().readTree(requestJson)
+            JsonMapper().readTree(resJson)
                 .path("solution")
                 .path("response")
                 .asString()
@@ -143,6 +143,8 @@ class PageFetcher(
         val cmd: String,
         val session: String? = null,
         val url: String? = null,
+        val disableMedia: Boolean = false,
+        val sessionTttlMinutes: Int = 1,
         val maxTimeout: Int? = 0,
         val proxy: Proxy? = null,
     )

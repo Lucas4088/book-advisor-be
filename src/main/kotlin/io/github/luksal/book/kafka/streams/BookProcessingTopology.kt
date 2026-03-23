@@ -1,8 +1,9 @@
 package io.github.luksal.book.kafka.streams
 
+import com.github.pemistahl.lingua.api.LanguageDetector
 import io.github.luksal.book.db.document.book.BookDocument
 import io.github.luksal.book.db.jpa.model.BookEntity
-import io.github.luksal.book.mapper.BookMapper
+import io.github.luksal.book.mapper.BookMapper.mapToEntity
 import io.github.luksal.util.ext.logger
 import org.apache.kafka.common.serialization.Serde
 import org.apache.kafka.common.serialization.Serdes
@@ -15,7 +16,9 @@ import org.springframework.kafka.support.serializer.JacksonJsonSerde
 import org.springframework.stereotype.Component
 
 @Component
-class BookProcessingTopology {
+class BookProcessingTopology(
+    private val languageDetector: LanguageDetector,
+) {
     @Value($$"${app.kafka.connect.books-source-topic}")
     private val sourceTopic: String? = null
 
@@ -35,7 +38,7 @@ class BookProcessingTopology {
             .stream(sourceTopic, Consumed.with(STRING_SERDE, DOCUMENT_SERDE))
             .peek { _, value -> log.debug("*** raw value {}", value) }
             .filter { _, value -> value != null }
-            .mapValues { BookMapper.mapToEntity(it!!) }
+            .mapValues { it.mapToEntity(languageDetector.detectLanguageOf(it.title).name) }
             .peek { _, value -> log.info("*** lowercase value = {}", value) }
             //todo add maybe some useful statistics calculations
             .to(sinkTopic, Produced.with(Serdes.String(), ENTITY_SERDE))

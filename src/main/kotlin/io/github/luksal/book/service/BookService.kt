@@ -1,5 +1,6 @@
 package io.github.luksal.book.service
 
+import com.github.pemistahl.lingua.api.LanguageDetector
 import io.github.luksal.book.api.dto.BookBasicInfoDetailsDto
 import io.github.luksal.book.api.dto.BookBasicInfoDto
 import io.github.luksal.book.api.dto.BookBasicInfoSearchCriteria
@@ -42,7 +43,8 @@ class BookService(
     private val ratingSourceJpaRepository: RatingSourceJpaRepository,
     private val bookBasicInfoDocumentRepository: BookBasicInfoDocumentRepository,
     private val bookDocumentRepository: BookDocumentRepository,
-    private val publisher: ApplicationEventPublisher
+    private val publisher: ApplicationEventPublisher,
+    private val languageDetector: LanguageDetector,
 ) {
 
     private val log = logger()
@@ -169,7 +171,7 @@ class BookService(
             }?.toMutableSet() ?: mutableSetOf()
 
             val bookEntity : BookEntity = bookJpaRepository.findById(document.id)
-                .orElse(document.mapToEntity(authors, genres))!!
+                .orElse(document.mapToEntity(languageDetector.detectLanguageOf(document.title).name, authors, genres))!!
 
             bookEntity.ratings.clear()
             bookEntity.ratings.addAll(document.ratings?.map {
@@ -205,7 +207,7 @@ class BookService(
     }
 
     private fun bulkSaveNoDuplicatesBooks(books: List<Book>) =
-        bookDocumentRepository.saveBulkWithDeduplication(books.map { BookMapper.map(it) })
+        bookDocumentRepository.saveBulkWithDeduplication(books.map { BookMapper.toModel(it) })
 
     private fun bulkSaveNoDuplicatesBasicBookInfo(documents: List<BookBasicInfoDocument>): Int =
         bookBasicInfoDocumentRepository.saveBulkWithDeduplication(documents).size

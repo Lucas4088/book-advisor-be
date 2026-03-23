@@ -70,6 +70,6 @@ class BookDataPurgeService(
         val offsets = partitions.associateWith {
             OffsetAndMetadata(0) // 0 = earliest
         }
-        adminClient.alterConsumerGroupOffsets("book-advisor-consumer", offsets)
+        adminClient.alterConsumerGroupOffsets("book-consumer-group", offsets)
     }
 }

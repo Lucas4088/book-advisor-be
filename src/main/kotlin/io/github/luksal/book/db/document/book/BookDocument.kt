@@ -83,7 +83,6 @@ data class GenreEmbedded(
     val name: String
 )
 
-@Document(collection = "ratings")
 data class RatingEmbedded(
     @Id
     @JsonProperty("_id")
@@ -124,7 +123,7 @@ data class RatingDocument(
     @Field("bi")
     @JsonProperty("bi")
     val bookId: String,
-    @Field("ra")
+    @Field("sc")
     @JsonProperty("sc")
     val score: BigDecimal,
     @Field("co")

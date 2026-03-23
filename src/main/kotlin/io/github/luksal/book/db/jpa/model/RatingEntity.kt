@@ -15,9 +15,9 @@ class RatingEntity(
     val book: BookEntity,
 
     @Column(precision = 3, scale = 2, nullable = false)
-    val score: BigDecimal,
+    var score: BigDecimal,
 
-    val count: Int?,
+    var count: Int?,
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "source_id")

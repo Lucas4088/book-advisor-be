@@ -35,6 +35,7 @@ dependencies {
     implementation(libs.caffeine)
     implementation(libs.guava)
     implementation(libs.dotenv)
+    implementation(libs.lingua)
 
     implementation(libs.spring.kafka)
     implementation(libs.kafka.streams)

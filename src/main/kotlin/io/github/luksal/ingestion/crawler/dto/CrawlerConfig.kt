@@ -51,6 +51,7 @@ data class Path(
     val bookTitleSelector: String,
     val bookAuthorsSelector: String,
     val search: String,
+    val searchPageLoadedSelector: String?,
     val isRatingAvailableOnSearch: Boolean,
     val bookFirstElementSearchSelector: String?,
     val bookRatingCountSearchSelector: String?,

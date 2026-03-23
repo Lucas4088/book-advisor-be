@@ -1,0 +1,14 @@
+{
+  "connector.class": "com.mongodb.kafka.connect.MongoSourceConnector",
+  "tasks.max": "1",
+  "connection.uri": "mongodb://mongo_user:mongo_password@mongodb:27017/?authSource=admin",
+  "database": "book-advisor-db",
+  "collection": "books",
+  "pipeline": "[{\"$match\": {\"operationType\": \"insert\"}}]",
+  "output.format.value": "json",
+  "output.format.key": "json",
+  "output.json.formatter": "com.mongodb.kafka.connect.source.json.formatter.SimplifiedJson",
+  "publish.full.document.only": "true",
+  "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+  "value.converter": "org.apache.kafka.connect.storage.StringConverter"
+}

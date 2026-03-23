@@ -8,7 +8,7 @@ import io.github.luksal.ingestion.crawler.jpa.entity.CrawlerPath
 import io.github.luksal.ingestion.crawler.jpa.entity.PageCrawlerConfigEntity
 
 object CrawlerConfigMapper {
-    fun PageCrawlerConfigEntity.toEntity(): CrawlerConfig =
+    fun PageCrawlerConfigEntity.toConfig(): CrawlerConfig =
         CrawlerConfig(
             id = id,
             name = name,
@@ -23,6 +23,7 @@ object CrawlerConfigMapper {
                 bookRatingCountSelector = path.bookRatingCountSelector,
                 bookRatingScoreSelector = path.bookRatingScoreSelector,
                 search = path.search,
+                searchPageLoadedSelector = path.searchPageLoadedSelector,
                 includeAuthorsForSearch = path.includeAuthorsForSearch,
                 titleSpaceSeparator = path.titleSpaceSeparator,
                 bookTitleSelector = path.bookTitleSelector,
@@ -40,7 +41,7 @@ object CrawlerConfigMapper {
             forwardingProxyEnabled = forwardingProxyEnabled
         )
 
-    fun CrawlerConfig.toEntity(id: Long? = null): PageCrawlerConfigEntity =
+    fun CrawlerConfig.toConfig(id: Long? = null): PageCrawlerConfigEntity =
         PageCrawlerConfigEntity(
             id = id ?: id,
             name = name,
@@ -55,6 +56,7 @@ object CrawlerConfigMapper {
                 bookRatingCountSelector = path.bookRatingCountSelector,
                 bookRatingScoreSelector = path.bookRatingScoreSelector,
                 search = path.search,
+                searchPageLoadedSelector = path.searchPageLoadedSelector,
                 includeAuthorsForSearch = path.includeAuthorsForSearch,
                 titleSpaceSeparator = path.titleSpaceSeparator,
                 bookTitleSelector = path.bookTitleSelector,

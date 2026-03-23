@@ -25,7 +25,7 @@ class AuthorService(private val authorDocumentRepository: AuthorDocumentReposito
         authorDocumentRepository.findAllById(authorsKeys)
 
     fun searchAuthors(criteria: AuthorSearchCriteria, page: Pageable) : Page<AuthorDto> =
-        authorJpaRepository.search(criteria.id, criteria.publicId, criteria.name, page).map(BookMapper::map)
+        authorJpaRepository.search(criteria.id, criteria.publicId, criteria.name, page).map(BookMapper::toModel)
 
     fun getAuthorDetails(publicId: String) : AuthorDetailsDto? =
         authorJpaRepository.findByPublicId(publicId)?.let {

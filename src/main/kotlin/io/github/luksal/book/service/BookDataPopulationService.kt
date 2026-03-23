@@ -1,10 +1,11 @@
 package io.github.luksal.book.service
 
+import com.github.pemistahl.lingua.api.LanguageDetector
 import io.github.luksal.book.db.document.bookbasicinfo.BookBasicInfoDocument
 import io.github.luksal.book.db.jpa.event.PopulateBookBasicDataJpaRepository
 import io.github.luksal.book.db.jpa.event.PopulateBookDetailsEventJpaRepository
 import io.github.luksal.book.db.jpa.model.event.ScheduledBookBasicInfoPopulationEventEntity
-import io.github.luksal.book.mapper.BookMapper.map
+import io.github.luksal.book.mapper.BookMapper.toModel
 import io.github.luksal.book.model.Book
 import io.github.luksal.commons.dto.EventStatus
 import io.github.luksal.commons.jpa.EventMeta
@@ -45,7 +46,8 @@ class BookDataPopulationService(
     private val archiveBooksService: ArchiveBooksService,
     private val redisTemplate: RedisTemplate<Any, Any>,
     private val emailService: EmailService,
-    private val eventService: EventService
+    private val eventService: EventService,
+    private val languageDetector: LanguageDetector
 ) {
 
     private val log = logger()
@@ -169,12 +171,12 @@ class BookDataPopulationService(
     private fun findBookDetails(bookInfo: BookBasicInfoDocument): Book? {
         val response = redisTemplate.opsForValue()["google-books:${bookInfo.id}"] as BookItem?
             ?: googleBooksService.findBookDetails(bookInfo.title, bookInfo.authors)?.items
-                    ?.firstOrNull()
-                    ?.also { redisTemplate.opsForValue()["google-books:${bookInfo.id}"] = it }
+                ?.firstOrNull()
+                ?.also { redisTemplate.opsForValue()["google-books:${bookInfo.id}"] = it }
 
         return response
             ?.also { publishEvent("GOOGLE_BOOKS", it) }
-            ?.map(bookInfo)
+            ?.toModel(bookInfo, languageDetector.detectLanguageOf(bookInfo.title).name)
             ?: fetchFallbackBookDetails(bookInfo)
     }
 
@@ -195,11 +197,11 @@ class BookDataPopulationService(
             return null
         }
 
-        return map(
+        return unprocessed.toModel(
             openLibraryBookDetails,
             openLibraryDoc,
             archiveBookDetailsResponse,
-            unprocessed
+            languageDetector.detectLanguageOf(openLibraryBookDetails!!.title).name
         )
     }
 

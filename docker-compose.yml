@@ -110,7 +110,7 @@ services:
     image: vimagick/tinyproxy
     ports:
       - "8888:8888"
-      -
+
   proxy:
     image: ghcr.io/flaresolverr/flaresolverr:latest
     container_name: flaresolverr

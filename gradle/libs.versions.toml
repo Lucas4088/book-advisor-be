@@ -16,6 +16,7 @@ jsoup = "1.22.1"
 
 guava = "33.5.0-jre"
 dotenv = "6.5.1"
+lingua = "1.2.2"
 
 [libraries]
 # Spring Boot Starters
@@ -60,6 +61,7 @@ caffeine = { module = "com.github.ben-manes.caffeine:caffeine" }
 
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 dotenv = { module = "io.github.cdimascio:dotenv-kotlin", version.ref = "dotenv" }
+lingua = { module = "com.github.pemistahl:lingua", version.ref = "lingua" }
 
 [bundles]
 spring-boot-starters = [

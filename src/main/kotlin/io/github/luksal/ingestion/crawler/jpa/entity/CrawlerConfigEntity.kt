@@ -65,6 +65,9 @@ data class CrawlerPath(
     @Column(nullable = false)
     val bookRatingScoreSelector: String,
 
+    @Column
+    val searchPageLoadedSelector: String?,
+
     @Column(nullable = false)
     val search: String,
 

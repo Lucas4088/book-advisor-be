@@ -82,17 +82,17 @@ services:
       kafka-connect:
         condition: service_healthy
     restart: "no"
-    command: >
-      command: >
-        sh -c "
+    command:
+      - sh
+      - -c
+      - |
         sleep 5 &&
-        curl -X PUT http://kafka-connect:8083/connectors/jdbc-sink/config
-        -H 'Content-Type: application/json'
-        -d @/docker/kafka-connect/jdbc_connector.json ;
-        curl -X PUT http://kafka-connect:8083/connectors/mongodb-source/config
-        -H 'Content-Type: application/json'
-        -d @/docker/kafka-connect/mongo_connector.json
-        "
+        curl -X PUT http://kafka-connect:8083/connectors/mongo-ratings-sink/config \
+          -H 'Content-Type: application/json' \
+          -d @/docker/kafka-connect/mongo_ratings_connector.json &&
+        curl -X PUT http://kafka-connect:8083/connectors/mongo-books-sink/config \
+          -H 'Content-Type: application/json' \
+          -d @/docker/kafka-connect/mongo_books_connector.json
     volumes:
       - ./docker/kafka-connect:/docker/kafka-connect
 

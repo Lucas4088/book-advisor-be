@@ -16,6 +16,16 @@ class PageCrawler {
             .map { "${crawlerConfig.baseUrl}${it.attr("href")}" }
             .firstOrNull()
 
+    fun isSearchPageLoaded(html: String, crawlerConfig: CrawlerConfig): Boolean {
+        if(crawlerConfig.path.searchPageLoadedSelector == null) {
+            return true
+        }
+        return Jsoup.parse(html)
+            .select(crawlerConfig.path.searchPageLoadedSelector)
+            .firstOrNull()
+            .let { it != null }
+    }
+
     fun extractRatingScore(html: String, crawlerConfig: CrawlerConfig): BigDecimal? {
         return selectFirstSearchResult(Jsoup.parse(html), crawlerConfig)
             .selectFirst(crawlerConfig.getRatingScoreSelector())

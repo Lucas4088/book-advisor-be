@@ -4,19 +4,19 @@ import io.github.luksal.book.api.dto.BookSearchResponse
 import io.github.luksal.book.model.RatingSourceUpdate
 import io.github.luksal.book.model.RatingUpdate
 import io.github.luksal.config.ProxiesProperties
+import io.github.luksal.exception.SearchPageNotLoadedException
 import io.github.luksal.ingestion.crawler.dto.CrawlerConfig
 import io.github.luksal.ingestion.crawler.jpa.PageCrawlerJpaRepository
 import io.github.luksal.ingestion.crawler.jpa.entity.PageCrawlerConfigEntity
+import io.github.luksal.ingestion.crawler.mapper.CrawlerConfigMapper.toConfig
 import io.github.luksal.ingestion.crawler.service.PageCrawler
 import io.github.luksal.ingestion.fetcher.PageFetcher
-import io.github.luksal.ingestion.mapper.IngestionMapper.map
 import io.github.luksal.util.ext.intersectPercentage
 import io.github.luksal.util.ext.logger
 import io.github.luksal.util.ext.normalizeStandardChars
 import io.github.luksal.util.ext.percentageLevenshteinDistance
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Service
-import java.io.File
 import java.math.BigDecimal
 import java.net.URLEncoder
 
@@ -46,7 +46,7 @@ class BookPageCrawlerService(
 
         return cached?.also {
             log.info("Rating for book ${book.title} from source ${crawler.name} found in cache: ${it.score}")
-        } ?: crawlAndExtractRating(book, crawler.map())?.also {
+        } ?: crawlAndExtractRating(book, crawler.toConfig())?.also {
             redisTemplate.opsForValue()["rating:${crawler.name}:${book.id}"] = it
         }
     }
@@ -59,6 +59,11 @@ class BookPageCrawlerService(
         log.info("Composed search url: $searchUrl")
 
         return fetch(searchUrl, crawlerSpec)?.let { searchPageHtml ->
+            if(!pageCrawler.isSearchPageLoaded(searchPageHtml, crawlerSpec)) {
+                throw SearchPageNotLoadedException(
+                    "Unable to load search page for book ${book.title} from source ${crawlerSpec.name}"
+                )
+            }
             if (crawlerSpec.path.isRatingAvailableOnSearch) {
                 return extractRating(searchPageHtml, crawlerSpec, book)
             }
