@@ -7,7 +7,7 @@ services:
     volumes:
       - mongo_data:/data/db
       - ./docker/mongo/keyfile:/tmp/keyfile:ro
-      - ./mongo-entrypoint.sh:/mongo-entrypoint.sh:ro
+      - ./docker/mongo/replica-set-script.sh:/mongo-entrypoint.sh:ro
     entrypoint: ["bash", "/mongo-entrypoint.sh"]
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
