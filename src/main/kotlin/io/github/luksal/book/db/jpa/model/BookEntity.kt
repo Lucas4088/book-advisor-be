@@ -46,6 +46,9 @@ class BookEntity(
     @OneToMany(mappedBy = "book", cascade = [CascadeType.ALL], orphanRemoval = true)
     var ratings: MutableList<RatingEntity> = mutableListOf(),
 
+    @OneToMany(mappedBy = "book", cascade = [CascadeType.ALL], orphanRemoval = true)
+    var editions: MutableList<BookEditionEntity> = mutableListOf(),
+
     @Version
     var version: Int? = null
 ) : Persistable<String> {

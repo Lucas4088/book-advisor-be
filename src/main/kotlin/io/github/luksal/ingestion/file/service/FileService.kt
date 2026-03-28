@@ -14,6 +14,9 @@ class FileService(
     fun importBookBasicInfo() =
         openLibraryFileImporter.readAndSaveBookBasicInfo()
 
+    fun importBookBasicInfoEditions() =
+        openLibraryFileImporter.readAndSaveBookBasicInfoForEdition()
+
     fun loadInitFileImportState(eventName: String): String? =
         openLibraryFileImporter.loadProgressState(eventName).formattedProgress
 

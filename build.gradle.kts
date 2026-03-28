@@ -38,7 +38,7 @@ dependencies {
     implementation(libs.lingua)
 
     implementation(libs.spring.kafka)
-    implementation(libs.kafka.streams)
+    //implementation(libs.kafka.streams)
 
     testImplementation(libs.spring.boot.starter.test)
     testImplementation(kotlin("test"))

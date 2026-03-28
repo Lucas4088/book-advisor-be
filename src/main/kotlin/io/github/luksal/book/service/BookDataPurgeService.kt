@@ -4,14 +4,18 @@ import io.github.luksal.book.db.jpa.event.PopulateBookBasicDataJpaRepository
 import io.github.luksal.book.db.jpa.event.PopulateBookDetailsEventJpaRepository
 import io.github.luksal.book.db.jpa.event.SyncBookEventJpaRepository
 import io.github.luksal.ingestion.crawler.jpa.ScheduledBookCrawlerEventRepository
+import io.github.luksal.ingestion.file.dto.FileImportState
+import io.github.luksal.ingestion.file.reader.OpenLibraryFileImporter
 import io.github.luksal.ingestion.file.service.FileService
 import io.github.luksal.integration.db.BookDetailsFetchedEventRepository
 import io.github.luksal.util.ext.logger
 import jakarta.transaction.Transactional
 import org.apache.kafka.clients.admin.AdminClient
 import org.apache.kafka.clients.consumer.OffsetAndMetadata
+import org.apache.kafka.common.TopicCollection
 import org.apache.kafka.common.TopicPartition
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Service
 
 @Service
@@ -25,7 +29,8 @@ class BookDataPurgeService(
     @Value($$"${app.kafka.connect.books-source-topic}")
     private val sourceTopic: String? = null,
     private val adminClient: AdminClient,
-    private val fileService: FileService
+    private val fileService: FileService,
+    private val redisTemplate: RedisTemplate<Any, Any>
 ) {
 
     companion object {
@@ -42,6 +47,11 @@ class BookDataPurgeService(
         syncBookEventJpaRepository.deleteAllInBatch()
         log.info("Resetting book stream kafka offset")
         resetBookSyncKafkaOffset()
+        log.info("Deleting connect topics")
+        adminClient.deleteTopics(TopicCollection.ofTopicNames(listOf("connect-offsets")))
+        log.info("Deleting book sync topic")
+        adminClient.deleteTopics(TopicCollection.ofTopicNames(listOf("book-advisor-db.books")))
+        log.info("Successfully purged all book details data")
     }
 
     @Transactional
@@ -55,6 +65,11 @@ class BookDataPurgeService(
             fileService.resetInitBookBasicFileImportState()
             log.info("Deleting all book details Fetched events")
             bookDetailsFetchedEventRepository.deleteAllInBatch()
+            log.info("Deleting file import progress")
+            redisTemplate.opsForValue()[OpenLibraryFileImporter.BOOK_BASIC_INFO_EVENT_IMPORT_NAME] = FileImportState(0, "0")
+            log.info("Deleting file edition import progress")
+            redisTemplate.opsForValue()[OpenLibraryFileImporter.BOOK_BASIC_INFO_EDITION_EVENT_IMPORT_NAME] = FileImportState(0, "0")
+            log.info("Successfully purged all book basic info data")
         } catch (e: Exception) {
             log.error("Error while purging book basic info", e)
             throw e
@@ -72,4 +87,5 @@ class BookDataPurgeService(
         }
         adminClient.alterConsumerGroupOffsets("book-consumer-group", offsets)
     }
+
 }

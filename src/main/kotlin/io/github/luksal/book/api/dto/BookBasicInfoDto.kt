@@ -27,7 +27,7 @@ data class BookBasicInfoDetailsDto(
     val firstPublishDate: String? = null,
     val authors: List<String> = emptyList(),
     val authorsKeys: List<String> = emptyList(),
-    val lang: String,
+    val lang: String?,
     val subjects: List<String> = emptyList(),
     val description: String?,
 )

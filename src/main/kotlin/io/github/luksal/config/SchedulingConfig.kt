@@ -57,6 +57,22 @@ class SchedulingConfig(
             initialize()
         }
 
+    @Bean(name = ["pageCrawlerScheduledOnDemandJobScheduler"])
+    fun pageCrawlerScheduledOnDemanJobScheduler(): TaskScheduler =
+        ThreadPoolTaskScheduler().apply {
+            poolSize = 1
+            setThreadNamePrefix("pcsjodScheduler-")
+            initialize()
+        }
+
+    @Bean(name = ["pageCrawlerFailedOnDemandJobScheduler"])
+    fun pageCrawlerFailedOnDemanJobScheduler(): TaskScheduler =
+        ThreadPoolTaskScheduler().apply {
+            poolSize = 1
+            setThreadNamePrefix("pcfjodScheduler-")
+            initialize()
+        }
+
     private fun scheduler(name: String): TaskScheduler =
         ThreadPoolTaskScheduler().apply {
             poolSize = 1

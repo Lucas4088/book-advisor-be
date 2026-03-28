@@ -155,11 +155,13 @@ app:
     path:
       authors: /home/lukasz/Documents/openlibrary/ol_dump_authors_2026-02-28.txt
       works: /home/lukasz/Documents/openlibrary/ol_dump_works_2026-02-28.txt
+      editions: /home/lukasz/Documents/openlibrary/ol_dump_editions_2026-02-28.txt
   proxies:
     - name: flaresolverr
       url: http://localhost:8191/v1
       max-timeout: 1000000
       forwarding-proxies-urls:
+        #- proxy.proxying.io:8080:ZhVfzRgo:GtZxulbdOR_session-bY7ZgE_lifetime-60
         - http://172.17.0.1:8888
       headers:
         "Content-Type" : "application/json"
@@ -170,3 +172,4 @@ app:
       headers:
         "Content-Type": "application/json"
         "Accept": "application/json"
+        "Authorization": "Basic VTAwMDAzNjQ3Nzc6UFdfMTkxOTc5ZjU1NjJkNDI3YTRhMjRiYjBlMTIzODRmNzlj"

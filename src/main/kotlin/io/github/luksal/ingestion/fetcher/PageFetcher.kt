@@ -73,10 +73,6 @@ class PageFetcher(
         if (proxyForwardingEnabled) {
             forwardingProxyUrl = proxy.forwardingProxiesUrls[Random.nextInt(0, proxy.forwardingProxiesUrls.size)]
         }
-/*        if (session == null) {
-            session = createSession(proxy.url, proxy.maxTimeout.toInt(), forwardingProxyUrl)
-                ?: throw RuntimeException("Failed to create session for proxy ${proxy.url}")
-        }*/
 
         log.info("Forwarding proxy ${forwardingProxyUrl?.take(15)}")
         return fetchLocalProxy(proxy.url, url, proxy.maxTimeout.toInt(), session, forwardingProxyUrl)

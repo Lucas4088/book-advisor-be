@@ -7,7 +7,7 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
-      - ./mongo-keyfile:/tmp/keyfile:ro
+      - ./docker/mongo/keyfile:/tmp/keyfile:ro
       - ./docker/mongo/replica-set-script.sh:/mongo-entrypoint.sh:ro
     environment:
       MONGO_INITDB_DATABASE: book-advisor-db

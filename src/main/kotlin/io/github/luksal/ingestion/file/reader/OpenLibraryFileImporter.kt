@@ -1,5 +1,7 @@
 package io.github.luksal.ingestion.file.reader
 
+import com.github.pemistahl.lingua.api.Language
+import com.github.pemistahl.lingua.api.LanguageDetector
 import io.github.luksal.book.db.document.author.AuthorDocument
 import io.github.luksal.book.db.document.bookbasicinfo.BookBasicInfoDocument
 import io.github.luksal.book.db.document.bookbasicinfo.BookBasicInfoDocument.Companion.generatePublicId
@@ -21,21 +23,29 @@ import java.io.RandomAccessFile
 class OpenLibraryFileImporter(
     @Value($$"${app.file-read.path.authors}") private val authorsFilePath: String,
     @Value($$"${app.file-read.path.works}") private val worksFilePath: String,
+    @Value($$"${app.file-read.path.editions}") private val editionsFilePath: String,
     private val authorService: AuthorService,
     private val bookService: BookService,
     private val eventService: EventService,
-    private val redisTemplate: RedisTemplate<Any, Any>
+    private val redisTemplate: RedisTemplate<Any, Any>,
+    private val languageDetector: LanguageDetector
 ) {
 
     companion object {
         const val AUTHORS_IMPORT_EVENT_NAME = "authors-import"
         const val BOOK_BASIC_INFO_EVENT_IMPORT_NAME = "book-basic-info-import"
+        const val BOOK_BASIC_INFO_EDITION_EVENT_IMPORT_NAME = "book-basic-info-edition-import"
+
         val log = logger()
     }
 
     fun readAndSaveAuthors() {
         val authors = mutableListOf<AuthorDocument>()
-        readFileWithOffsetAndProgress(authorsFilePath, AUTHORS_IMPORT_EVENT_NAME, loadProgressState(AUTHORS_IMPORT_EVENT_NAME).filePointer) { line: String ->
+        readFileWithOffsetAndProgress(
+            authorsFilePath,
+            AUTHORS_IMPORT_EVENT_NAME,
+            loadProgressState(AUTHORS_IMPORT_EVENT_NAME).filePointer
+        ) { line: String ->
             val parts = line.split('\t', limit = 5)
             JsonMapper().readTree(parts[4]).let { jsonNode ->
                 val name = jsonNode.get("name")?.asString()
@@ -59,7 +69,11 @@ class OpenLibraryFileImporter(
 
     fun readAndSaveBookBasicInfo() {
         val bookBasicInfo = mutableListOf<BookBasicInfoDocument>()
-        readFileWithOffsetAndProgress(worksFilePath, BOOK_BASIC_INFO_EVENT_IMPORT_NAME, loadProgressState(BOOK_BASIC_INFO_EVENT_IMPORT_NAME).filePointer) { line: String ->
+        readFileWithOffsetAndProgress(
+            worksFilePath,
+            BOOK_BASIC_INFO_EVENT_IMPORT_NAME,
+            loadProgressState(BOOK_BASIC_INFO_EVENT_IMPORT_NAME).filePointer
+        ) { line: String ->
             val parts = line.split('\t', limit = 5)
             JsonMapper().readTree(parts[4]).let { jsonNode ->
                 jsonNode?.let {
@@ -75,7 +89,29 @@ class OpenLibraryFileImporter(
         }
     }
 
-    fun loadProgressState(eventName: String) : FileImportState {
+    fun readAndSaveBookBasicInfoForEdition() {
+        val bookBasicInfo = mutableListOf<BookBasicInfoDocument>()
+        readFileWithOffsetAndProgress(
+            editionsFilePath,
+            BOOK_BASIC_INFO_EDITION_EVENT_IMPORT_NAME,
+            loadProgressState(BOOK_BASIC_INFO_EDITION_EVENT_IMPORT_NAME).filePointer
+        ) { line: String ->
+            val parts = line.split('\t', limit = 5)
+            JsonMapper().readTree(parts[4]).let { jsonNode ->
+                jsonNode?.let {
+                    createBookBasicInfoDocumentEdition(jsonNode)?.let {
+                        bookBasicInfo.add(it)
+                    }
+                    if (bookBasicInfo.size >= 5000) {
+                        bookService.saveBookBasicEdition(bookBasicInfo)
+                        bookBasicInfo.clear()
+                    }
+                }
+            }
+        }
+    }
+
+    fun loadProgressState(eventName: String): FileImportState {
         val value = redisTemplate.opsForValue()[eventName]
         return ObjectMapper().convertValue(value, FileImportState::class.java) ?: FileImportState()
     }
@@ -126,6 +162,7 @@ class OpenLibraryFileImporter(
         jsonNode: JsonNode,
     ): BookBasicInfoDocument? {
         val title = jsonNode.get("title")?.asString()
+        val extractedLanguage = jsonNode.get("original_languages")?.get(0)?.get("key")?.asString()
         val subjects = jsonNode.get("subjects")?.mapNotNull { it.asString() }
         val authorsKeys = jsonNode.get("authors")?.mapNotNull { it.get("author")?.get("key")?.asString() }
         val key = jsonNode.get("key")?.asString()
@@ -135,20 +172,67 @@ class OpenLibraryFileImporter(
         val authors = authorsKeys?.let {
             authorService.getAuthors(it)
         }?.map { it.name } ?: emptyList()
+
         return title?.let {
             BookBasicInfoDocument(
-                openLibraryKey = key ?: "",
+                openLibraryKey = key ?: throw IllegalStateException("Key is null"),
                 bookPublicId = generatePublicId(title, authors),
-                title = title,
+                title = it,
+                isEdition = false,
                 openLibraryEditionKey = key,
                 subjects = subjects ?: emptyList(),
                 authors = authors,
                 authorsKeys = authorsKeys ?: emptyList(),
                 firstPublishDate = firstPublishDate,
                 description = desc,
-                lang = "eng"
+                lang = resolveLanguage(extractedLanguage, languageDetector.detectLanguageOf(it))
             )
         }
     }
+
+    private fun createBookBasicInfoDocumentEdition(
+        jsonNode: JsonNode,
+    ): BookBasicInfoDocument? {
+        val title = jsonNode.get("title")?.asString()
+        val workKey = jsonNode.get("works")?.get(0)?.get("key")?.asString()
+            ?: jsonNode.get("key")?.asString()
+        val editionKey = jsonNode.get("key")?.asString()
+        val extractedLanguage = jsonNode.get("languages")?.get(0)?.get("key")?.asString()
+
+        return title
+            ?.let { languageDetector.detectLanguageOf(it) }
+            ?.let {
+                BookBasicInfoDocument(
+                    bookPublicId = generatePublicId(title, emptyList()),
+                    openLibraryKey = workKey ?: throw IllegalStateException("Work key is null"),
+                    title = title,
+                    isEdition = true,
+                    openLibraryEditionKey = editionKey,
+                    subjects = emptyList(),
+                    authors = emptyList(),
+                    authorsKeys = emptyList(),
+                    description = "",
+                    lang = resolveLanguage(extractedLanguage, it)
+                )
+            }
+    }
+
+    private fun resolveLanguage(extractedLang: String?, detectedLang: Language?): String? {
+        detectedLang?.let {
+            if (BookService.EDITION_IMPORT_LANGUAGES.contains(it)) {
+                return it.name
+            }
+        }
+        return resolveExtractedLanguage(extractedLang)
+    }
+
+    private fun resolveExtractedLanguage(extractedLang: String?) =
+        extractedLang?.let {
+            when(it) {
+                "/languages/pol" -> Language.POLISH.name
+                "/languages/eng" -> Language.ENGLISH.name
+                else -> null
+            }
+        }
 }
 

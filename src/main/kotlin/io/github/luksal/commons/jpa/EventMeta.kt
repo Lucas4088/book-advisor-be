@@ -23,7 +23,7 @@ class EventMeta(
     @Column
     var updatedAt: Instant? = null,
 ) {
-    //TODO should be mainly handled by events itself, introduce base event interface or abstract class to enforce this contract
+
     fun markAsPending() {
         status = EventStatus.PENDING
         updatedAt = Instant.now()

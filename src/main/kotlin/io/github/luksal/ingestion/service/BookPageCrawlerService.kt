@@ -139,7 +139,7 @@ class BookPageCrawlerService(
             )
             log.info("Extracted rating for book \"${book.title}\" from source ${crawlerSpec.name}: ${it.score}")
         } ?: run {
-            log.warn("Failed to extract rating score for book \"${book.title}\" from source ${crawlerSpec.name}")
+            log.warn("No rating score for book \"${book.title}\" from source ${crawlerSpec.name}")
             null
         }
     }

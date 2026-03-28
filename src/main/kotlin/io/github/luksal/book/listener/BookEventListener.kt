@@ -6,9 +6,12 @@ import io.github.luksal.book.db.jpa.model.event.PopulateBookDetailsEventEntity
 import io.github.luksal.book.db.jpa.model.event.SyncBookEventEntity
 import io.github.luksal.book.model.BookBasicInfoDocumentSavedEvent
 import io.github.luksal.book.model.BookDocumentSavedEvent
+import io.github.luksal.book.model.BookEditionEntitySavedEvent
+import io.github.luksal.book.model.BookEntitySavedEvent
 import io.github.luksal.ingestion.crawler.jpa.ScheduledBookCrawlerEventRepository
 import io.github.luksal.ingestion.crawler.jpa.entity.ScheduledBookCrawlerEventEntity
 import io.github.luksal.ingestion.crawler.service.PageCrawlerCrudService
+import jakarta.transaction.Transactional
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
 
@@ -21,8 +24,18 @@ class BookEventListener(
 ) {
 
     @EventListener
-    fun handle(event: BookDocumentSavedEvent) {
+    fun handle(event: BookDocumentSavedEvent) =
         syncBookEventJpaRepository.save(SyncBookEventEntity(bookId = event.bookId))
+
+
+    @EventListener
+    fun handle(event: BookBasicInfoDocumentSavedEvent) {
+        populateBookDetailsEventJpaRepository.save(PopulateBookDetailsEventEntity(bookId = event.bookId))
+    }
+
+    @EventListener
+    @Transactional
+    fun handle(event: BookEntitySavedEvent) {
         crawlerCrudService.findAll()
             .forEach {
                 crawlerEventJpa.save(ScheduledBookCrawlerEventEntity(bookId = event.bookId, crawlerId = it.id!!))
@@ -30,7 +43,12 @@ class BookEventListener(
     }
 
     @EventListener
-    fun handle(event: BookBasicInfoDocumentSavedEvent) =
-        populateBookDetailsEventJpaRepository.save(PopulateBookDetailsEventEntity(bookId = event.bookId))
+    @Transactional
+    fun handle(event: BookEditionEntitySavedEvent) {
+        crawlerCrudService.findAll()
+            .forEach {
+                crawlerEventJpa.save(ScheduledBookCrawlerEventEntity(bookId = event.bookId, crawlerId = it.id!!))
+            }
+    }
 
 }

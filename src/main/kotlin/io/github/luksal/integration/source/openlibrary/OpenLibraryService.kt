@@ -36,7 +36,12 @@ class OpenLibraryService(private val openLibraryClient: OpenLibraryClient) {
     @Retry(name = "get-openLibraryRetry")
     fun getBookDetails(id: String): OpenLibraryBookDetails {
         val id = "$id.json"
-        return openLibraryClient.getBook(id)
+        try {
+            return openLibraryClient.getBook(id)
+        } catch (ex: Exception) {
+            log.warn("Open library service is unavailable. Falling back to null response. Error: ${ex.message}")
+            throw ex
+        }
     }
 
     private fun findBookDetailsFallback(title: String, authorName: String, ex: Throwable): OpenLibrarySearchResponse? {

@@ -1,3 +1,4 @@
+/*
 package io.github.luksal.config
 
 import io.github.luksal.util.ext.logger
@@ -14,9 +15,11 @@ import org.springframework.kafka.config.KafkaStreamsConfiguration
 import org.springframework.kafka.config.KafkaStreamsCustomizer
 
 
-@Configuration
+*/
+/*@Configuration
 @EnableKafka
-@EnableKafkaStreams
+@EnableKafkaStreams*//*
+
 class KafkaStreamsConfig {
 
     companion object {
@@ -52,3 +55,4 @@ class KafkaStreamsConfig {
 
 
 
+*/

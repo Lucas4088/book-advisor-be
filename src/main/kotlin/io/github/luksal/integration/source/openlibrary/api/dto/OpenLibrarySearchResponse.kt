@@ -36,6 +36,7 @@ data class OpenLibraryDoc(
         title = title,
         bookPublicId = BookBasicInfoDocument.generatePublicId(title, authorName ?: emptyList()),
         openLibraryKey = key,
+        isEdition = false,
         openLibraryEditionKey = editionKey(),
         authors = authorName ?: emptyList(),
         firstPublishYear = firstPublishYear,

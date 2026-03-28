@@ -6,7 +6,7 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
-      - ./mongo-keyfile:/tmp/keyfile:ro
+      - ./docker/mongo/keyfile:/tmp/keyfile:ro
       - ./mongo-entrypoint.sh:/mongo-entrypoint.sh:ro
     entrypoint: ["bash", "/mongo-entrypoint.sh"]
     environment:

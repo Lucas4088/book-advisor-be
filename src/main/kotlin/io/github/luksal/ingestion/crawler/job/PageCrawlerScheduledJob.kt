@@ -27,21 +27,29 @@ class PageCrawlerScheduledJob(
 
     @Scheduled(fixedDelay = 60_000, scheduler = "pageCrawlerScheduledJobScheduler")
     fun processPending() =
-        process(EventStatus.PENDING)
+        process(EventStatus.PENDING, JobName.CRAWL_BOOKS, bookRatingIngestionService::crawlForRating)
 
-    @Scheduled(fixedDelay = 90_000, scheduler = "pageCrawlerFailedJobScheduler")
+    @Scheduled(fixedDelay = 120_000, scheduler = "pageCrawlerFailedJobScheduler")
     fun processFailed() =
-        process(EventStatus.ERROR)
+        process(EventStatus.ERROR, JobName.CRAWL_BOOKS, bookRatingIngestionService::crawlForRating)
+
+    @Scheduled(fixedDelay = 500, scheduler = "pageCrawlerScheduledOnDemandJobScheduler")
+    fun processOnDemandPending() =
+        process(EventStatus.PENDING, JobName.CRAWL_BOOKS_ON_DEMAND, bookRatingIngestionService::crawlForRatingOnDemand)
+
+    @Scheduled(fixedDelay = 4_000, scheduler = "pageCrawlerFailedOnDemandJobScheduler")
+    fun processOnDemandFailed() =
+        process(EventStatus.ERROR, JobName.CRAWL_BOOKS_ON_DEMAND, bookRatingIngestionService::crawlForRatingOnDemand)
 
 
-    private fun process(eventStatus: EventStatus) =
-        jobRunPolicyService.isEnabled(JobName.CRAWL_BOOKS).takeIf { it }?.let {
+    private fun process(eventStatus: EventStatus, jobName: JobName, action: (EventStatus, Long) -> Unit) =
+        jobRunPolicyService.isEnabled(jobName).takeIf { it }?.let {
             pageCrawlerCrudService.findAll().filter { it.enabled }.forEach {
                 crawlersTaskSchedulerMap[it.id]?.apply {
                     val delaySeconds = Random.nextLong(1, 120) // 1–120
                     val nextExecutionTime = Instant.ofEpochMilli(System.currentTimeMillis() + delaySeconds * 1000)
                     schedule(
-                        { bookRatingIngestionService.crawlForRating(eventStatus, it.id!!) },
+                        { action.invoke(eventStatus, it.id!!) },
                         nextExecutionTime
                     )
                 }.also { ts ->

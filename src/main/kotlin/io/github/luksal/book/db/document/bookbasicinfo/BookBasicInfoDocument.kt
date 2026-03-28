@@ -11,15 +11,18 @@ import org.springframework.data.mongodb.core.mapping.Field
 @Document(collection = "book-basic-info")
 class BookBasicInfoDocument(
     @Id
-    val id: String ? = null,
+    val id: String? = null,
     @Indexed(unique = true)
     @Field(name = "pbi")
     val bookPublicId: String,
     @TextIndexed
     @Field(name = "tt")
     val title: String,
+    @Indexed
     @Field(name = "olk")
-    val openLibraryKey: String? = null,
+    val openLibraryKey: String,
+    @Field("ie")
+    val isEdition: Boolean,
     @Field(name = "olek")
     val openLibraryEditionKey: String? = null,
     @Field("et")
@@ -33,7 +36,7 @@ class BookBasicInfoDocument(
     @Field(name = "ak")
     val authorsKeys: List<String> = emptyList(),
     @Field(name = "la")
-    val lang: String,
+    val lang: String?,
     @Field(name = "su")
     val subjects: List<String> = emptyList(),
     @Field(name = "des")
@@ -43,4 +46,5 @@ class BookBasicInfoDocument(
         fun generatePublicId(title: String, authors: List<String>): String =
             ("$title|${authors.sorted().joinToString(",")}").normalizeWhiteChars().murmurHash3()
     }
+
 }

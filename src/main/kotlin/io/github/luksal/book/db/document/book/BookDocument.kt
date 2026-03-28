@@ -28,7 +28,17 @@ data class BookDocument(
     @Field("pc")
     @JsonProperty("pc")
     val pageCount: Int?,
+    @Field("la")
+    @JsonProperty("la")
+    val language: String?,
 
+    @Field("olk")
+    @JsonProperty("olk")
+    val openLibraryKey: String,
+
+    @Field("ie")
+    @JsonProperty("ie")
+    val isEdition: Boolean,
     @Field("ed")
     @JsonProperty("ed")
     val edition: EditionEmbedded? = null,

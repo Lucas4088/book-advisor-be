@@ -1,4 +1,5 @@
 server:
+  address: 0.0.0.0
   port: 8090
   tomcat:
     threads:
@@ -42,63 +43,18 @@ spring:
 app:
   scraping:
     proxy:
-      #url: http://proxy.localhost/html
       url: http://localhost:8191/v1
       max-timeout: 100000
   kafka:
+    consumer:
+      books-source-dlq-topic: book-advisor-db.books-dlq
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
     connect:
       books-source-topic: book-advisor-db.books
+      ratings-source-topic: book-advisor-db.ratings
       books-sink-topic: postgres.books
-  crawlers:
-    - name: goodreads
-      enabled: true
-      base-url: https://www.goodreads.com
-      rate-limit:
-        requests-per-minute: 30
-        burst: 5
-      path:
-        book-result-selector: "a.bookTitle[itemprop=url]"
-        book-rating-count-selector: "div.RatingStatistics__meta"
-        book-rating-score-selector: "div.RatingStatistics__rating"
-        book-title-selector: "[data-testid=bookTitle]"
-        book-authors-selector: "a.ContributorLink [data-testid=name]"
-        search: /search?q={formattedSearchParams}
-        includeAuthorsForSearch: true
-        title-space-separator: +
-      proxy-enabled: false
-    - name: amazon-books
-      enabled: true
-      base-url: https://www.amazon.com
-      rate-limit:
-        requests-per-minute: 30
-        burst: 5
-      path:
-        book-result-selector: "div[data-cy=title-recipe] a.a-link-normal"
-        book-rating-count-selector: "#acrCustomerReviewText"
-        book-rating-score-selector: "#averageCustomerReviews span.a-size-small.a-color-base"
-        book-title-selector: "#productTitle"
-        book-authors-selector: ".author a.a-link-normal"
-        search: /s?k={formattedSearchParams}&i=stripbooks
-        includeAuthorsForSearch: true
-        title-space-separator: +
-      proxy-enabled: true
-    - name: the-story-graph
-      enabled: true
-      base-url: https://app.thestorygraph.com
-      rate-limit:
-        requests-per-minute: 30
-        burst: 5
-      path:
-        book-result-selector: "h3 > a[href^=/books/]"
-        book-rating-count-selector: "turbo-frame#community_reviews span.text-sm a.inverse-link"
-        book-rating-score-selector: "span.average-star-rating"
-        book-title-selector: ".book-title-author-and-series h3"
-        book-authors-selector: ".book-title-author-and-series p a"
-        search: /browse?search_term={formattedSearchParams}
-        includeAuthorsForSearch: false
-        title-space-separator: +
-      proxy-enabled: true
-      proxy-name: flaresolverr
 
 
 

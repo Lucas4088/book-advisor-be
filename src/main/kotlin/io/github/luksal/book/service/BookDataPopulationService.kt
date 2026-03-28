@@ -47,7 +47,6 @@ class BookDataPopulationService(
     private val redisTemplate: RedisTemplate<Any, Any>,
     private val emailService: EmailService,
     private val eventService: EventService,
-    private val languageDetector: LanguageDetector
 ) {
 
     private val log = logger()
@@ -134,9 +133,14 @@ class BookDataPopulationService(
             }
             return
         }
+
         bookBasicInfo.content.mapNotNull { bookInfo ->
             val populateEvent = populateEventMap[bookInfo.bookPublicId]
             runCatching {
+                if(bookInfo.lang == null || !BookService.EDITION_IMPORT_LANGUAGES.map { it.name }.contains(bookInfo.lang)) {
+                    populateEvent?.meta?.markAsSkipped()
+                    return@mapNotNull null
+                }
                 findBookDetails(bookInfo)
             }.onSuccess { book ->
                 if (book != null) {
@@ -176,7 +180,7 @@ class BookDataPopulationService(
 
         return response
             ?.also { publishEvent("GOOGLE_BOOKS", it) }
-            ?.toModel(bookInfo, languageDetector.detectLanguageOf(bookInfo.title).name)
+            ?.toModel(bookInfo, bookInfo.lang)
             ?: fetchFallbackBookDetails(bookInfo)
     }
 
@@ -201,7 +205,7 @@ class BookDataPopulationService(
             openLibraryBookDetails,
             openLibraryDoc,
             archiveBookDetailsResponse,
-            languageDetector.detectLanguageOf(openLibraryBookDetails!!.title).name
+            unprocessed.lang
         )
     }
 

@@ -35,5 +35,6 @@ data class BookDetailsDto(
     val pageCount: Int?,
     val thumbnailUrl: String?,
     val smallThumbnailUrl: String?,
+    val rating: RatingResult?
 )
 

@@ -84,7 +84,9 @@ class BookDocumentRepositoryImpl(
                 setIfNotEmpty(getJsonPropertyName(BookDocument::class, "edition"), document.edition)
                 pushIfNotEmpty(getJsonPropertyName(BookDocument::class, "authors"), document.authors)
                 pushIfNotEmpty(getJsonPropertyName(BookDocument::class, "genres"), document.genres)
-                pushIfNotEmpty(getJsonPropertyName(BookDocument::class, "ratings"), document.ratings?.map { it.toRatingEmbedded() })
+                pushIfNotEmpty(
+                    getJsonPropertyName(BookDocument::class, "ratings"),
+                    document.ratings?.map { it.toRatingEmbedded() })
             }
         }
         return mongoTemplate.updateFirst(
@@ -94,7 +96,11 @@ class BookDocumentRepositoryImpl(
         ).upsertedId?.toString()
     }
 
-    fun getJsonPropertyName(clazz: KClass<*>, fieldName: String): String? {
+    override fun findByKey(key: String): BookDocument? =
+        Query().addCriteria(Criteria.where("openLibraryKey").`is`(key))
+            .let { mongoTemplate.findOne(it, BookDocument::class.java) }
+
+    private fun getJsonPropertyName(clazz: KClass<*>, fieldName: String): String? {
         return clazz.primaryConstructor
             ?.parameters
             ?.find { it.name == fieldName }

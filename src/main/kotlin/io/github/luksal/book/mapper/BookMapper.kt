@@ -24,12 +24,12 @@ object BookMapper {
     fun mapGenres(genres: List<GenreUpdate>?): List<GenreEmbedded> =
         genres?.map { GenreEmbedded(name = it.name) } ?: emptyList()
 
-    fun BookDocument.mapToEntity(lang: String): BookEntity =
+    fun BookDocument.mapToEntity(): BookEntity =
         BookEntity(
             bookId = id,
             title = title,
             description = description,
-            language = lang,
+            language = language,
             publishingYear = publishingYear,
             pageCount = pageCount,
             thumbnailUrl = thumbnailUrl,
@@ -42,18 +42,25 @@ object BookMapper {
             }?.toMutableSet() ?: mutableSetOf()
         )
 
-    fun BookDocument.mapToEntity(lang: String, authors: Set<AuthorEntity>, genres: Set<GenreEntity>): BookEntity =
+    fun BookDocument.mapToEntity(authors: Set<AuthorEntity>, genres: Set<GenreEntity>): BookEntity =
         BookEntity(
             bookId = id,
             title = title,
             description = description,
-            language = lang,
+            language = language,
             publishingYear = publishingYear,
             pageCount = pageCount,
             thumbnailUrl = thumbnailUrl,
             smallThumbnailUrl = smallThumbnailUrl,
             authors = authors.toMutableSet(),
             genres = genres.toMutableSet(),
+        )
+
+    fun BookDocument.mapToEditionEntity(bookEntity: BookEntity): BookEditionEntity =
+        BookEditionEntity(
+            title = title,
+            language = language!!,
+            book = bookEntity,
         )
 
     fun RatingEmbedded.mapToEntity(book: BookEntity, sourceEntity: RatingSourceEntity): RatingEntity =
@@ -137,80 +144,38 @@ object BookMapper {
         url = this.url
     )
 
-    @OptIn(ExperimentalUuidApi::class)
-    fun mapToEntity(book: Book): BookEntity {
-        return BookEntity(
-            bookId = book.id,
-            title = book.title,
-            description = book.description,
-            language = book.language,
-            publishingYear = book.publishingYear.value,
-            pageCount = book.pageCount,
-            thumbnailUrl = book.thumbnailUrl,
-            smallThumbnailUrl = book.smallThumbnailUrl,
-            authors = book.authors.takeIf { it.isNotEmpty() }?.map {
-                AuthorEntity(
-                    publicId = it.publicId,
-                    name = it.name,
-                    otherNames = it.otherNames
-                )
-            }?.toMutableSet() ?: mutableSetOf(),
-            genres = book.genres.takeIf { it.isNotEmpty() }?.map {
-                GenreEntity(
-                    id = null,
-                    name = it.name
-                )
-            }?.toMutableSet() ?: mutableSetOf()
-        )
-    }
 
-    fun toModel(bookEntity: BookEntity, sourceEntity: RatingSourceEntity, rating: Rating): RatingEntity =
-        RatingEntity(
-            id = null,
-            score = rating.score,
-            count = rating.count,
-            book = bookEntity,
-            source = sourceEntity,
-            titleConfidenceIndicator = rating.titleConfidenceIndicator,
-            authorsConfidenceIndicator = rating.authorsConfidenceIndicator,
-        )
-
-    fun toModel(ratingSource: RatingSource) =
-        RatingSourceEntity(
-            id = null,
-            name = ratingSource.name,
-            url = ratingSource.url
-        )
-
-
-    fun toModel(book: Book): BookDocument =
+    fun Book.toDocument(): BookDocument =
         BookDocument(
-            id = book.id,
-            title = book.title,
-            description = book.description,
-            publishingYear = book.publishingYear.value,
-            pageCount = book.pageCount,
-            edition = book.edition?.let {
+            id = id,
+            title = title,
+            language = lang,
+            description =  description,
+            publishingYear = publishingYear.value,
+            pageCount = pageCount,
+            openLibraryKey = key,
+            isEdition = isEdition,
+            edition = edition?.let {
                 EditionEmbedded(
                     title = it.title,
                     lang = it.lang
                 )
             },
-            thumbnailUrl = book.thumbnailUrl,
-            smallThumbnailUrl = book.smallThumbnailUrl,
-            authors = book.authors.map {
+            thumbnailUrl = thumbnailUrl,
+            smallThumbnailUrl = smallThumbnailUrl,
+            authors = authors.map {
                 AuthorEmbedded(
                     name = it.name,
                     key = it.key
                 )
             },
-            genres = book.genres.map {
+            genres = genres.map {
                 GenreEmbedded(
                     name = it.name
                 )
             },
             createdOn = LocalDateTime.now(),
-            ratings = book.ratings.map {
+            ratings = ratings.map {
                 RatingEmbedded(
                     score = it.score,
                     count = it.count,
@@ -227,11 +192,12 @@ object BookMapper {
     fun BookEntity.mapToSearchResponse() = BookSearchResponse(
         id = bookId!!,
         title = title,
+        language = language,
         authors = authors.map { it.name },
         smallThumbnailUrl = smallThumbnailUrl
     )
 
-    fun BookEntity.toDetailsDto() = BookDetailsDto(
+    fun BookEntity.toDetailsDto(rating: RatingResult? = null) = BookDetailsDto(
         bookId = bookId,
         title = title,
         publishedYear = publishingYear,
@@ -239,7 +205,8 @@ object BookMapper {
         publishingYear = publishingYear,
         pageCount = pageCount,
         thumbnailUrl = thumbnailUrl,
-        smallThumbnailUrl = smallThumbnailUrl
+        smallThumbnailUrl = smallThumbnailUrl,
+        rating =  rating
     )
 
     fun BookEntity.toDto() = BookDto(
@@ -253,32 +220,24 @@ object BookMapper {
         id = id,
         title = title,
         authors = authors?.map { it.name }.orEmpty(),
-        smallThumbnailUrl = smallThumbnailUrl
-    )
-
-    fun toModel(details: OpenLibraryBookDetails): BookUpdate = BookUpdate(
-        id = details.key,
-        description = details.description?.value,
-        genres = details.subjects?.map { subject ->
-            GenreUpdate(
-                id = null,
-                name = subject
-            )
-        }
+        language = language,
+        smallThumbnailUrl = smallThumbnailUrl,
     )
 
     fun BookBasicInfoDocument.toModel(
         openDetails: OpenLibraryBookDetails?, openDoc: OpenLibraryDoc?, archiveDetails: ArchiveSearchDoc?,
-        lang: String
+        lang: String?
     ) = Book(
         id = bookPublicId,
         title = title,
         description = openDetails?.description?.value ?: archiveDetails?.description?.firstOrNull(),
-        language = lang,
         publishingYear = (openDoc?.firstPublishYear?.let { Year.of(it) }
             ?: archiveDetails?.year?.let { Year.of(it) })!!,
         pageCount = openDetails?.numberOfPages,
-        edition = BookEdition(editionTitle, lang),
+        key = openLibraryKey,
+        lang = lang,
+        isEdition = isEdition,
+        edition = BookEdition(editionTitle, lang ?: ""),
         //TODO fix for publicID together witth key
         authors = openDoc?.authorName?.map { name -> Author(name = name, key = "", publicId = "", otherNames = null) }
             ?.takeIf { it.isNotEmpty() }
@@ -288,16 +247,18 @@ object BookMapper {
         ratings = emptyList()
     )
 
-    fun BookItem.toModel(basicInfo: BookBasicInfoDocument, lang: String) = Book(
+    fun BookItem.toModel(basicInfo: BookBasicInfoDocument, lang: String?) = Book(
         id = basicInfo.bookPublicId,
         title = volumeInfo.title,
         description = volumeInfo.description ?: "",
-        language = lang,
         publishingYear = volumeInfo.publishedDate.take(4).toInt().let { Year.of(it) },
         pageCount = volumeInfo.pageCount ?: 0,
-        edition = BookEdition(basicInfo.editionTitle, basicInfo.lang),
+        key = basicInfo.openLibraryKey,
+        isEdition = basicInfo.isEdition,
+        edition = BookEdition(basicInfo.editionTitle, ""),
         thumbnailUrl = volumeInfo.imageLinks?.thumbnail ?: "",
         smallThumbnailUrl = volumeInfo.imageLinks?.smallThumbnail ?: "",
+        lang = lang,
         authors = volumeInfo.authors?.map { name ->
             Author(
                 name = name,

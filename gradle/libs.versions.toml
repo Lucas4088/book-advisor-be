@@ -45,7 +45,7 @@ kotlin-jackson = { module = "tools.jackson.module:jackson-module-kotlin" }
 
 # Kafka
 spring-kafka = { module = "org.springframework.kafka:spring-kafka" }
-kafka-streams = { module = "org.apache.kafka:kafka-streams" }
+#kafka-streams = { module = "org.apache.kafka:kafka-streams" }
 
 # Spring Cloud
 spring-cloud-openfeign = { module = "org.springframework.cloud:spring-cloud-starter-openfeign" }

@@ -33,4 +33,12 @@ class FileImportController(
         }
         return ResponseEntity.ok().build()
     }
+
+    @PostMapping("/book-basic-info-edition", produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
+    fun importBookBasicInfoEditions(): ResponseEntity<Unit> {
+        CoroutineScope(Dispatchers.IO).launch {
+            fileService.importBookBasicInfoEditions()
+        }
+        return ResponseEntity.ok().build()
+    }
 }

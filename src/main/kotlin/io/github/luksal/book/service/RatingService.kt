@@ -6,13 +6,18 @@ import io.github.luksal.book.db.jpa.RatingJpaRepository
 import io.github.luksal.book.db.jpa.RatingSourceJpaRepository
 import io.github.luksal.book.db.jpa.model.RatingSourceEntity
 import io.github.luksal.book.mapper.BookMapper.mapToEntity
+import io.github.luksal.ingestion.crawler.service.PageCrawlerCrudService
+import io.github.luksal.ingestion.service.BookRatingIngestionService
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
+import org.springframework.web.bind.annotation.PathVariable
 
 @Service
 class RatingService(
     private val ratingJpaRepository: RatingJpaRepository,
     private val ratingSourceJpaRepository: RatingSourceJpaRepository,
+    private val pageCrawlerCrudService: PageCrawlerCrudService,
+    private val ratingIngestionService: BookRatingIngestionService,
     private val bookJpaRepository: BookJpaRepository
 ) {
 
@@ -37,4 +42,9 @@ class RatingService(
 
         ratingJpaRepository.save(ratingEntity)
     }
+
+    fun scheduleOnDemandRatingRetrieval(@PathVariable bookId: String) =
+        pageCrawlerCrudService.findAll().forEach {
+            ratingIngestionService.scheduleOnDemandCrawling(bookId, it.id!!)
+        }
 }

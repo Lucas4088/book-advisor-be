@@ -6,10 +6,8 @@ import io.github.luksal.commons.jpa.RetryMeta
 import jakarta.persistence.*
 import java.time.Instant
 
-@Entity
-@Table(name = "scheduled_book_crawler_events")
-class ScheduledBookCrawlerEventEntity(
-
+@MappedSuperclass
+abstract class BaseScheduledBookCrawlerEventEntity(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long? = null,
@@ -25,7 +23,7 @@ class ScheduledBookCrawlerEventEntity(
         AttributeOverride(name = "status", column = Column(name = "status", nullable = false)),
         AttributeOverride(name = "errorMessage", column = Column(name = "error_message")),
         AttributeOverride(name = "createdAt", column = Column(name = "created_at", nullable = false)),
-        AttributeOverride(name = "updatedAt", column = Column(name = "updated_at", nullable = false)),
+        AttributeOverride(name = "updatedAt", column = Column(name = "updated_at")),
     )
     val meta: EventMeta = EventMeta(),
 
@@ -54,3 +52,17 @@ class ScheduledBookCrawlerEventEntity(
             meta.markAsFailed(errorMessage)
         }
 }
+
+@Entity
+@Table(name = "scheduled_book_crawler_events")
+class ScheduledBookCrawlerEventEntity(
+    bookId: String,
+    crawlerId: Long,
+) : BaseScheduledBookCrawlerEventEntity(bookId = bookId, crawlerId = crawlerId)
+
+@Entity
+@Table(name = "scheduled_book_crawler_on_demand_events")
+class ScheduledBookCrawlerOnDemandEventEntity(
+    bookId: String,
+    crawlerId: Long,
+) : BaseScheduledBookCrawlerEventEntity(bookId = bookId, crawlerId = crawlerId)

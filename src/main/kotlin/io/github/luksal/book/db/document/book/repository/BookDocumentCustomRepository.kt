@@ -10,4 +10,6 @@ interface BookDocumentCustomRepository {
     fun search(title: String?, startYear: Int?, endYear: Int?, genres: List<String>?, pageable: Pageable): Page<BookDocument>
 
     fun update(book: BookUpdate): String?
+
+    fun findByKey(key: String): BookDocument?
 }
