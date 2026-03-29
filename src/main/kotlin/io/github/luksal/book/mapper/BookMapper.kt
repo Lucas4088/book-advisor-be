@@ -12,18 +12,8 @@ import io.github.luksal.integration.source.openlibrary.api.dto.OpenLibraryBookDe
 import io.github.luksal.integration.source.openlibrary.api.dto.OpenLibraryDoc
 import java.time.LocalDateTime
 import java.time.Year
-import kotlin.uuid.ExperimentalUuidApi
 
 object BookMapper {
-    fun mapEdition(edition: BookEdition?): EditionEmbedded? =
-        edition?.let { EditionEmbedded(title = it.title, lang = it.lang) }
-
-    fun mapAuthors(authors: List<AuthorUpdate>?): List<AuthorEmbedded> =
-        authors?.map { AuthorEmbedded(name = it.name, key = it.key) } ?: emptyList()
-
-    fun mapGenres(genres: List<GenreUpdate>?): List<GenreEmbedded> =
-        genres?.map { GenreEmbedded(name = it.name) } ?: emptyList()
-
     fun BookDocument.mapToEntity(): BookEntity =
         BookEntity(
             bookId = id,
@@ -89,6 +79,19 @@ object BookMapper {
             authorsConfidenceIndicator = authorsConfidenceIndicator,
         )
 
+    fun RatingUpdate.toDocument(bookId: String) =
+        RatingDocument(
+            bookId = bookId,
+            score = score,
+            count = count,
+            source = RatingSourceEmbedded(
+                name = source.name,
+                url = source.url
+            ),
+            titleConfidenceIndicator = titleConfidenceIndicator,
+            authorsConfidenceIndicator = authorsConfidenceIndicator,
+        )
+
     fun mapAuthorToEntity(author: AuthorEmbedded) =
         AuthorEntity(
             publicId = AuthorDocument.generatePublicId(author.key, author.name),
@@ -99,35 +102,6 @@ object BookMapper {
     fun mapGenreToEntity(genre: GenreEmbedded) =
         GenreEntity(
             name = genre.name,
-        )
-
-    fun toModel(bookEntity: BookEntity, sourceEntity: RatingSourceEntity, rating: RatingDocument): RatingEntity =
-        RatingEntity(
-            id = null,
-            score = rating.score,
-            count = rating.count,
-            book = bookEntity,
-            source = sourceEntity,
-            titleConfidenceIndicator = rating.titleConfidenceIndicator,
-            authorsConfidenceIndicator = rating.authorsConfidenceIndicator,
-        )
-
-    fun toModel(bookEntity: BookEntity, sourceEntity: RatingSourceEntity, rating: RatingEmbedded): RatingEntity =
-        RatingEntity(
-            id = null,
-            score = rating.score,
-            count = rating.count,
-            book = bookEntity,
-            source = sourceEntity,
-            titleConfidenceIndicator = rating.titleConfidenceIndicator,
-            authorsConfidenceIndicator = rating.authorsConfidenceIndicator,
-        )
-
-    fun toModel(ratingSource: RatingSourceEmbedded) =
-        RatingSourceEntity(
-            id = null,
-            name = ratingSource.name,
-            url = ratingSource.url
         )
 
     fun RatingUpdate.toRatingEmbedded() = RatingEmbedded(
@@ -188,14 +162,6 @@ object BookMapper {
                 )
             }.toSet()
         )
-
-    fun BookEntity.mapToSearchResponse() = BookSearchResponse(
-        id = bookId!!,
-        title = title,
-        language = language,
-        authors = authors.map { it.name },
-        smallThumbnailUrl = smallThumbnailUrl
-    )
 
     fun BookEntity.toDetailsDto(rating: RatingResult? = null) = BookDetailsDto(
         bookId = bookId,

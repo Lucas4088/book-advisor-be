@@ -1,8 +1,7 @@
 package io.github.luksal.ingestion.service
 
-import io.github.luksal.book.db.document.book.RatingDocument
-import io.github.luksal.book.db.document.book.RatingSourceEmbedded
 import io.github.luksal.book.db.document.rating.repository.RatingDocumentRepository
+import io.github.luksal.book.mapper.BookMapper.toDocument
 import io.github.luksal.book.model.BookUpdate
 import io.github.luksal.book.service.BookService
 import io.github.luksal.commons.dto.EventStatus
@@ -10,14 +9,20 @@ import io.github.luksal.ingestion.crawler.job.PageCrawlerScheduledJob.Companion.
 import io.github.luksal.ingestion.crawler.jpa.ScheduledBookCrawlerEventRepository
 import io.github.luksal.ingestion.crawler.jpa.ScheduledBookCrawlerOnDemandEventRepository
 import io.github.luksal.ingestion.crawler.jpa.entity.BaseScheduledBookCrawlerEventEntity
-import io.github.luksal.ingestion.crawler.jpa.entity.ScheduledBookCrawlerEventEntity
 import io.github.luksal.ingestion.crawler.jpa.entity.ScheduledBookCrawlerOnDemandEventEntity
+import io.github.luksal.ingestion.crawler.service.PageCrawlerCrudService
+import org.springframework.scheduling.TaskScheduler
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
+import java.time.Instant
+import kotlin.random.Random
 
 @Service
 class BookRatingIngestionService(
+    private val pageCrawlerCrudService: PageCrawlerCrudService,
+    private val crawlersTaskSchedulerMap: Map<Long, TaskScheduler>,
     private val crawlerEventRepository: ScheduledBookCrawlerEventRepository,
     private val crawlerOnDemandEventRepository: ScheduledBookCrawlerOnDemandEventRepository,
     private val scheduledBookCrawlerOnDemandEventRepository: ScheduledBookCrawlerOnDemandEventRepository,
@@ -26,23 +31,46 @@ class BookRatingIngestionService(
     private val bookPageCrawlerService: BookPageCrawlerService
 ) {
 
+    @Transactional
+    fun processScheduledCrawlerTasks(eventStatus: EventStatus) =
+        processScheduledCrawlerTasks(eventStatus, crawlerEventRepository::claimByStatus, crawlerEventRepository::save)
 
     @Transactional
-    fun crawlForRating(eventStatus: EventStatus, crawlerId: Long) =
-        crawlerEventRepository.claimByStatus(eventStatus, 5, crawlerId)?.forEach { it ->
-            crawlAndSaveRating(it.crawlerId, it).also {
-                crawlerEventRepository.save(it as ScheduledBookCrawlerEventEntity)
+    fun processScheduledCrawlerOnDemandTasks(eventStatus: EventStatus) =
+        processScheduledCrawlerTasks(
+            eventStatus,
+            crawlerOnDemandEventRepository::claimByStatus,
+            crawlerOnDemandEventRepository::save
+        )
+
+    private fun <T : BaseScheduledBookCrawlerEventEntity> processScheduledCrawlerTasks(
+        eventStatus: EventStatus,
+        fetchTasks: (EventStatus, Int, Long) -> List<T>?,
+        saveTask: (T) -> T
+    ) {
+        pageCrawlerCrudService.findAll().filter { crawler -> crawler.enabled }.forEach { crawler ->
+            fetchTasks.invoke(eventStatus, 5, crawler.id!!)?.forEach { event ->
+                crawlersTaskSchedulerMap[event.crawlerId]?.apply {
+                    val delaySeconds = Random.nextLong(1, 120) // 1–120
+                    val nextExecutionTime = Instant.ofEpochMilli(System.currentTimeMillis() + delaySeconds * 1000)
+                    schedule(
+                        {
+                            crawlAndSaveRating(event.crawlerId, event)
+                            saveTask.invoke(event)
+                        },
+                        nextExecutionTime
+                    )
+                }.also { ts ->
+                    val scheduler = ts as ThreadPoolTaskScheduler
+                    val executor = scheduler.scheduledExecutor as java.util.concurrent.ScheduledThreadPoolExecutor
+                    log.info(
+                        "Thread Scheduler info: ${scheduler.threadNamePrefix} : queueSize ${executor.queue.size} " +
+                                ": completed ${executor.completedTaskCount}: active ${scheduler.activeCount}"
+                    )
+                }
             }
         }
-
-    @Transactional
-    fun crawlForRatingOnDemand(eventStatus: EventStatus, crawlerId: Long) =
-        crawlerOnDemandEventRepository.claimByStatus(eventStatus, 5, crawlerId)?.forEach {  it ->
-            crawlAndSaveRating(it.crawlerId, it)
-                .also {
-                    crawlerOnDemandEventRepository.save(it as ScheduledBookCrawlerOnDemandEventEntity)
-                }
-        }
+    }
 
     @Transactional
     fun scheduleOnDemandCrawling(bookId: String, crawlerId: Long) {
@@ -51,9 +79,7 @@ class BookRatingIngestionService(
         )?.also { return }
         ScheduledBookCrawlerOnDemandEventEntity(
             bookId, crawlerId
-        ).let {
-            crawlerOnDemandEventRepository.save(it)
-        }
+        )
     }
 
     private fun crawlAndSaveRating(
@@ -72,23 +98,11 @@ class BookRatingIngestionService(
 
     private fun crawlForRating(crawlerId: Long, bookId: String, event: BaseScheduledBookCrawlerEventEntity) =
         bookService.getBookByIdForCrawling(bookId).let { book ->
-                bookPageCrawlerService.crawlBookPage(crawlerId, book)?.takeIf { it.score != BigDecimal.ZERO }?.let {
-                    ratingDocumentRepository.save(
-                        RatingDocument(
-                            bookId = book.id,
-                            score = it.score,
-                            count = it.count,
-                            source = RatingSourceEmbedded(
-                                name = it.source.name,
-                                url = it.source.url
-                            ),
-                            titleConfidenceIndicator = it.titleConfidenceIndicator,
-                            authorsConfidenceIndicator = it.authorsConfidenceIndicator,
-                        )
-                    )
-                    bookService.updateBook(BookUpdate(id = book.id, ratings = listOf(it)))
-                }
-                event.meta.markAsSuccess()
+            bookPageCrawlerService.crawlBookPage(crawlerId, book)?.takeIf { it.score != BigDecimal.ZERO }?.let {
+                ratingDocumentRepository.save(it.toDocument(book.id))
+                bookService.updateBook(BookUpdate(id = book.id, ratings = listOf(it)))
+            }
+            event.meta.markAsSuccess()
         }
 
 }

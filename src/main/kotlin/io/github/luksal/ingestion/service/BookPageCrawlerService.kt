@@ -3,7 +3,6 @@ package io.github.luksal.ingestion.service
 import io.github.luksal.book.api.dto.BookSearchResponse
 import io.github.luksal.book.model.RatingSourceUpdate
 import io.github.luksal.book.model.RatingUpdate
-import io.github.luksal.config.ProxiesProperties
 import io.github.luksal.exception.SearchPageNotLoadedException
 import io.github.luksal.ingestion.crawler.dto.CrawlerConfig
 import io.github.luksal.ingestion.crawler.jpa.PageCrawlerJpaRepository
@@ -15,6 +14,7 @@ import io.github.luksal.util.ext.intersectPercentage
 import io.github.luksal.util.ext.logger
 import io.github.luksal.util.ext.normalizeStandardChars
 import io.github.luksal.util.ext.percentageLevenshteinDistance
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
@@ -25,10 +25,11 @@ class BookPageCrawlerService(
     private val pageCrawlerRepository: PageCrawlerJpaRepository,
     private val pageFetcher: PageFetcher,
     private val pageCrawler: PageCrawler,
-    private val proxiesProperties: ProxiesProperties,
-    private val redisTemplate: RedisTemplate<Any, Any>
+    private val redisTemplate: RedisTemplate<Any, Any>,
+    circuitBreakerRegistry: CircuitBreakerRegistry
 ) {
 
+    private val circuitBreaker = circuitBreakerRegistry.circuitBreaker("crawl-ExtractRatingCircuitBreaker")
     private val log = logger()
 
     companion object {
@@ -38,7 +39,15 @@ class BookPageCrawlerService(
     fun crawlBookPage(crawlerId: Long, book: BookSearchResponse): RatingUpdate? {
         return pageCrawlerRepository.findById(crawlerId).orElseThrow()
             .takeIf { it.enabled }
-            ?.let { crawler -> getRating(book, crawler) }
+            ?.let { crawler ->
+                runCatching {
+                    circuitBreaker.executeSupplier {
+                        getRating(book, crawler)
+                    }
+                }.getOrElse { ex ->
+                    getRatingFallback(book, crawler, ex)
+                }
+            }
     }
 
     private fun getRating(book: BookSearchResponse, crawler: PageCrawlerConfigEntity): RatingUpdate? {
@@ -53,15 +62,16 @@ class BookPageCrawlerService(
 
     private fun crawlAndExtractRating(
         book: BookSearchResponse,
-        crawlerSpec: CrawlerConfig
+        crawlerSpec: CrawlerConfig,
+        useRemoteProxy: Boolean = false
     ): RatingUpdate? {
         val searchUrl = composeSearchBookUrl(book, crawlerSpec)
         log.info("Composed search url: $searchUrl")
 
         return fetch(searchUrl, crawlerSpec)?.let { searchPageHtml ->
-            if(!pageCrawler.isSearchPageLoaded(searchPageHtml, crawlerSpec)) {
+            if (!pageCrawler.isSearchPageLoaded(searchPageHtml, crawlerSpec)) {
                 throw SearchPageNotLoadedException(
-                    "Unable to load search page for book ${book.title} from source ${crawlerSpec.name}"
+                    "Unable to load search page for book \"${book.title}\" from source ${crawlerSpec.name}"
                 )
             }
             if (crawlerSpec.path.isRatingAvailableOnSearch) {
@@ -69,7 +79,7 @@ class BookPageCrawlerService(
             }
             return pageCrawler.extractBookPageUrl(searchPageHtml, crawlerSpec)?.let {
                 log.info("Composed page url: $it")
-                fetch(it, crawlerSpec).takeIf { bookPage -> bookPage?.isNotEmpty() ?: false }
+                fetch(it, crawlerSpec, useRemoteProxy).takeIf { bookPage -> bookPage?.isNotEmpty() ?: false }
                     ?.let { bookPage ->
                         extractRating(bookPage, crawlerSpec, book)
                     }
@@ -77,15 +87,12 @@ class BookPageCrawlerService(
         }
     }
 
-    private fun fetch(url: String, crawlerSpec: CrawlerConfig): String? {
+    private fun fetch(url: String, crawlerSpec: CrawlerConfig, useRemoteProxy: Boolean = false): String? {
         return if (crawlerSpec.proxyEnabled) {
-            val proxy = proxiesProperties.proxies.firstOrNull { it.name == crawlerSpec.proxyName }
-                ?: throw IllegalStateException("Proxy ${crawlerSpec.proxyName} not found for crawler ${crawlerSpec.name}")
-            if (crawlerSpec.proxySessionEnabled) {
-                pageFetcher.fetchLocalProxyWitSession(url, crawlerSpec.forwardingProxyEnabled, proxy)
-            } else {
-                pageFetcher.fetchLocalProxy(url, proxy)
+            if (useRemoteProxy) {
+                return pageFetcher.fetchRemoteProxy(url)
             }
+            pageFetcher.fetchLocalProxy(url, crawlerSpec.forwardingProxyEnabled)
         } else {
             pageFetcher.fetchNoProxy(url)
         }
@@ -142,6 +149,15 @@ class BookPageCrawlerService(
             log.warn("No rating score for book \"${book.title}\" from source ${crawlerSpec.name}")
             null
         }
+    }
+
+    private fun getRatingFallback(
+        book: BookSearchResponse,
+        crawler: PageCrawlerConfigEntity,
+        ex: Throwable
+    ): RatingUpdate? {
+        log.info("Using crawler fallback for book \"${book.title}\" from source ${crawler.name}")
+        return crawlAndExtractRating(book, crawler.toConfig(), useRemoteProxy = true)
     }
 
     data class ConfidenceIndicatorCheck(

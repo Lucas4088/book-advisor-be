@@ -9,8 +9,8 @@ data class CrawlerConfig(
     val headers: Map<String, String> = emptyMap(),
     val path: Path,
     val proxyEnabled: Boolean,
-    val proxyName: String?,
-    val proxySessionEnabled: Boolean,
+    //val proxyName: String?,
+    //val proxySessionEnabled: Boolean,
     val forwardingProxyEnabled: Boolean
 ) {
     fun getRatingScoreSelector(): String =

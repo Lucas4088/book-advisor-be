@@ -1,25 +1,16 @@
 package io.github.luksal.ingestion.crawler.api
 
-import io.github.luksal.commons.dto.EventStatus
 import io.github.luksal.ingestion.crawler.dto.CrawlerConfig
 import io.github.luksal.ingestion.crawler.dto.CrawlerSearchDetails
 import io.github.luksal.ingestion.crawler.mapper.CrawlerConfigMapper.toSearchResponse
 import io.github.luksal.ingestion.crawler.service.PageCrawlerCrudService
-import io.github.luksal.ingestion.service.BookRatingIngestionService
 import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/api/crawler")
 class CrawlerController(
-    val bookRatingIngestionService: BookRatingIngestionService,
     val crawlerCrudService: PageCrawlerCrudService
 ) {
-
-    @PostMapping("/crawl/{crawlerId}")
-    fun crawl(@PathVariable("crawlerId") crawlerId: Long): String {
-        bookRatingIngestionService.crawlForRating(EventStatus.PENDING, crawlerId)
-        return "Crawling finished"
-    }
 
     @PostMapping
     //TODO validation + sanitize input

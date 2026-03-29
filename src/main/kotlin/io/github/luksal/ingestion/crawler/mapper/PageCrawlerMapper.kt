@@ -36,8 +36,8 @@ object CrawlerConfigMapper {
                 bookAuthorsSearchSelector = path.bookAuthorsSearchSelector,
             ),
             proxyEnabled = proxyEnabled,
-            proxyName = proxyName,
-            proxySessionEnabled = proxySessionEnabled,
+            //proxyName = proxyName,
+            //proxySessionEnabled = proxySessionEnabled,
             forwardingProxyEnabled = forwardingProxyEnabled
         )
 
@@ -69,8 +69,8 @@ object CrawlerConfigMapper {
                 bookAuthorsSearchSelector = path.bookAuthorsSearchSelector,
             ),
             proxyEnabled = proxyEnabled,
-            proxyName = proxyName,
-            proxySessionEnabled = proxySessionEnabled,
+            proxyName = null,
+            proxySessionEnabled = false,
             forwardingProxyEnabled = forwardingProxyEnabled,
         )
 
