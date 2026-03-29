@@ -59,6 +59,8 @@ class BookRatingIngestionService(
     ) {
         pageCrawlerCrudService.findAll().filter { crawler -> crawler.enabled }.forEach { crawler ->
             fetchTasks.invoke(eventStatus, 5, crawler.id!!)?.forEach { event ->
+                event.meta.markAsInProgress()
+                saveTask.invoke(event)
                 crawlersTaskSchedulerMap[event.crawlerId]?.apply {
                     val delaySeconds = Random.nextLong(1, 120) // 1–120
                     val nextExecutionTime = Instant.ofEpochMilli(System.currentTimeMillis() + delaySeconds * 1000)
@@ -101,7 +103,6 @@ class BookRatingIngestionService(
         key: Long,
         value: T
     ): T = runCatching {
-        value.meta.markAsInProgress()
         crawlForRating(key, value.bookId, value)
     }.onFailure {
         log.error("Error crawling book with id ${value.bookId} using crawler ${value.crawlerId}", it)
