@@ -46,9 +46,9 @@ app:
 
   file-read:
     path:
-      authors: /home/lukasz/Documents/openlibrary/ol_dump_authors_2026-02-28.txt
-      works: /home/lukasz/Documents/openlibrary/ol_dump_works_2026-02-28.txt
-      editions: /home/lukasz/Documents/openlibrary/ol_dump_editions_2026-02-28.txt
+      authors: /app/data/ol_dump_authors.txt
+      works: /app/data/ol_dump_works.txt
+      editions: /app/data/ol_dump_editions.txt
   proxies:
     - name: flaresolverr
       url: http://proxy:8191/v1
@@ -66,4 +66,3 @@ app:
       headers:
         "Content-Type": "application/json"
         "Accept": "application/json"
-        "Authorization": "Basic VTAwMDAzNjQ3Nzc6UFdfMTkxOTc5ZjU1NjJkNDI3YTRhMjRiYjBlMTIzODRmNzlj"
