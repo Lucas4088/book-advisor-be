@@ -165,10 +165,3 @@ app:
       headers:
         "Content-Type" : "application/json"
         "Accept" : "application/json"
-    - name: decodo
-      url: http://proxy.localhost/html
-      max-timeout: 100000
-      headers:
-        "Content-Type": "application/json"
-        "Accept": "application/json"
-        "Authorization": "Basic VTAwMDAzNjQ3Nzc6UFdfMTkxOTc5ZjU1NjJkNDI3YTRhMjRiYjBlMTIzODRmNzlj"
