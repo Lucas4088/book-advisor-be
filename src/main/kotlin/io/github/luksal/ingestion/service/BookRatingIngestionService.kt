@@ -40,6 +40,7 @@ class BookRatingIngestionService(
     fun processScheduledCrawlerTasks(eventStatus: EventStatus) =
         processScheduledCrawlerTasks(
             eventStatus,
+            120,
             crawlerEventRepository::claimByStatus,
             crawlerEventRepository::save
         )
@@ -48,12 +49,14 @@ class BookRatingIngestionService(
     fun processScheduledCrawlerOnDemandTasks(eventStatus: EventStatus) =
         processScheduledCrawlerTasks(
             eventStatus,
+            10,
             crawlerOnDemandEventRepository::claimByStatus,
             crawlerOnDemandEventRepository::save
         )
 
     private fun <T : BaseScheduledBookCrawlerEventEntity> processScheduledCrawlerTasks(
         eventStatus: EventStatus,
+        delay: Long,
         fetchTasks: (EventStatus, Int, Long) -> List<T>?,
         saveTask: (T) -> T
     ) {
