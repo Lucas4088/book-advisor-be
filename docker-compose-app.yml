@@ -7,3 +7,5 @@ services:
       - .env
     environment:
       SPRING_PROFILES_ACTIVE: docker
+    ports:
+      - "8090:8090"
