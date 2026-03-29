@@ -169,6 +169,7 @@ object BookMapper {
         publishedYear = publishingYear,
         description = description,
         publishingYear = publishingYear,
+        authors = authors.map { it.toDto() },
         pageCount = pageCount,
         thumbnailUrl = thumbnailUrl,
         smallThumbnailUrl = smallThumbnailUrl,
@@ -179,7 +180,7 @@ object BookMapper {
         id = bookId,
         title = title,
         smallThumbnailUrl = smallThumbnailUrl,
-        publishedYear = publishingYear
+        publishedYear = publishingYear,
     )
 
     fun BookDocument.mapToSearchResponse() = BookSearchResponse(
@@ -264,17 +265,17 @@ object BookMapper {
         )
 
 
-    fun toModel(authorEntity: AuthorEntity): AuthorDto =
+    fun AuthorEntity.toDto(): AuthorDto =
         AuthorDto(
-            id = authorEntity.id,
-            publicId = authorEntity.publicId,
-            name = authorEntity.name
+            id = id,
+            publicId = publicId,
+            name = name
         )
 
-    fun mapDetails(authorEntity: AuthorEntity): AuthorDetailsDto =
+    fun AuthorEntity.mapDetails(): AuthorDetailsDto =
         AuthorDetailsDto(
-            id = authorEntity.id,
-            publicId = authorEntity.publicId,
-            name = authorEntity.name
+            id = id,
+            publicId = publicId,
+            name = name
         )
 }

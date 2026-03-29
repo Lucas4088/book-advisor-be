@@ -29,6 +29,7 @@ data class BookDto(
 data class BookDetailsDto(
     val bookId: String? = null,
     val title: String,
+    val authors: List<AuthorDto>,
     val publishedYear: Int,
     val description: String?,
     val publishingYear: Int,
