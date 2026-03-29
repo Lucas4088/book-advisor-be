@@ -12,7 +12,7 @@ interface BookJpaRepository : JpaRepository<BookEntity, String> {
 
     @Query(
         """
-        select b from BookEntity b 
+        select distinct b from BookEntity b 
         left join b.genres g
         where (b.title is null or b.title like %:title%) 
            and (:startYear is null or b.publishingYear >= :startYear)
@@ -22,8 +22,8 @@ interface BookJpaRepository : JpaRepository<BookEntity, String> {
     )
     fun searchAll(
         title: String?,
-        startYear: Int,
-        endYear: Int,
+        startYear: Int?,
+        endYear: Int?,
         genres: List<String>?,
         pageable: Pageable
     ): Page<BookEntity>

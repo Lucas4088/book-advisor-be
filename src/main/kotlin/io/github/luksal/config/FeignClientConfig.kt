@@ -34,7 +34,7 @@ data class GoogleBooksAuthProperties(
 ) {
 
     fun resolvedApiKeys(): List<String> =
-        dotenv()[apiKeys]?.replace("\n", "")?.split(",").orEmpty()
+        dotenv{ignoreIfMissing=true}[apiKeys]?.replace("\n", "")?.split(",").orEmpty()
 }
 
 class FeignGoogleBooksConfig {

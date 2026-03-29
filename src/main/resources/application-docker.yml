@@ -1,31 +1,32 @@
 spring:
   mongodb:
-    uri: mongodb://mongo_user:mongo_password@localhost:27017/admin
+    uri: mongodb://mongo_user:mongo_password@mongodb:27017/admin
     database: book-advisor-db
   datasource:
-    url: jdbc:postgresql://localhost:5435/book-advisor-db
+    url: jdbc:postgresql://postgres:5432/book-advisor-db
+    driver-class-name: org.postgresql.Driver
     username: postgres
     password: password
   mail:
-    host: localhost
+    host: mailpit
     port: 1025
     username: admin
     password: admin
     properties:
       mail:
         smtp:
-        auth: false
-        starttls:
-          enable: false
+          auth: false
+          starttls:
+            enable: false
         debug: true
   data:
     redis:
-      host: localhost
+      host: redis
       port: 6379
       password: redis
 
   kafka:
-    bootstrap-servers: localhost:29092
+    bootstrap-servers: kafka:9092
 
 
 logging:
@@ -50,10 +51,19 @@ app:
       editions: /home/lukasz/Documents/openlibrary/ol_dump_editions_2026-02-28.txt
   proxies:
     - name: flaresolverr
-      url: http://localhost:8191/v1
+      url: http://proxy:8191/v1
       max-timeout: 1000000
       forwarding-proxies-urls:
-        - http://172.17.0.1:8888
+        - http://tinyproxy:8888
       headers:
         "Content-Type" : "application/json"
         "Accept" : "application/json"
+    - name: decodo
+      url: https://scraper-api.decodo.com/v2/scrape
+      max-timeout: 100000
+      forwarding-proxies-urls:
+        - http://tinyproxy:8888
+      headers:
+        "Content-Type": "application/json"
+        "Accept": "application/json"
+        "Authorization": "Basic VTAwMDAzNjQ3Nzc6UFdfMTkxOTc5ZjU1NjJkNDI3YTRhMjRiYjBlMTIzODRmNzlj"
