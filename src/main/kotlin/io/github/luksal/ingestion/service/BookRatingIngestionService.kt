@@ -14,7 +14,9 @@ import io.github.luksal.ingestion.crawler.service.PageCrawlerCrudService
 import org.springframework.scheduling.TaskScheduler
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler
 import org.springframework.stereotype.Service
+import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.transaction.support.TransactionTemplate
 import java.math.BigDecimal
 import java.time.Instant
 import kotlin.random.Random
@@ -28,8 +30,11 @@ class BookRatingIngestionService(
     private val scheduledBookCrawlerOnDemandEventRepository: ScheduledBookCrawlerOnDemandEventRepository,
     private val bookService: BookService,
     private val ratingDocumentRepository: RatingDocumentRepository,
-    private val bookPageCrawlerService: BookPageCrawlerService
+    private val bookPageCrawlerService: BookPageCrawlerService,
+    transactionManager: PlatformTransactionManager
 ) {
+
+    private val transactionTemplate = TransactionTemplate(transactionManager)
 
     @Transactional
     fun processScheduledCrawlerTasks(eventStatus: EventStatus) =
@@ -59,10 +64,12 @@ class BookRatingIngestionService(
                     val nextExecutionTime = Instant.ofEpochMilli(System.currentTimeMillis() + delaySeconds * 1000)
                     schedule(
                         {
-                            crawlAndSaveRating(event.crawlerId, event)
-                                .also {
-                                    saveTask.invoke(it)
-                                }
+                            transactionTemplate.execute {
+                                crawlAndSaveRating(event.crawlerId, event)
+                                    .also {
+                                        saveTask.invoke(it)
+                                    }
+                            }
                         },
                         nextExecutionTime
                     )
