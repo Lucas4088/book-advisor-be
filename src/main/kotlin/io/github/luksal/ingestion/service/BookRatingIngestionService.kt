@@ -90,7 +90,7 @@ class BookRatingIngestionService(
         }
     }
 
-    private fun <T :BaseScheduledBookCrawlerEventEntity >crawlAndSaveRating(
+    private fun <T : BaseScheduledBookCrawlerEventEntity> crawlAndSaveRating(
         key: Long,
         value: T
     ): T = runCatching {
