@@ -33,7 +33,11 @@ class BookRatingIngestionService(
 
     @Transactional
     fun processScheduledCrawlerTasks(eventStatus: EventStatus) =
-        processScheduledCrawlerTasks(eventStatus, crawlerEventRepository::claimByStatus, crawlerEventRepository::save)
+        processScheduledCrawlerTasks(
+            eventStatus,
+            crawlerEventRepository::claimByStatus,
+            crawlerEventRepository::save
+        )
 
     @Transactional
     fun processScheduledCrawlerOnDemandTasks(eventStatus: EventStatus) =
@@ -79,7 +83,9 @@ class BookRatingIngestionService(
         )?.also { return }
         ScheduledBookCrawlerOnDemandEventEntity(
             bookId, crawlerId
-        )
+        ).also {
+            crawlerOnDemandEventRepository.save(it)
+        }
     }
 
     private fun crawlAndSaveRating(
