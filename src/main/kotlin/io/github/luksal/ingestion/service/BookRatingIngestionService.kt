@@ -60,7 +60,9 @@ class BookRatingIngestionService(
                     schedule(
                         {
                             crawlAndSaveRating(event.crawlerId, event)
-                            saveTask.invoke(event)
+                                .also {
+                                    saveTask.invoke(it)
+                                }
                         },
                         nextExecutionTime
                     )
@@ -88,10 +90,10 @@ class BookRatingIngestionService(
         }
     }
 
-    private fun crawlAndSaveRating(
+    private fun <T :BaseScheduledBookCrawlerEventEntity >crawlAndSaveRating(
         key: Long,
-        value: BaseScheduledBookCrawlerEventEntity
-    ): BaseScheduledBookCrawlerEventEntity = runCatching {
+        value: T
+    ): T = runCatching {
         value.meta.markAsInProgress()
         crawlForRating(key, value.bookId, value)
     }.onFailure {
