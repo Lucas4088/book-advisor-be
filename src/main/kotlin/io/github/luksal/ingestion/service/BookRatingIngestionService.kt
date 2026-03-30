@@ -49,7 +49,7 @@ class BookRatingIngestionService(
     fun processScheduledCrawlerOnDemandTasks(eventStatus: EventStatus) =
         processScheduledCrawlerTasks(
             eventStatus,
-            10,
+            3,
             crawlerOnDemandEventRepository::claimByStatus,
             crawlerOnDemandEventRepository::save
         )
@@ -65,7 +65,7 @@ class BookRatingIngestionService(
                 event.meta.markAsInProgress()
                 saveTask.invoke(event)
                 crawlersTaskSchedulerMap[event.crawlerId]?.apply {
-                    val delaySeconds = Random.nextLong(1, 120) // 1–120
+                    val delaySeconds = Random.nextLong(1, delay) // 1–120
                     val nextExecutionTime = Instant.ofEpochMilli(System.currentTimeMillis() + delaySeconds * 1000)
                     schedule(
                         {
