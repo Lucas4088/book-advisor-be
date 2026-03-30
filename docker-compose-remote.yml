@@ -8,7 +8,7 @@ services:
       - mongo_data:/data/db
       - ./docker/mongo/keyfile:/tmp/keyfile:ro
       - ./docker/mongo/replica-set-script.sh:/mongo-entrypoint.sh:ro
-    entrypoint: ["bash", "/mongo-entrypoint.sh"]
+    entrypoint: [ "bash", "/mongo-entrypoint.sh" ]
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
@@ -88,19 +88,12 @@ services:
       - "29092:29092"
 
     environment:
-      KAFKA_LISTENERS: >
-        PLAINTEXT://0.0.0.0:9092,
-        PLAINTEXT_HOST://0.0.0.0:29092,
-        CONTROLLER://0.0.0.0:9093
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: "broker,controller"
 
-      KAFKA_ADVERTISED_LISTENERS: >
-        PLAINTEXT://kafka:9092,
-        PLAINTEXT_HOST://localhost:29092
-
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: >
-        PLAINTEXT:PLAINTEXT,
-        PLAINTEXT_HOST:PLAINTEXT,
-        CONTROLLER:PLAINTEXT
+      KAFKA_LISTENERS: "PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092,CONTROLLER://0.0.0.0:9093"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT,CONTROLLER:PLAINTEXT"
 
       KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
       KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093"
