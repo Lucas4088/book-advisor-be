@@ -16,7 +16,8 @@ data class Book(
     val thumbnailUrl: String? = null,
     val smallThumbnailUrl: String? = null,
     val authors: List<Author>,
-    val genres: List<Genre>,
+    var genres: List<Genre>,
+    var tags: List<Tag>,
     val ratings: List<Rating>,
 )
 
@@ -34,6 +35,11 @@ data class Author(
 )
 
 data class Genre(
+    val id: Long? = null,
+    val name: String
+)
+
+data class Tag(
     val id: Long? = null,
     val name: String
 )

@@ -41,7 +41,15 @@ class BookEntity(
         joinColumns = [JoinColumn(name = "book_id")],
         inverseJoinColumns = [JoinColumn(name = "genre_id")]
     )
-    val genres: MutableSet<GenreEntity> = mutableSetOf(),
+    var genres: MutableSet<GenreEntity> = mutableSetOf(),
+
+    @ManyToMany
+    @JoinTable(
+        name = "book_tags",
+        joinColumns = [JoinColumn(name = "book_id")],
+        inverseJoinColumns = [JoinColumn(name = "tag_id")]
+    )
+    var tags: MutableSet<TagEntity> = mutableSetOf(),
 
     @OneToMany(mappedBy = "book", cascade = [CascadeType.ALL], orphanRemoval = true)
     var ratings: MutableList<RatingEntity> = mutableListOf(),

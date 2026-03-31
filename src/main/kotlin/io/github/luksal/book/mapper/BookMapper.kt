@@ -32,7 +32,7 @@ object BookMapper {
             }?.toMutableSet() ?: mutableSetOf()
         )
 
-    fun BookDocument.mapToEntity(authors: Set<AuthorEntity>, genres: Set<GenreEntity>): BookEntity =
+    fun BookDocument.mapToEntity(authors: Set<AuthorEntity>, genres: Set<GenreEntity>, tag: Set<TagEntity>): BookEntity =
         BookEntity(
             bookId = id,
             title = title,
@@ -44,6 +44,7 @@ object BookMapper {
             smallThumbnailUrl = smallThumbnailUrl,
             authors = authors.toMutableSet(),
             genres = genres.toMutableSet(),
+            tags = tag.toMutableSet()
         )
 
     fun BookDocument.mapToEditionEntity(bookEntity: BookEntity): BookEditionEntity =
@@ -163,11 +164,13 @@ object BookMapper {
             }.toSet()
         )
 
+
     fun BookEntity.toDetailsDto(rating: RatingResult? = null) = BookDetailsDto(
         bookId = bookId,
         title = title,
         publishedYear = publishingYear,
         description = description,
+        genres = genres.map { it.name },
         publishingYear = publishingYear,
         authors = authors.map { it.toDto() },
         pageCount = pageCount,
@@ -181,6 +184,41 @@ object BookMapper {
         title = title,
         smallThumbnailUrl = smallThumbnailUrl,
         publishedYear = publishingYear,
+    )
+
+    fun BookEntity.toModel() = Book(
+        id = bookId!!,
+        title = title,
+        description = description,
+        publishingYear = Year.of(publishingYear),
+        pageCount = pageCount,
+        key = "",
+        isEdition = false,
+        edition = null,
+        thumbnailUrl = thumbnailUrl,
+        smallThumbnailUrl = smallThumbnailUrl,
+        authors = authors.map { it.toModel() },
+        genres = genres.map { it.toModel() },
+        tags = tags.map { it.toModel() },
+        ratings = emptyList(),
+        lang = language,
+    )
+
+    fun AuthorEntity.toModel() = Author(
+        id = id,
+        key = "",
+        publicId = publicId,
+        name = name,
+    )
+
+    fun GenreEntity.toModel() = Genre(
+        id = id,
+        name = name,
+    )
+
+    fun TagEntity.toModel() = Tag(
+        id = id,
+        name = name,
     )
 
     fun BookDocument.mapToSearchResponse() = BookSearchResponse(
@@ -211,6 +249,7 @@ object BookMapper {
             ?: archiveDetails?.creator?.map { name -> Author(name = name, key = "", publicId = "", otherNames = null) }
             ?: emptyList(),
         genres = openDetails?.subjects?.map { Genre(name = it) } ?: emptyList(),
+        tags = openDetails?.subjects?.map { Tag(name = it) } ?: emptyList(),
         ratings = emptyList()
     )
 
@@ -235,6 +274,8 @@ object BookMapper {
             )
         } ?: emptyList(),
         genres = volumeInfo.categories?.map { name -> Genre(name = name) }
+            ?: emptyList(),
+        tags = volumeInfo.categories?.map { name -> Tag(name = name) }
             ?: emptyList(),
         ratings = emptyList()
     )

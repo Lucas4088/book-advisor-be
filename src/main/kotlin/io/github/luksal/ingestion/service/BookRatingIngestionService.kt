@@ -119,7 +119,7 @@ class BookRatingIngestionService(
         bookService.getBookByIdForCrawling(bookId).let { book ->
             bookPageCrawlerService.crawlBookPage(crawlerId, book)?.takeIf { it.score != BigDecimal.ZERO }?.let {
                 ratingDocumentRepository.save(it.toDocument(book.id))
-                bookService.updateBook(BookUpdate(id = book.id, ratings = listOf(it)))
+                bookService.updateBookDocument(BookUpdate(id = book.id, ratings = listOf(it)))
             }
             event.meta.markAsSuccess()
         }

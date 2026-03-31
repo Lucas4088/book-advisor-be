@@ -32,6 +32,7 @@ data class BookDetailsDto(
     val authors: List<AuthorDto>,
     val publishedYear: Int,
     val description: String?,
+    val genres: List<String>,
     val publishingYear: Int,
     val pageCount: Int?,
     val thumbnailUrl: String?,

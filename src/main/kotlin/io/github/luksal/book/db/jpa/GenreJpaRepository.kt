@@ -7,4 +7,6 @@ import org.springframework.stereotype.Repository
 @Repository
 interface GenreJpaRepository : JpaRepository<GenreEntity, Long> {
     fun findByName(name: String): GenreEntity?
+
+    fun findAllByNameIn(names: List<String>): List<GenreEntity>
 }

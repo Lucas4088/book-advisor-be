@@ -11,6 +11,7 @@ import io.github.luksal.book.db.jpa.*
 import io.github.luksal.book.db.jpa.model.BookEntity
 import io.github.luksal.book.db.jpa.model.GenreEntity
 import io.github.luksal.book.db.jpa.model.RatingEntity
+import io.github.luksal.book.db.jpa.model.TagEntity
 import io.github.luksal.book.mapper.BookMapper
 import io.github.luksal.book.mapper.BookMapper.mapToEditionEntity
 import io.github.luksal.book.mapper.BookMapper.mapToEntity
@@ -18,6 +19,7 @@ import io.github.luksal.book.mapper.BookMapper.mapToSearchResponse
 import io.github.luksal.book.mapper.BookMapper.toDetailsDto
 import io.github.luksal.book.mapper.BookMapper.toDocument
 import io.github.luksal.book.mapper.BookMapper.toDto
+import io.github.luksal.book.mapper.BookMapper.toModel
 import io.github.luksal.book.model.*
 import io.github.luksal.book.service.dto.BookSearchCriteriaDto
 import io.github.luksal.event.service.EventService
@@ -38,6 +40,7 @@ class BookService(
     private val bookEditionJpaRepository: BookEditionJpaRepository,
     private val authorJpaRepository: AuthorJpaRepository,
     private val genreJpaRepository: GenreJpaRepository,
+    private val tagJpaRepository: TagJpaRepository,
     private val ratingSourceJpaRepository: RatingSourceJpaRepository,
     private val bookBasicInfoDocumentRepository: BookBasicInfoDocumentRepository,
     private val bookDocumentRepository: BookDocumentRepository,
@@ -83,6 +86,12 @@ class BookService(
         ).map { it.toDto() }
     }
 
+    @Transactional
+    fun getBooks(page: Pageable): Page<Book> =
+        bookJpaRepository.findAll(page)
+            .map { it.toModel() }
+
+
     fun getBookDocumentByIds(ids: List<String>): List<BookDocument> =
         bookDocumentRepository.findAllById(ids)
 
@@ -114,8 +123,30 @@ class BookService(
         }
     }
 
-    fun updateBook(bookUpdate: BookUpdate): String? =
+    fun updateBookDocument(bookUpdate: BookUpdate): String? =
         bookDocumentRepository.update(bookUpdate)
+
+    @Transactional
+    fun updateBook(book: Book) {
+        val entity = bookJpaRepository.findById(book.id)
+            .orElseThrow()
+
+        book.tags.map {
+            tagJpaRepository.findByName(it.name)
+                ?: tagJpaRepository.save(TagEntity(name = it.name))
+        }.toMutableSet().let {
+            entity.tags = it
+        }
+
+        book.genres.map {
+            genreJpaRepository.findByName(it.name)
+                ?: genreJpaRepository.save(GenreEntity(name = it.name))
+        }.toMutableSet().let {
+            entity.genres = it
+        }
+
+        bookJpaRepository.save(entity)
+    }
 
     @Transactional
     fun saveBookBasicInfo(bookBasicInfo: List<BookBasicInfoDocument>): Int =
@@ -191,8 +222,13 @@ class BookService(
                     ?: genreJpaRepository.saveAndFlush(GenreEntity(name = genre.name))
             }?.toMutableSet() ?: mutableSetOf()
 
+            val tags = document.genres?.map {
+                tagJpaRepository.findByName(it.name)
+                    ?: tagJpaRepository.saveAndFlush(TagEntity(name = it.name))
+            }?.toMutableSet() ?: mutableSetOf()
+
             val bookEntity: BookEntity = bookJpaRepository.findById(document.id)
-                .orElse(document.mapToEntity(authors, genres))!!
+                .orElse(document.mapToEntity(authors, genres, tags))!!
 
             bookEntity.ratings.clear()
             bookEntity.ratings.addAll(document.ratings?.map {
