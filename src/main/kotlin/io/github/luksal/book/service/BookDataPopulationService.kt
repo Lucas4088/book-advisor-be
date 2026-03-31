@@ -137,7 +137,9 @@ class BookDataPopulationService(
         bookBasicInfo.content.mapNotNull { bookInfo ->
             val populateEvent = populateEventMap[bookInfo.bookPublicId]
             runCatching {
-                if(bookInfo.lang == null || !BookService.EDITION_IMPORT_LANGUAGES.map { it.name }.contains(bookInfo.lang)) {
+                if(bookInfo.lang == null
+                    || bookInfo.isEdition && bookInfo.lang != "POLISH"
+                    || !BookService.EDITION_IMPORT_LANGUAGES.map { it.name }.contains(bookInfo.lang)) {
                     populateEvent?.meta?.markAsSkipped()
                     return@mapNotNull null
                 }

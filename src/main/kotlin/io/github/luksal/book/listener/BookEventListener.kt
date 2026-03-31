@@ -4,6 +4,7 @@ import io.github.luksal.book.db.jpa.event.PopulateBookDetailsEventJpaRepository
 import io.github.luksal.book.db.jpa.event.SyncBookEventJpaRepository
 import io.github.luksal.book.db.jpa.model.event.PopulateBookDetailsEventEntity
 import io.github.luksal.book.db.jpa.model.event.SyncBookEventEntity
+import io.github.luksal.book.model.BookBasicInfoDocumentEditionSavedEvent
 import io.github.luksal.book.model.BookBasicInfoDocumentSavedEvent
 import io.github.luksal.book.model.BookDocumentSavedEvent
 import io.github.luksal.book.model.BookEditionEntitySavedEvent
@@ -30,6 +31,11 @@ class BookEventListener(
 
     @EventListener
     fun handle(event: BookBasicInfoDocumentSavedEvent) {
+        populateBookDetailsEventJpaRepository.save(PopulateBookDetailsEventEntity(bookId = event.bookId))
+    }
+
+    @EventListener
+    fun handle(event: BookBasicInfoDocumentEditionSavedEvent) {
         populateBookDetailsEventJpaRepository.save(PopulateBookDetailsEventEntity(bookId = event.bookId))
     }
 
