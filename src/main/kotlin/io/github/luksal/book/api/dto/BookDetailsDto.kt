@@ -1,12 +1,11 @@
 package io.github.luksal.book.api.dto
 
-import io.github.luksal.book.model.Genre
 import io.github.luksal.book.service.dto.BookSearchCriteriaDto
 
 data class BookSearchCriteria(
     val bookId: String? = null,
     val title: String?,
-    val genres: List<Genre>? = null,
+    val genres: List<String>? = null,
     val startYear: Int? = null,
     val endYear: Int? = null,
 ) {

@@ -1,6 +1,7 @@
 package io.github.luksal.book.service
 
 import com.github.pemistahl.lingua.api.Language
+import io.github.luksal.book.aiclassification.service.GenreClassifierService
 import io.github.luksal.book.api.dto.*
 import io.github.luksal.book.db.document.author.AuthorDocument
 import io.github.luksal.book.db.document.book.BookDocument
@@ -26,6 +27,7 @@ import io.github.luksal.event.service.EventService
 import io.github.luksal.integration.source.openlibrary.api.dto.OpenLibraryDoc
 import io.github.luksal.util.ext.logger
 import jakarta.transaction.Transactional
+import kotlinx.coroutines.runBlocking
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -44,6 +46,7 @@ class BookService(
     private val ratingSourceJpaRepository: RatingSourceJpaRepository,
     private val bookBasicInfoDocumentRepository: BookBasicInfoDocumentRepository,
     private val bookDocumentRepository: BookDocumentRepository,
+    private val bookGenreClassifierService: GenreClassifierService,
     private val eventService: EventService
 ) {
 
@@ -81,7 +84,7 @@ class BookService(
             title = criteria.title?.lowercase(),
             startYear = criteria.startYear,
             endYear = criteria.endYear,
-            genres = criteria.genres?.takeIf { it.isNotEmpty() }?.map { it.name },
+            genres = criteria.genres?.takeIf { it.isNotEmpty() },
             pageable = pageable
         ).map { it.toDto() }
     }
@@ -89,6 +92,11 @@ class BookService(
     @Transactional
     fun getBooks(page: Pageable): Page<Book> =
         bookJpaRepository.findAll(page)
+            .map { it.toModel() }
+
+    @Transactional
+    fun getBooksForGenreClassification(): List<Book> =
+        bookJpaRepository.getBookForGenreClassification(GenreClassifierService.GENERAL_GENRES)
             .map { it.toModel() }
 
 
@@ -217,18 +225,24 @@ class BookService(
                     ?: authorJpaRepository.saveAndFlush(BookMapper.mapAuthorToEntity(author))
             }?.toMutableSet() ?: mutableSetOf()
 
-            val genres = document.genres?.map { genre ->
-                genreJpaRepository.findByName(genre.name)
-                    ?: genreJpaRepository.saveAndFlush(GenreEntity(name = genre.name))
-            }?.toMutableSet() ?: mutableSetOf()
-
             val tags = document.genres?.map {
                 tagJpaRepository.findByName(it.name)
                     ?: tagJpaRepository.saveAndFlush(TagEntity(name = it.name))
             }?.toMutableSet() ?: mutableSetOf()
 
+            val resolvedGenres = runBlocking {
+                 bookGenreClassifierService.classifyBookGenre(
+                    title = document.title,
+                    subjects = document.genres?.map { it.name } ?: emptyList(),
+                    description = document.description
+                ).map {
+                    genreJpaRepository.findByName(it)
+                        ?: genreJpaRepository.saveAndFlush(GenreEntity(name = it))
+                }.toMutableSet()
+            }
+
             val bookEntity: BookEntity = bookJpaRepository.findById(document.id)
-                .orElse(document.mapToEntity(authors, genres, tags))!!
+                .orElse(document.mapToEntity(authors, resolvedGenres, tags))!!
 
             bookEntity.ratings.clear()
             bookEntity.ratings.addAll(document.ratings?.map {

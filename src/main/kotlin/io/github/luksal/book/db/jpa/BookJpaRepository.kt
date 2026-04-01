@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -48,4 +49,22 @@ interface BookJpaRepository : JpaRepository<BookEntity, String> {
         pageable: Pageable
     ): Page<BookEntity>
 
+
+    @Query("""
+         SELECT DISTINCT b.*, 
+            array_agg(DISTINCT g.name) as genres,
+            array_agg(DISTINCT t.name) as tags
+        FROM books b
+        JOIN book_genres bg ON b.id = bg.book_id
+        JOIN genres g ON bg.genre_id = g.id
+        LEFT JOIN book_tags bt ON b.id = bt.book_id
+        LEFT JOIN tags t ON bt.tag_id = t.id
+        WHERE b.id NOT IN (
+            SELECT bg2.book_id FROM book_genres bg2
+            JOIN genres g2 ON bg2.genre_id = g2.id
+            WHERE g2.name IN :allowed_genres
+        )
+        GROUP BY b.id
+    """, nativeQuery = true)
+    fun getBookForGenreClassification(@Param("allowed_genres") allowedGenres: List<String>): List<BookEntity>
 }

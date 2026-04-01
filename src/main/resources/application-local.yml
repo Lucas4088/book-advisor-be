@@ -42,6 +42,9 @@ app:
     google-books-api:
       auth:
         api-keys: GOOGLE_BOOKS_API_KEYS
+  ai:
+    ollama:
+      url: http://10.0.2.2:11434
 
   file-read:
     path:
