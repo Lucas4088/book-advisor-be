@@ -43,7 +43,9 @@ app:
     google-books-api:
       auth:
         api-keys: GOOGLE_BOOKS_API_KEYS
-
+  ai:
+    ollama:
+      url: http://192.168.1.15:11434
   file-read:
     path:
       authors: /app/data/ol_dump_authors.txt
