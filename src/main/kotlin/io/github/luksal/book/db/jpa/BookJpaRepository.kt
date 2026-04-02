@@ -40,7 +40,7 @@ interface BookJpaRepository : JpaRepository<BookEntity, String> {
         (:#{#genres == null || #genres.empty} = true or g.name in :genres)
         group by b.id
         having (:#{#genres == null || #genres.empty} = true 
-                or count(distinct g.name) = :#{#genres.size()})
+                or count(distinct g.name) = :#{#genres == null ? 0 : #genres.size()})
     """
     )
     fun search(
