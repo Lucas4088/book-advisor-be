@@ -30,7 +30,7 @@ data class BookRatingStatisticsDto(
 )
 
 data class BookRatingValueDto(
-    val numberOfRatings: Int,
+    val numberOfRatings: Long,
     val value: Long,
 )
 

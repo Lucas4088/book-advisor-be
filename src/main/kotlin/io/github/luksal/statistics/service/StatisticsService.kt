@@ -4,6 +4,7 @@ import io.github.luksal.book.db.document.author.repository.AuthorDocumentReposit
 import io.github.luksal.book.db.document.book.repository.BookDocumentRepository
 import io.github.luksal.book.db.document.bookbasicinfo.repository.BookBasicInfoDocumentRepository
 import io.github.luksal.book.db.jpa.BookJpaRepository
+import io.github.luksal.book.db.jpa.RatingJpaRepository
 import io.github.luksal.ingestion.crawler.jpa.ScheduledBookCrawlerEventRepository
 import io.github.luksal.ingestion.crawler.service.PageCrawlerCrudService
 import io.github.luksal.integration.db.BookDetailsFetchedEventRepository
@@ -22,6 +23,7 @@ class StatisticsService(
     private val authorDocumentRepository: AuthorDocumentRepository,
     private val bookBasicInfoDocumentRepository: BookBasicInfoDocumentRepository,
     private val bookDocumentRepository: BookDocumentRepository,
+    private val ratingJpaRepository: RatingJpaRepository,
     private val bookJpaRepository: BookJpaRepository,
     private val scheduledBookCrawlerEventRepository: ScheduledBookCrawlerEventRepository,
     private val crawlerCrudService: PageCrawlerCrudService,
@@ -69,7 +71,7 @@ class StatisticsService(
     }
 
     fun calculateBooksRatingStatistics(): BookRatingStatisticsDto {
-        val result = bookDocumentRepository.countBooksPerRatingNumber()
+        val result = ratingJpaRepository.countBooksPerRatingNumber()
         return BookRatingStatisticsDto(
             totalRatings = result.takeIf { it.isNotEmpty() }?.map { it.documents }?.reduce { acc, total -> acc + total }
                 ?: 0,

@@ -32,7 +32,16 @@ class GenreClassifierService(
             "Politics",
             "True Crime",
             "Health",
-            "Religion"
+            "Religion",
+            "Science Fiction",
+            "Fantasy",
+            "Young Adult",
+            "Children",
+            "Classic",
+            "Graphic Novel",
+            "Poetry",
+            "Memoir",
+            "Travel",
         )
     }
 
@@ -56,7 +65,7 @@ class GenreClassifierService(
             subjects = subjects,
             description = description ?: ""
         )
-        if(embeddingResult.size < 3) {
+        if (embeddingResult.size < 3) {
             return llmClassifier.classify(
                 title = title,
                 subjects = subjects,

@@ -6,6 +6,7 @@ import io.github.luksal.book.model.Tag
 import io.github.luksal.book.service.BookService
 import io.github.luksal.util.ext.logger
 import kotlinx.coroutines.runBlocking
+import org.springframework.data.domain.PageRequest
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
@@ -24,10 +25,10 @@ class BookGenresClassifierJob(
 
     @Scheduled(fixedDelay = 2, timeUnit = TimeUnit.SECONDS)
     fun run() = runBlocking {
-        val currentPage = redisTemplate.opsForValue()["booksindex:genreclassifier"]
+        val currentPage = redisTemplate.opsForValue()["booksindex:genreclassifier:page"]
             ?.toString()?.toIntOrNull() ?: 0
 
-        bookService.getBooksForGenreClassification()
+        bookService.getBooks(PageRequest.of(currentPage, 1000))
             .forEach { book ->
                 val result = genreClassifierService.classifyBookGenre(book)
                 book.tags = book.genres.map { Tag(it.id, it.name) }
@@ -36,6 +37,6 @@ class BookGenresClassifierJob(
                 log.info("Book ${book.title} genres: $result")
             }
 
-        redisTemplate.opsForValue()["booksindex:genreclassifier"] = currentPage + 1
+        redisTemplate.opsForValue()["booksindex:genreclassifier:page"] = currentPage + 1
     }
 }

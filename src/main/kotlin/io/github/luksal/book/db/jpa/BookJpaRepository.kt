@@ -38,6 +38,9 @@ interface BookJpaRepository : JpaRepository<BookEntity, String> {
         (:startYear is null or b.publishingYear >= :startYear) and
         (:endYear is null or b.publishingYear <= :endYear) and 
         (:#{#genres == null || #genres.empty} = true or g.name in :genres)
+        group by b.id
+        having (:#{#genres == null || #genres.empty} = true 
+                or count(distinct g.name) = :#{#genres.size()})
     """
     )
     fun search(
