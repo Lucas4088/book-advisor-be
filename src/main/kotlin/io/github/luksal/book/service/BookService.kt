@@ -299,8 +299,9 @@ class BookService(
         )
     }
 
-    private fun createBasicRating(ratings: List<RatingEntity>): BasicRating {
-        val totalRatingCount = ratings.sumOf { it.count ?: 0 }.takeIf { it != 0 } ?: 0
+    private fun createBasicRating(ratings: List<RatingEntity>): BasicRating? {
+        val totalRatingCount = ratings.mapNotNull { it.count }.sumOf { it }.takeIf { it != 0 }
+        totalRatingCount ?: return null
         val averageRatingScore = calculateAverageRatingScore(ratings, totalRatingCount)
         return BasicRating(
             averageRatingScore,
