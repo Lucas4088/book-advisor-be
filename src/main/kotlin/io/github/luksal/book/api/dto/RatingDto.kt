@@ -2,6 +2,11 @@ package io.github.luksal.book.api.dto
 
 import java.math.BigDecimal
 
+data class BasicRating(
+    val averageRatingScore: BigDecimal,
+    val totalRatingCount: Int,
+)
+
 data class RatingResult(
     val averageRatingScore: BigDecimal,
     val totalRatingCount: Int,

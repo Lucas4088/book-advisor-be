@@ -179,11 +179,17 @@ object BookMapper {
         rating =  rating
     )
 
-    fun BookEntity.toDto() = BookDto(
+    fun BookEntity.toDto(rating: BasicRating? = null) = BookDto(
         id = bookId,
         title = title,
         smallThumbnailUrl = smallThumbnailUrl,
         publishedYear = publishingYear,
+        rating = rating?.let {
+            BasicRating(
+                averageRatingScore = rating.averageRatingScore,
+                totalRatingCount = rating.totalRatingCount
+            )
+        }
     )
 
     fun BookEntity.toModel() = Book(

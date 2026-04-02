@@ -86,7 +86,7 @@ class BookService(
             endYear = criteria.endYear,
             genres = criteria.genres?.takeIf { it.isNotEmpty() },
             pageable = pageable
-        ).map { it.toDto() }
+        ).map { it.toDto(createBasicRating(it.ratings)) }
     }
 
     @Transactional
@@ -231,7 +231,7 @@ class BookService(
             }?.toMutableSet() ?: mutableSetOf()
 
             val resolvedGenres = runBlocking {
-                 bookGenreClassifierService.classifyBookGenre(
+                bookGenreClassifierService.classifyBookGenre(
                     title = document.title,
                     subjects = document.genres?.map { it.name } ?: emptyList(),
                     description = document.description
@@ -290,14 +290,8 @@ class BookService(
 
     private fun createTotalRating(ratings: List<RatingEntity>): RatingResult {
         val ratingsSources = ratings.map { RatingSingleSource(it.score, it.count, it.source.name) }
-        val totalRatingCount = ratings.sumOf { it.count ?: 1 }.takeIf { it != 0 } ?: 1
-        val averageRatingScore = ratings.fold(BigDecimal.ZERO) { acc, entity ->
-            acc.add(
-                entity.score.multiply(
-                    entity.count?.toBigDecimal() ?: BigDecimal.ONE
-                )
-            )
-        }.divide(totalRatingCount.toBigDecimal(), 2, RoundingMode.HALF_EVEN)
+        val totalRatingCount = ratings.sumOf { it.count ?: 0 }.takeIf { it != 0 } ?: 0
+        val averageRatingScore = calculateAverageRatingScore(ratings, totalRatingCount)
         return RatingResult(
             averageRatingScore,
             totalRatingCount,
@@ -305,5 +299,23 @@ class BookService(
         )
     }
 
-
+    private fun createBasicRating(ratings: List<RatingEntity>): BasicRating {
+        val totalRatingCount = ratings.sumOf { it.count ?: 0 }.takeIf { it != 0 } ?: 0
+        val averageRatingScore = calculateAverageRatingScore(ratings, totalRatingCount)
+        return BasicRating(
+            averageRatingScore,
+            totalRatingCount
+        )
+    }
+    private fun calculateAverageRatingScore(ratings: List<RatingEntity>, totalRatingCount: Int) =
+        ratings.fold(BigDecimal.ZERO) { acc, entity ->
+            acc.add(
+                entity.score.multiply(
+                    entity.count?.toBigDecimal() ?: BigDecimal.ONE
+                )
+            )
+        }.divide(
+            if (totalRatingCount == 0) 1.toBigDecimal() else totalRatingCount.toBigDecimal(),
+            2, RoundingMode.HALF_EVEN
+        )
 }

@@ -23,6 +23,7 @@ data class BookDto(
     val title: String? = null,
     val smallThumbnailUrl: String? = null,
     val publishedYear: Int,
+    val rating: BasicRating?
 )
 
 data class BookDetailsDto(
