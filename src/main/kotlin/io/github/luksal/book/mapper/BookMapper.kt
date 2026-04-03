@@ -183,7 +183,7 @@ object BookMapper {
         rating = rating
     )
 
-    fun BookEntity.toDto(rating: BasicRating? = null) = BookDto(
+    fun BookWithScoreProjection.toDto(rating: BasicRating? = null) = BookDto(
         id = bookId,
         title = title,
         smallThumbnailUrl = smallThumbnailUrl,

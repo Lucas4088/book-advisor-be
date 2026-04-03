@@ -74,7 +74,7 @@ interface BookWithScoreProjection {
     val title: String
     val description: String?
     val language: String?
-    val publishingYear: Int
+    val publishingYear: Int?
     val pageCount: Int?
     val thumbnailUrl: String?
     val smallThumbnailUrl: String?

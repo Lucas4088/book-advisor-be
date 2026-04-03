@@ -84,9 +84,10 @@ class BookService(
             title = criteria.title?.lowercase(),
             startYear = criteria.startYear,
             endYear = criteria.endYear,
-            genres = criteria.genres?.takeIf { it.isNotEmpty() },
+            genres = criteria.genres,
+            genresSize = criteria.genres?.size,
             pageable = pageable
-        ).map { it.toDto(createBasicRating(it.ratings)) }
+        ).map { it.toDto(createBasicRating(it.ratingScore, it.ratingCount)) }
     }
 
     @Transactional
@@ -299,15 +300,15 @@ class BookService(
         )
     }
 
-    private fun createBasicRating(ratings: List<RatingEntity>): BasicRating? {
-        val totalRatingCount = ratings.mapNotNull { it.count }.sumOf { it }.takeIf { it != 0 }
-        totalRatingCount ?: return null
-        val averageRatingScore = calculateAverageRatingScore(ratings, totalRatingCount)
-        return BasicRating(
-            averageRatingScore,
-            totalRatingCount
-        )
+    private fun createBasicRating(score: Double?, ratingCount: Int): BasicRating? {
+        return score?.let {
+            BasicRating(
+                BigDecimal.valueOf(score).setScale(2, RoundingMode.HALF_EVEN),
+                ratingCount
+            )
+        }
     }
+
     private fun calculateAverageRatingScore(ratings: List<RatingEntity>, totalRatingCount: Int) =
         ratings.fold(BigDecimal.ZERO) { acc, entity ->
             acc.add(
