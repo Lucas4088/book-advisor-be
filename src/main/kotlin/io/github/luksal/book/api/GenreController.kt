@@ -10,6 +10,6 @@ import org.springframework.web.bind.annotation.RestController
 class GenreController(private val genreService: GenreService) {
 
     @GetMapping
-    fun findAll() = genreService.findAll()
+    fun findAll() = genreService.findAll().sorted()
 
 }
