@@ -21,6 +21,6 @@ services:
       context: ../personal-advisor
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: http://app:8090
+        NEXT_PUBLIC_API_BASE_URL: http://app:8090
     ports:
       - "3000:3000"
