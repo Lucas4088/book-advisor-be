@@ -19,7 +19,8 @@ class WebConfig {
         val configuration = CorsConfiguration().apply {
             allowedOriginPatterns = listOf(
                 "http://localhost:*",
-                "http://127.0.0.1:*"
+                "http://127.0.0.1:*",
+                "http://192.168.1.52:*"
             )
             allowedMethods = listOf("GET", "POST", "PUT", "DELETE", "OPTIONS")
             allowedHeaders = listOf("*")
