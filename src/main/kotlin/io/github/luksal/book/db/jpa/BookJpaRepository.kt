@@ -63,8 +63,7 @@ interface BookJpaRepository : JpaRepository<BookEntity, String> {
             (:startYear IS NULL OR b.publishing_year >= :startYear) AND
             (:endYear IS NULL OR b.publishing_year <= :endYear) AND
              (
-                   COALESCE(array_length(CAST(:genres AS text[]), 1), 0) = 0
-                   OR g.name = ANY(CAST(:genres AS text[]))
+                :genresSize is null or :genresSize = 0 OR g.name IN (:genres)
               )
         GROUP BY b.id, b.title, b.small_thumbnail_url
         HAVING (
@@ -85,8 +84,7 @@ interface BookJpaRepository : JpaRepository<BookEntity, String> {
             (:startYear IS NULL OR b.publishing_year >= :startYear) AND
             (:endYear IS NULL OR b.publishing_year <= :endYear) AND
            (
-                COALESCE(array_length(CAST(:genres AS text[]), 1), 0) = 0
-                OR g.name = ANY(CAST(:genres AS text[]))
+              :genresSize is null or :genresSize = 0 OR g.name IN (:genres)
             )
         GROUP BY b.id
         HAVING (

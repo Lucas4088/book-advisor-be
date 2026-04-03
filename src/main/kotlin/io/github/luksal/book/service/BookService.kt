@@ -81,11 +81,11 @@ class BookService(
 
     fun searchBooks(criteria: BookSearchCriteriaDto, pageable: Pageable): Page<BookDto> {
         return bookJpaRepository.search(
-            title = criteria.title?.lowercase(),
+            title = criteria.title?.lowercase()?.takeIf { it.isNotBlank() },
             startYear = criteria.startYear,
             endYear = criteria.endYear,
             genres = criteria.genres,
-            genresSize = criteria.genres?.size,
+            genresSize = criteria.genres?.size?.takeIf { it > 0 },
             pageable = pageable
         ).map { it.toDto(createBasicRating(it.ratingScore, it.ratingCount)) }
     }
