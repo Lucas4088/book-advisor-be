@@ -20,7 +20,7 @@ class BookEntity(
     val language: String?,
 
     @Column(nullable = false)
-    val publishingYear: Int,
+    val publishingYear: Int?,
 
     val pageCount: Int?,
 
@@ -67,4 +67,18 @@ class BookEntity(
 
     override fun isNew(): Boolean = isNew
 
+}
+
+interface BookWithScoreProjection {
+    val bookId: String
+    val title: String
+    val description: String?
+    val language: String?
+    val publishingYear: Int
+    val pageCount: Int?
+    val thumbnailUrl: String?
+    val smallThumbnailUrl: String?
+
+    val ratingScore: Double?
+    val ratingCount: Int
 }

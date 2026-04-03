@@ -32,7 +32,11 @@ object BookMapper {
             }?.toMutableSet() ?: mutableSetOf()
         )
 
-    fun BookDocument.mapToEntity(authors: Set<AuthorEntity>, genres: Set<GenreEntity>, tag: Set<TagEntity>): BookEntity =
+    fun BookDocument.mapToEntity(
+        authors: Set<AuthorEntity>,
+        genres: Set<GenreEntity>,
+        tag: Set<TagEntity>
+    ): BookEntity =
         BookEntity(
             bookId = id,
             title = title,
@@ -125,8 +129,8 @@ object BookMapper {
             id = id,
             title = title,
             language = lang,
-            description =  description,
-            publishingYear = publishingYear.value,
+            description = description,
+            publishingYear = publishingYear?.value,
             pageCount = pageCount,
             openLibraryKey = key,
             isEdition = isEdition,
@@ -176,7 +180,7 @@ object BookMapper {
         pageCount = pageCount,
         thumbnailUrl = thumbnailUrl,
         smallThumbnailUrl = smallThumbnailUrl,
-        rating =  rating
+        rating = rating
     )
 
     fun BookEntity.toDto(rating: BasicRating? = null) = BookDto(
@@ -196,7 +200,7 @@ object BookMapper {
         id = bookId!!,
         title = title,
         description = description,
-        publishingYear = Year.of(publishingYear),
+        publishingYear = publishingYear?.let { Year.of(publishingYear) },
         pageCount = pageCount,
         key = "",
         isEdition = false,
@@ -263,7 +267,7 @@ object BookMapper {
         id = basicInfo.bookPublicId,
         title = volumeInfo.title,
         description = volumeInfo.description ?: "",
-        publishingYear = volumeInfo.publishedDate.take(4).toInt().let { Year.of(it) },
+        publishingYear = volumeInfo.publishedDate?.take(4)?.toInt()?.let { Year.of(it) },
         pageCount = volumeInfo.pageCount ?: 0,
         key = basicInfo.openLibraryKey,
         isEdition = basicInfo.isEdition,

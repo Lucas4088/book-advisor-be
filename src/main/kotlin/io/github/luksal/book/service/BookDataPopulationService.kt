@@ -47,6 +47,7 @@ class BookDataPopulationService(
     private val redisTemplate: RedisTemplate<Any, Any>,
     private val emailService: EmailService,
     private val eventService: EventService,
+    private val objectMapper: ObjectMapper,
 ) {
 
     private val log = logger()
@@ -175,8 +176,12 @@ class BookDataPopulationService(
     }
 
     private fun findBookDetails(bookInfo: BookBasicInfoDocument): Book? {
-        val response = redisTemplate.opsForValue()["google-books:${bookInfo.id}"] as BookItem?
-            ?: googleBooksService.findBookDetails(bookInfo.title, bookInfo.authors)?.items
+        val cachedValue = redisTemplate.opsForValue()["google-books:${bookInfo.id}"]
+        val response = if (cachedValue != null && cachedValue is Map<*, *>) {
+            objectMapper.convertValue(cachedValue, BookItem::class.java)
+        } else {
+            cachedValue as BookItem?
+        } ?: googleBooksService.findBookDetails(bookInfo.title, bookInfo.authors)?.items
                 ?.firstOrNull()
                 ?.also { redisTemplate.opsForValue()["google-books:${bookInfo.id}"] = it }
 

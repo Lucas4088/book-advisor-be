@@ -22,7 +22,7 @@ data class BookDto(
     val id: String? = null,
     val title: String? = null,
     val smallThumbnailUrl: String? = null,
-    val publishedYear: Int,
+    val publishedYear: Int?,
     val rating: BasicRating?
 )
 
@@ -30,10 +30,10 @@ data class BookDetailsDto(
     val bookId: String? = null,
     val title: String,
     val authors: List<AuthorDto>,
-    val publishedYear: Int,
+    val publishedYear: Int?,
     val description: String?,
     val genres: List<String>,
-    val publishingYear: Int,
+    val publishingYear: Int?,
     val pageCount: Int?,
     val thumbnailUrl: String?,
     val smallThumbnailUrl: String?,

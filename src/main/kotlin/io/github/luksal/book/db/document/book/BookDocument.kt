@@ -24,7 +24,7 @@ data class BookDocument(
     val description: String?,
     @Field("py")
     @JsonProperty("py")
-    val publishingYear: Int,
+    val publishingYear: Int?,
     @Field("pc")
     @JsonProperty("pc")
     val pageCount: Int?,

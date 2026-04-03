@@ -7,7 +7,7 @@ data class Book(
     val id: String,
     val title: String,
     val description: String?,
-    val publishingYear: Year,
+    val publishingYear: Year?,
     val pageCount: Int?,
     val key: String,
     val lang: String?,
