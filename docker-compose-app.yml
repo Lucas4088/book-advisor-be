@@ -13,7 +13,7 @@ services:
       - /home/lukasz/Documents/openlibrary/ol_dump_authors_2026-02-28.txt:/app/data/ol_dump_authors.txt:ro
       - /home/lukasz/Documents/openlibrary/ol_dump_works_2026-02-28.txt:/app/data/ol_dump_works.txt:ro
       - /home/lukasz/Documents/openlibrary/ol_dump_editions_2026-02-28.txt:/app/data/ol_dump_editions.txt:ro
-      -
+
   frontend:
     build:
       context: ../personal-advisor
