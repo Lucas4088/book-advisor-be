@@ -36,6 +36,7 @@ interface BookJpaRepository : JpaRepository<BookEntity, String> {
         SELECT 
             b.id AS bookId,
             b.title AS title,
+            b.description AS description,
             b.small_thumbnail_url AS smallThumbnailUrl,
             COALESCE((
                     SELECT SUM(r2.score * r2.count)

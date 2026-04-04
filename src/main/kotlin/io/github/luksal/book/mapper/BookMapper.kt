@@ -187,6 +187,7 @@ object BookMapper {
         id = bookId,
         title = title,
         smallThumbnailUrl = smallThumbnailUrl,
+        shortDescription = description?.take(150)?.takeIf { it.isNotBlank() }?.plus("..."),
         publishedYear = publishingYear,
         rating = rating?.let {
             BasicRating(

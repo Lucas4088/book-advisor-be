@@ -21,6 +21,7 @@ data class BookSearchCriteria(
 data class BookDto(
     val id: String? = null,
     val title: String? = null,
+    val shortDescription: String?,
     val smallThumbnailUrl: String? = null,
     val publishedYear: Int?,
     val rating: BasicRating?
