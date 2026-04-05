@@ -13,6 +13,8 @@ services:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
     restart: unless-stopped
+    networks:
+      - shared
 
   mongo-init:
     image: mongo:7
@@ -30,6 +32,8 @@ services:
           members: [{ _id: 0, host: \"mongodb:27017\" }]
         })'
       "
+    networks:
+      - shared
 
   postgres:
     image: postgres:16
@@ -43,6 +47,8 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
+    networks:
+      - shared
 
   redis:
     image: redis:7.4.8-alpine
@@ -53,11 +59,15 @@ services:
     command: redis-server --save 20 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
     volumes:
       - redis_data:/data
+    networks:
+      - shared
 
   tinyproxy:
     image: vimagick/tinyproxy
     ports:
       - "8888:8888"
+    networks:
+      - shared
 
   proxy:
     image: ghcr.io/flaresolverr/flaresolverr:latest
@@ -77,6 +87,8 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.proxy.rule=Host(`proxy.localhost`)"
       - "traefik.http.routers.proxy.entrypoints=web"
+    networks:
+      - shared
 
   kafka:
     image: confluentinc/cp-kafka:7.8.0
@@ -120,6 +132,8 @@ services:
 
     volumes:
       - kafka_data:/var/lib/kafka/data
+    networks:
+      - shared
 
   kafka-connect:
     build:
@@ -148,6 +162,8 @@ services:
 
     volumes:
       - ./connect-plugins:/usr/share/custom-plugins
+    networks:
+      - shared
 
   kafka-connect-init:
     image: curlimages/curl:latest
@@ -168,7 +184,13 @@ services:
           -d @/docker/kafka-connect/mongo_books_connector.json
     volumes:
       - ./docker/kafka-connect:/docker/kafka-connect
+    networks:
+      - shared
 
+networks:
+  default:
+    external: true
+    name: my-shared-network
 
 volumes:
   mongo_data:

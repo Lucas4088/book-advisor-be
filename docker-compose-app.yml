@@ -14,15 +14,10 @@ services:
       - /home/lukasz/Documents/openlibrary/ol_dump_authors_2026-02-28.txt:/app/data/ol_dump_authors.txt:ro
       - /home/lukasz/Documents/openlibrary/ol_dump_works_2026-02-28.txt:/app/data/ol_dump_works.txt:ro
       - /home/lukasz/Documents/openlibrary/ol_dump_editions_2026-02-28.txt:/app/data/ol_dump_editions.txt:ro
+    networks:
+      - shared
 
-  frontend:
-    image: book-advisor-frontend
-    build:
-      context: ../personal-advisor
-      dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_API_BASE_URL: http://192.168.1.52:8090
-    environment:
-      INTERNAL_API_URL: http://app:8090
-    ports:
-      - "3000:3000"
+networks:
+  default:
+    external: true
+    name: my-shared-network
