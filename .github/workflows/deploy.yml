@@ -21,12 +21,6 @@ jobs:
             ~/.gradle/wrapper
           key: gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'openjdk'
-          java-version: '25'
-
       - name: Build with Gradle
         run: ./gradlew clean build -x test
 
