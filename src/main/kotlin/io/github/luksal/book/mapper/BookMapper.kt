@@ -123,7 +123,6 @@ object BookMapper {
         url = this.url
     )
 
-
     fun Book.toDocument(): BookDocument =
         BookDocument(
             id = id,
@@ -315,7 +314,6 @@ object BookMapper {
             subjects = bookBasicInfo.subjects,
             description = bookBasicInfo.description
         )
-
 
     fun AuthorEntity.toDto(): AuthorDto =
         AuthorDto(
