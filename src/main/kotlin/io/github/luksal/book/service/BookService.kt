@@ -194,10 +194,6 @@ class BookService(
         eventService.publish(BookEntitySavedEvent(bookId = document.id))
     }
 
-    fun updateBookBasicInfo(bookBasicInfoDocument: List<BookBasicInfoDocument>) =
-        bookBasicInfoDocumentRepository.saveAll(bookBasicInfoDocument)
-
-
     fun getBookBasicInfo(bookIds: List<String>, page: Pageable): Page<BookBasicInfoDocument> =
         bookBasicInfoDocumentRepository.findAllByBookPublicIdIn(bookIds, page)
 
