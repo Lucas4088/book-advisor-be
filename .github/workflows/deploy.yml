@@ -26,3 +26,15 @@ jobs:
 
       - name: Deploy with Docker Compose
         run: docker compose -f docker-compose-app.yml up -d --build
+        env:
+          GOOGLE_BOOKS_API_KEYS: ${{ secrets.GOOGLE_BOOKS_API_KEYS }}
+          MONGOEXPRESS_LOGIN: ${{ secrets.MONGOEXPRESS_LOGIN }}
+          MONGOEXPRESS_PASSWORD: ${{ secrets.MONGOEXPRESS_PASSWORD }}
+          MONGO_ROOT_USER: ${{ secrets.MONGO_ROOT_USER }}
+          MONGO_ROOT_PASSWORD: ${{ secrets.MONGO_ROOT_PASSWORD }}
+          MAILPIT_LOGIN: ${{ secrets.MAILPIT_LOGIN }}
+          MAILPIT_PASSWORD: ${{ secrets.MAILPIT_PASSWORD }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+          MEILISEARCH_MASTER_KEY: ${{ secrets.MEILISEARCH_MASTER_KEY }}
